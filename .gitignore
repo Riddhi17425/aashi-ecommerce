@@ -4,6 +4,7 @@
 /public/build
 /public/hot
 /storage/*.key
+/file_backup
 
 # Environment files
 .env
