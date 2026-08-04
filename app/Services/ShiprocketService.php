@@ -940,7 +940,6 @@ class ShiprocketService
             }
 
             $originalOrder = $returnRequest->order;
-
             if (!$originalOrder) {
                 return response()->json([
                     'status' => false,
@@ -948,17 +947,27 @@ class ShiprocketService
                 ], 404);
             }
 
-            $cartItems = $returnRequest->cart_id
-                ? $originalOrder->cart_info->where('id', $returnRequest->cart_id)
-                : $originalOrder->cart_info;
-
-            if ($cartItems->isEmpty()) {
+            $cartItem = $returnRequest->cart;
+            if (!$cartItem) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'No exchange product found for this request.',
+                    'message' => 'Exchange item not found for this request.',
                 ], 422);
             }
 
+            /*
+             |--------------------------------------------------------------------------
+             | OLD EXCHANGE ORDER API LOGIC (HIDDEN)
+             |--------------------------------------------------------------------------
+             |
+             | The original Shiprocket exchange payload and /orders/create/exchange
+             | logic is preserved below as a hidden reference. The new implementation
+             | now creates a return shipment for the old product and a forward
+             | shipment for the replacement product.
+             |
+             */
+
+            /*
             $sellerPickupLocationId = env('SHIPROCKET_SELLER_PICKUP_LOCATION_ID');
             $sellerShippingLocationId = env('SHIPROCKET_SELLER_SHIPPING_LOCATION_ID', $sellerPickupLocationId);
             $returnReasonId = (int) env('SHIPROCKET_EXCHANGE_RETURN_REASON_ID', 29);
@@ -1094,6 +1103,58 @@ class ShiprocketService
                 'shiprocket_response' => $data,
                 'payload' => $payload,
             ]);
+            */
+
+            // NEW CODE: create return shipment for old product
+            $returnShipmentResponse = $this->createReturnShipment($originalOrder, $returnRequest);
+            $returnShipmentData = $returnShipmentResponse->getData(true);
+
+            if (empty($returnShipmentData['status'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed to create return shipment for exchange.',
+                    'shiprocket_response' => $returnShipmentData,
+                ], 500);
+            }
+
+            // NEW CODE: create forward shipment for replacement product
+            $forwardShipmentResponse = $this->createForwardShipment($originalOrder, $returnRequest);
+            $forwardShipmentData = $forwardShipmentResponse->getData(true);
+
+            if (empty($forwardShipmentData['status'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed to create forward shipment for exchange.',
+                    'shiprocket_response' => $forwardShipmentData,
+                ], 500);
+            }
+
+            $returnRequest->update([
+                'status' => 'exchange_approved',
+                'approved_at' => now(),
+                'exchange_approved_at' => now(),
+                'shiprocket_return_order_id' => $returnShipmentData['shiprocket_response']['order_id'] ?? null,
+                'shiprocket_shipment_id' => $returnShipmentData['shiprocket_response']['shipment_id'] ?? null,
+                'exchange_order_id' => $forwardShipmentData['shiprocket_response']['order_id'] ?? null,
+                'exchange_shipment_id' => $forwardShipmentData['shiprocket_response']['shipment_id'] ?? null,
+                'create_return_payload' => $returnShipmentData['payload'] ?? null,
+                'create_return_response' => $returnShipmentData,
+                'exchange_create_payload' => [
+                    'return_shipment' => $returnShipmentData['payload'] ?? null,
+                    'forward_shipment' => $forwardShipmentData['payload'] ?? null,
+                ],
+                'exchange_create_response' => [
+                    'return_shipment' => $returnShipmentData,
+                    'forward_shipment' => $forwardShipmentData,
+                ],
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Shiprocket exchange return and forward shipments created successfully.',
+                'return_shipment' => $returnShipmentData,
+                'forward_shipment' => $forwardShipmentData,
+            ]);
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $error = $e->getResponse()
                 ? json_decode($e->getResponse()->getBody()->getContents(), true)
@@ -1114,6 +1175,232 @@ class ShiprocketService
                 'return_request_id' => $returnRequest->id ?? null,
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function createReturnShipment(Order $order, OrderReturnRequest $returnRequest)
+    {
+        try {
+            $authToken = $this->getAuthToken();
+            $channelId = env('SHIPROCKET_CHANNEL_ID');
+            $cartItem = $returnRequest->cart;
+
+            if (!$cartItem) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Return item not found for exchange.',
+                ], 422);
+            }
+
+            $size = null;
+            if (!empty($cartItem->size_price)) {
+                $sizeData = json_decode($cartItem->size_price, true);
+                $size = $sizeData['size'] ?? null;
+            }
+
+            $colorName = optional($cartItem->color)->color_name;
+            $productName = $cartItem->product->title ?? 'Product';
+            if ($colorName) {
+                $productName .= ' | Color: ' . $colorName;
+            }
+            if ($size) {
+                $productName .= ' | Size: ' . $size;
+            }
+
+            $sellingPrice = $cartItem->price + ($cartItem->gst_amt ?? 0);
+            $subTotal = ($sellingPrice * $cartItem->quantity);
+
+            $payload = [
+                'order_id' => 'RETURN_' . $order->order_number . '_' . $returnRequest->id,
+                'order_date' => now()->format('Y-m-d H:i'),
+                'channel_id' => !empty($channelId) ? (int) $channelId : null,
+                'pickup_customer_name' => trim($order->first_name . ' ' . $order->last_name),
+                'pickup_last_name' => $order->last_name ?? '',
+                'company_name' => env('SHIPROCKET_STORE_NAME', 'Seller'),
+                'pickup_address' => $order->address1,
+                'pickup_address_2' => $order->address2 ?? '',
+                'pickup_city' => $order->city ?? 'Delhi',
+                'pickup_state' => $order->state ?? 'Delhi',
+                'pickup_country' => $order->country ?? 'India',
+                'pickup_pincode' => (int) $order->post_code,
+                'pickup_email' => $order->email,
+                'pickup_phone' => $order->phone,
+                'pickup_isd_code' => '91',
+                'shipping_customer_name' => env('SHIPROCKET_STORE_NAME', 'Seller'),
+                'shipping_last_name' => '',
+                'shipping_address' => env('SHIPROCKET_STORE_ADDRESS', $order->address1),
+                'shipping_address_2' => env('SHIPROCKET_STORE_ADDRESS_2', $order->address2 ?? ''),
+                'shipping_city' => env('SHIPROCKET_STORE_CITY', $order->city ?? 'Delhi'),
+                'shipping_state' => env('SHIPROCKET_STORE_STATE', $order->state ?? 'Delhi'),
+                'shipping_country' => env('SHIPROCKET_STORE_COUNTRY', 'India'),
+                'shipping_pincode' => env('SHIPROCKET_STORE_PINCODE', $order->post_code),
+                'shipping_email' => env('SHIPROCKET_STORE_EMAIL', $order->email),
+                'shipping_isd_code' => '91',
+                'shipping_phone' => env('SHIPROCKET_STORE_PHONE', $order->phone),
+                'order_items' => [[
+                    'name' => $productName,
+                    'sku' => 'RETURN_' . ($cartItem->product_id ?? $cartItem->id),
+                    'units' => $cartItem->quantity,
+                    'selling_price' => $sellingPrice,
+                    'discount' => 0,
+                ]],
+                'payment_method' => strtolower((string) $order->payment_method) === 'cod' ? 'COD' : 'PREPAID',
+                'total_discount' => '0',
+                'sub_total' => (int) $subTotal,
+                'length' => 11,
+                'breadth' => 11,
+                'height' => 11,
+                'weight' => 0.5,
+                'request_pickup' => true,
+            ];
+
+            if (empty($payload['channel_id'])) {
+                unset($payload['channel_id']);
+            }
+
+            Log::channel('shiprocket')->info('Return Shipment Payload (Exchange)', $payload);
+
+            $response = $this->client->post(
+                $this->url . '/shipments/create/return-shipment',
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $authToken,
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => $payload,
+                ]
+            );
+
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            Log::channel('shiprocket')->info('Return Shipment Response (Exchange)', $data);
+
+            return response()->json([
+                'status' => true,
+                'shiprocket_response' => $data,
+                'payload' => $payload,
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('shiprocket')->error('Return Shipment Error (Exchange): ' . $e->getMessage(), [
+                'return_request_id' => $returnRequest->id ?? null,
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function createForwardShipment(Order $order, OrderReturnRequest $returnRequest)
+    {
+        try {
+            $authToken = $this->getAuthToken();
+            $channelId = env('SHIPROCKET_CHANNEL_ID');
+            $cartItem = $returnRequest->cart;
+
+            if (!$cartItem) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Forward shipment item not found for exchange.',
+                ], 422);
+            }
+
+            $size = null;
+            if (!empty($cartItem->size_price)) {
+                $sizeData = json_decode($cartItem->size_price, true);
+                $size = $sizeData['size'] ?? null;
+            }
+
+            $colorName = optional($cartItem->color)->color_name;
+            $productName = $cartItem->product->title ?? 'Product';
+            if ($colorName) {
+                $productName .= ' | Color: ' . $colorName;
+            }
+            if ($size) {
+                $productName .= ' | Size: ' . $size;
+            }
+
+            $sellingPrice = $cartItem->price + ($cartItem->gst_amt ?? 0);
+            $subTotal = ($sellingPrice * $cartItem->quantity);
+
+            $payload = [
+                'order_id' => 'EXCHANGE_' . $order->order_number . '_' . $returnRequest->id,
+                'order_date' => now()->format('Y-m-d H:i'),
+                'channel_id' => !empty($channelId) ? (int) $channelId : null,
+                'billing_customer_name' => $order->first_name,
+                'billing_last_name' => $order->last_name ?? '',
+                'billing_address' => $order->address1,
+                'billing_address_2' => $order->address2 ?? '',
+                'billing_city' => $order->city ?? 'Delhi',
+                'billing_state' => $order->state ?? 'Delhi',
+                'billing_country' => $order->country ?? 'India',
+                'billing_email' => $order->email,
+                'billing_phone' => $order->phone,
+                'shipping_is_billing' => true,
+                'order_items' => [[
+                    'name' => $productName,
+                    'sku' => 'EXCHANGE_' . ($cartItem->product_id ?? $cartItem->id) . ($size ? '_' . $size : ''),
+                    'units' => $cartItem->quantity,
+                    'selling_price' => $sellingPrice,
+                    'discount' => 0,
+                ]],
+                'payment_method' => strtolower((string) $order->payment_method) === 'cod' ? 'COD' : 'PREPAID',
+                'sub_total' => (int) $subTotal,
+                'length' => 100,
+                'breadth' => 50,
+                'height' => 10,
+                'weight' => 0.50,
+                'pickup_location' => env('SHIPROCKET_PICKUP_LOCATION', 'work'),
+                'vendor_details' => [
+                    'email' => env('SHIPROCKET_STORE_EMAIL', $order->email),
+                    'phone' => env('SHIPROCKET_STORE_PHONE', $order->phone),
+                    'name' => env('SHIPROCKET_STORE_NAME', 'Seller'),
+                    'address' => env('SHIPROCKET_STORE_ADDRESS', $order->address1),
+                    'address_2' => env('SHIPROCKET_STORE_ADDRESS_2', $order->address2 ?? ''),
+                    'city' => env('SHIPROCKET_STORE_CITY', $order->city ?? 'Delhi'),
+                    'state' => env('SHIPROCKET_STORE_STATE', $order->state ?? 'Delhi'),
+                    'country' => env('SHIPROCKET_STORE_COUNTRY', 'India'),
+                    'pin_code' => env('SHIPROCKET_STORE_PINCODE', $order->post_code),
+                    'pickup_location' => env('SHIPROCKET_PICKUP_LOCATION', 'work'),
+                ],
+            ];
+
+            if (empty($payload['channel_id'])) {
+                unset($payload['channel_id']);
+            }
+
+            Log::channel('shiprocket')->info('Forward Shipment Payload (Exchange)', $payload);
+
+            $response = $this->client->post(
+                $this->url . '/shipments/create/forward-shipment',
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $authToken,
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => $payload,
+                ]
+            );
+
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            Log::channel('shiprocket')->info('Forward Shipment Response (Exchange)', $data);
+
+            return response()->json([
+                'status' => true,
+                'shiprocket_response' => $data,
+                'payload' => $payload,
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('shiprocket')->error('Forward Shipment Error (Exchange): ' . $e->getMessage(), [
+                'return_request_id' => $returnRequest->id ?? null,
             ]);
 
             return response()->json([
