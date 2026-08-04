@@ -236,37 +236,37 @@
                     
                         <hr>
                     
-                        <!--<h5>8. Returns, Exchanges & Refunds</h5>-->
+                        <h5>8. Returns, Exchanges & Refunds</h5>
                     
-                        <!--<p>We offer the following policies:</p>-->
+                        <p>We offer the following policies:</p>
                     
-                        <!--<ul class="tc-list">-->
-                        <!--    <li>We offer only a 7-day return policy for eligible products.</li>-->
-                        <!--    <li>You can request an exchange within 15 days from the date of delivery.</li>-->
-                        <!--    <li>Please note only one exchange request is allowed for each order.</li>-->
-                        <!--    <li>Refunds will be processed to the original payment method upon receipt of the returned product.</li>-->
-                        <!--    <li>Refunds will be initiated within 2–4 working days after we receive the returned product.</li>-->
-                        <!--    <li>If the payment was made through COD, you will be prompted to provide your bank account details for a secure refund transaction.</li>-->
-                        <!--    <li>If you have received an incorrect product, please share an unboxing video of the package for verification purposes.</li>-->
-                        <!--    <li>Do not accept tampered packages.</li>-->
-                        <!--    <li>Cancellation requests must be made via Contact Us section.</li>-->
-                        <!--</ul>-->
+                        <ul class="tc-list">
+                            <li>We offer only a 7-day return policy for eligible products.</li>
+                            <li>You can request an exchange within 7 days from the date of delivery.</li>
+                            <li>Please note only one exchange request is allowed for each order.</li>
+                            <li>Refunds will be processed to the original payment method upon receipt of the returned product.</li>
+                            <li>Refunds will be initiated within 2-4 working days after we receive the returned product.</li>
+                            <li>If the payment was made through COD, you will be prompted to provide your bank account details for a secure refund transaction.</li>
+                            <li>If you have received an incorrect product, please share an images for verification purposes.</li>
+                            <li>Do not accept tampered packages.</li>
+                            {{-- <li>Cancellation requests must be made via Contact Us section.</li> --}}
+                        </ul>
                     
-                        <!--<p>We aim to respond within 24 hours.</p>-->
+                        <p>We aim to respond within 24 hours.</p>
                     
-                        <!--<p>-->
-                        <!--    For more information about our Return & Exchange Policy,-->
-                        <!--    <a href="#">click here</a>.-->
-                        <!--</p>-->
+                        {{-- <p>
+                            For more information about our Return & Exchange Policy,
+                            <a href="#">click here</a>.
+                        </p>
                     
-                        <!--<p>-->
-                        <!--    To place a Return or Exchange request,-->
-                        <!--    <a href="#">click here</a>.-->
-                        <!--</p>-->
+                        <p>
+                            To place a Return or Exchange request,
+                            <a href="#">click here</a>.
+                        </p> --}}
                     
-                        <!--<hr>-->
+                        <hr>
                     
-                        <h5>8. Product Maintenance & Care</h5>
+                        <h5>9. Product Maintenance & Care</h5>
                     
                         <p>
                             To maintain the quality of the products purchased, we recommend the following care instructions:
@@ -280,7 +280,7 @@
                     
                         <hr>
                     
-                        <h5>9. User Content & Reviews</h5>
+                        <h5>10. User Content & Reviews</h5>
                     
                         <ul class="tc-list">
                             <li>
@@ -318,7 +318,7 @@
                     
                         <hr>
                     
-                        <h5>10. Intellectual Property Rights</h5>
+                        <h5>11. Intellectual Property Rights</h5>
                     
                         <p>
                             All content, branding, logos, product designs, and materials are the exclusive property of 
@@ -329,7 +329,7 @@
                     
                         <hr>
                     
-                        <h5>11. Limitation of Liability</h5>
+                        <h5>12. Limitation of Liability</h5>
                     
                         <p>We shall not be liable for:</p>
                     
@@ -341,7 +341,7 @@
                     
                         <hr>
                     
-                        <h5>12. Indemnification</h5>
+                        <h5>13. Indemnification</h5>
                     
                         <p>
                             You agree to indemnify and hold harmless NEW AASHI RAINWEAR, its directors, employees, and affiliates from any claims, damages, or liabilities arising from:
@@ -355,7 +355,7 @@
                     
                         <hr>
                     
-                        <h5>13. Termination</h5>
+                        <h5>14. Termination</h5>
                     
                         <p>
                             We reserve the right to suspend or terminate access to the Website without prior notice in case of violation of these Terms.
@@ -365,7 +365,7 @@
                     
                         <hr>
                     
-                        <h5>14. Governing Law & Jurisdiction</h5>
+                        <h5>15. Governing Law & Jurisdiction</h5>
                     
                         <p>
                             These Terms are governed by the laws of India. All disputes shall be subject to the exclusive jurisdiction of competent courts in India.
@@ -373,7 +373,7 @@
                     
                         <hr>
                     
-                        <h5>15. Contact Information</h5>
+                        <h5>16. Contact Information</h5>
                     
                         <p>
                             For any questions or concerns regarding these Terms:
