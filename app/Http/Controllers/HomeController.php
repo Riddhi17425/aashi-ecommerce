@@ -39,27 +39,33 @@ class HomeController extends Controller
         return view('user.users.profile')->with('profile',$profile)->with('orders', $orders);
     }
 
-    public function profileUpdate(Request $request,$id){
-        // return $request->all();
-        $user=User::findOrFail($id);
-        $data=$request->all();
-        
+    public function profileUpdate(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->name = $request->name;
+
         if ($request->hasFile('photo')) {
+
             $image = $request->file('photo');
-            $imageName = time().'_'.rand(1111,9999).'.'.$image->getClientOriginalExtension();
-            $image->move(public_path('profile_images'), $imageName);
-            $data['photo'] = '/profile_images/'.$imageName;
-        } else {
-            unset($data['photo']);
+
+            $imageName = \Illuminate\Support\Str::random(40) . '.' . $image->getClientOriginalExtension();
+
+            $image->move(
+                public_path('profile_images'),
+                $imageName
+            );
+
+            $user->photo = 'profile_images/' . $imageName;
         }
 
-        $status=$user->fill($data)->save();
-        if($status){
-            request()->session()->flash('success','Successfully updated your profile');
-        }
-        else{
-            request()->session()->flash('error','Please try again!');
-        }
+        $user->save();
+
+        request()->session()->flash(
+            'success',
+            'Successfully updated your profile'
+        );
+
         return redirect()->back();
     }
 

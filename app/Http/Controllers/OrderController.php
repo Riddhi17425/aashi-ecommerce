@@ -21,6 +21,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
@@ -141,6 +142,17 @@ class OrderController extends Controller
             session()->forget('coupon');
         }
         Cart::where('user_id', auth()->user()->id)->where('order_id', null)->update(['order_id' => $order->id]);
+        
+        $order->load('cart_info');
+
+        $data = [
+            'order' => $order,
+        ];
+
+        Mail::send('emails.order-success', $data, function ($message) use ($order) {
+            $message->to($order->email)
+                    ->subject('Order Confirmation - ' . $order->order_number);
+        });
         
         if (strtolower($order->payment_method) == 'cod') {
             $shiprocketService = new ShiprocketService(new Client());
@@ -374,9 +386,13 @@ class OrderController extends Controller
         return view('frontend.pages.myorders', compact('orders'));
     }
 
-
     public function orderDetails($id){
-        $order = Order::where('id', $id)->where('user_id', auth()->user()->id)->with(['cart.product', 'cart.color', 'user', 'returnRequests.cart.product'])->first();
+        $order = Order::where('id', $id);
+        if(auth()->check()){
+            $order = $order->where('user_id', auth()->user()->id);
+        }
+        $order = $order->with(['cart.product', 'cart.color', 'user', 'returnRequests.cart.product'])->first();
+        
         $completedStatuses = ['rejected', 'failed', 'refunded', 'return_delivered', 'received', 'completed', 'return_cancelled', 'exchange_rejected', 'exchange_cancelled'];
 
         $activeReturnRequest = $order

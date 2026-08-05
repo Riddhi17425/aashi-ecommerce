@@ -51,10 +51,23 @@ use App\Http\Controllers\ShiprocketWebhookController;
 
     Auth::routes(['register' => false, 'login' => false, 'reset' => false, 'verify' => false,]);
 
-    Route::get('password/reset', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('password/email', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
-    Route::get('password/reset/{token}', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('password/reset', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
+    // Forgot Password
+    Route::get('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])
+        ->name('password.request');
+
+    Route::post('/password/email', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])
+        ->name('password.email');
+
+    // Reset Password
+    Route::get('/password/reset', function () {
+        return redirect()->route('password.request');
+    });
+
+    Route::get('/password/reset/{token}', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])
+        ->name('password.reset');
+
+    Route::post('/password/reset', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])
+        ->name('password.update');
 
     Route::get('user/login', [FrontendController::class, 'login'])->name('login.form');
     Route::post('user/login', [FrontendController::class, 'loginSubmit'])->name('login.submit');
@@ -114,7 +127,6 @@ use App\Http\Controllers\ShiprocketWebhookController;
         return response()->json(['images' => $images]);
     });
     
-
     Route::get('/cart', function () {
         return view('frontend.pages.cart');
     })->name('cart')->middleware('user');

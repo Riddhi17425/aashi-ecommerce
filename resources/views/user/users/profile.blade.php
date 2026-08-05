@@ -12,16 +12,29 @@
                     <div class="card profile-sidebar shadow rounded" style="border: none;">
                         <div class="card-body text-center p-4" style="background: #333333; color: white; border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem;">
                             <div class="profile-avatar mb-3 position-relative d-inline-block">
-                                @php 
+                                @php
                                     $dummy_image = 'https://bootdey.com/img/Content/avatar/avatar7.png';
-                                    $photo = $profile->photo;
-                                    if ($photo) {
-                                        $avatar = (strpos($photo, 'http') === 0) ? $photo : asset($photo);
+
+                                    if (!empty($profile->photo)) {
+
+                                        if (strpos($profile->photo, 'http') === 0) {
+                                            $avatar = $profile->photo;
+                                        } else {
+                                            $avatar = asset('public/' . $profile->photo);
+                                        }
+
                                     } else {
                                         $avatar = $dummy_image;
                                     }
                                 @endphp
-                                <img id="holder" src="{{$avatar}}" alt="Profile Image" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid rgba(255,255,255,0.3); background-color: #fff;">
+
+                                <img
+                                    id="holder"
+                                    src="{{ $avatar }}?v={{ time() }}"
+                                    alt="Profile Image"
+                                    class="rounded-circle shadow"
+                                    style="width:120px; height:120px; object-fit:cover; border:4px solid rgba(255,255,255,0.3); background-color:#fff;"
+                                >
                             </div>
                             <h4 class="mb-0 font-weight-bold text-white">{{$profile->name}}</h4>
                             <p class="mb-2" style="color: #cccccc;"><i class="ti-email mr-1"></i> {{$profile->email}}</p>
@@ -87,7 +100,12 @@
                                                             <i class="fa fa-picture-o"></i> Choose Image
                                                             <input type="file" name="photo" accept="image/*" style="display: none;" onchange="document.getElementById('thumbnail').value = this.files[0].name; var reader = new FileReader(); reader.onload = function(e) { document.getElementById('holder').src = e.target.result; }; reader.readAsDataURL(this.files[0]);">
                                                         </label>
-                                                        <input id="thumbnail" type="text" value="{{$profile->photo}}" readonly style="flex: 1; height: 45px; border: 1px solid #e6e2f5; padding: 0 20px; background-color: #f5f5f5;">
+                                                        <input
+                                                            id="thumbnail"
+                                                            type="text"
+                                                            value="{{ $profile->photo }}"
+                                                            readonly
+                                                            style="flex:1; height:45px; border:1px solid #e6e2f5; padding:0 20px; background-color:#f5f5f5;">
                                                     </div>
                                                     @error('photo')
                                                         <span class="text-danger small">{{$message}}</span>

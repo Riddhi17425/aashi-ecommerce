@@ -1,39 +1,37 @@
 $(document).ready(function () {
-
     var shippingAmount = 50;
-    if($('.order_subtotal').data('price') == 0){
+
+    if ($('.order_subtotal').data('price') == 0) {
         shippingAmount = 0;
     }
+
     $("#shipping_amount").text("₹ " + shippingAmount);
     $("#shipping_input").val(shippingAmount);
     updateTotalPrice(shippingAmount);
 
     let lastCheckedPin = null;
 
-    $('#post_code').on('keyup change blur', function () {
+    $('#post_code').on('keyup change', function () {
         let postCodeInput = $(this).val().trim();
-        //if (postCodeInput.length === 6 && postCodeInput !== lastCheckedPin) {
-        if (postCodeInput.length === 6) {
-            $(this).blur();
-            lastCheckedPin = postCodeInput; // store checked pin
+        if (postCodeInput.length === 6 && postCodeInput !== lastCheckedPin) {
+            lastCheckedPin = postCodeInput;
             if ($("input[name='payment_method']:checked").length === 0) {
-                $("#delivery_status").text("❌ Please select your Payment Method first").css("color", "red");
-                $('#post_code').val('');
-                return; 
+                $("#delivery_status")
+                    .text("❌ Please select your Payment Method first")
+                    .css("color", "red");
+                return;
             }
             $("#delivery_status").text("");
             checkDeliveryService(postCodeInput);
-        }else{
+        } else if (postCodeInput.length < 6) {
+            lastCheckedPin = null;
             $("#delivery_status").text("");
             $("#cod_status").text("");
-           // $("#shipping_amount").text("$0.00");
-            // $("input[value='cod']").prop("checked", false);
-            // $("input[value='paypal']").prop("checked", false);
             updateTotalPrice(0);
         }
     });
-
 });
+
 function checkDeliveryService(pin = null) {
    // var shippingAmount = 50;
     if(pin == null){
@@ -127,8 +125,13 @@ function checkDeliveryService(pin = null) {
                 console.log("No delivery codes found for this pincode.");
             }
         },
-        error: function () {
-            $("#delivery_status").text("API Error").css("color", "red");
+        error: function (xhr) {
+            $(".preloader").hide();
+
+            $("#delivery_status")
+                .text("API Error")
+                .css("color", "red");
+            console.log("Pincode API Error:", xhr.responseText);
         }
     });
 }

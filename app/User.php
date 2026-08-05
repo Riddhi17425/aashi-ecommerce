@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -39,5 +40,11 @@ class User extends Authenticatable
 
     public function orders(){
         return $this->hasMany('App\Models\Order');
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $url = url('/password/reset/' . $token . '?email=' . urlencode($this->email));
+        $this->notify(new \App\Notifications\CustomResetPasswordNotification($url));
     }
 }

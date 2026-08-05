@@ -20,14 +20,37 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+use Illuminate\Support\Facades\Mail;
+use App\Models\Order;
+
 use GuzzleHttp\Client;
+
 class FrontendController extends Controller
 {
     public function index(Request $request){
         return redirect()->route($request->user()->role);
     }
 
-    public function home(){
+    public function home()
+    {
+        // START - THIS CODE WE NEED TO REMOVE AFTER TESTING
+        /*
+        $order = Order::where('id', 18)->first();
+        $data = [
+            'order' => $order,
+        ];
+
+        //echo "<pre>"; print_r($data); die;
+
+        Mail::send('emails.order-success', $data, function ($message) use ($order) {
+            $message->to($order->email)
+                    ->subject('Order Confirmation - ' . $order->order_number);
+        });
+        
+        die;
+        */
+        // END - THIS CODE WE NEED TO REMOVE AFTER TESTING
+
         $featured = Product::with('cat_info')->where('status', 'active')->where('is_featured', 1)->whereNull('deleted_at')->get()->unique('cat_id')->take(2);
         $posts=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
         $banners=Banner::where('status','active')->limit(3)->orderBy('id','ASC')->get();
@@ -672,8 +695,9 @@ class FrontendController extends Controller
         //     request()->session()->flash('error','Invalid email and password pleas try again!');
         //     return redirect()->route('login.form');
         // }
-        $credentials = $request->only('email','password');
+
         // Check if credentials exist with 'user' role
+        $credentials = $request->only('email','password');
         $credentials['role'] = 'user';
         $credentials['status'] = 'active';
     
@@ -730,7 +754,6 @@ class FrontendController extends Controller
     
         return redirect()->route('admin.login')->with('error','Invalid credentials');
     }
-
 
     public function logout(){
         Session::forget('user');

@@ -50,7 +50,7 @@
                             $deliveredDate = Carbon::parse($order->updated_at);
                         }
                         $returnExpiryDate = $deliveredDate ? $deliveredDate->copy()->addDays(7) : null;
-                        $countReturnReqtuest = OrderReturnRequest::where('order_id', $order->id)->count();
+                        $countReturnReqtuest = $order ? OrderReturnRequest::where('order_id', $order->id)->count() : 0;
                         $exchangeCancelableStatuses = ['pending', 'exchange_requested'];
                         $canCancelExchangeRequest = isset($latestReturnRequest)
                             && $latestReturnRequest
