@@ -19,7 +19,7 @@
         font-size:15px;
     ">
         You are receiving this email because we received a password
-        reset request for your Aashi Ecommerce account.
+        reset request for your Aashi account.
     </p>
 
     <!-- Reset Button -->
@@ -71,7 +71,7 @@
         Regards,<br>
 
         <strong style="color:#2c3e50;">
-            Aashi Ecommerce Team
+            Aashi Team
         </strong>
     </p>
 
