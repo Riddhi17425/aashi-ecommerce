@@ -23,7 +23,7 @@
                         <td align="center" style="background-color: #ffffff;">
 
                             <img
-                                src="{{ asset('images/aashi-email-banner.webp') }}"
+                                src="{{ asset('public/images/aashi-email-banner.webp') }}"
                                 alt="Aashi Ecommerce Banner"
                                 width="600"
                                 style="width: 100%; max-width: 600px; display: block; border: 0;"
@@ -57,18 +57,17 @@
                                     <td align="center">
 
                                         <span style="display: inline-block; margin: 0 10px;">
-                                            📧
-                                            <a href="mailto:support@aashiecommerce.com"
+                                            <a href="mailto:support@aashirainwear.com"
                                                 style="color: #5db845; text-decoration: none;">
-                                                support@aashiecommerce.com
+                                                support@aashirainwear.com
                                             </a>
                                         </span>
 
                                         <span style="display: inline-block; margin: 0 10px;">
-                                            📞
-                                            <a href="tel:+919898592812"
+                                            ðŸ“ž
+                                            <a href="tel:+918511985585"
                                                 style="color: #5db845; text-decoration: none;">
-                                                +91 98985 92812
+                                                +91 85119 85585
                                             </a>
                                         </span>
 
