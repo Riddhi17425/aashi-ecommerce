@@ -15,7 +15,7 @@
                                 @foreach($settings as $data) 
                                     <a href="tel:{{ preg_replace('/\s+/', '', $data->phone) }}">
                                         {{ $data->phone }}
-                                    </a> 
+                                    </a> b
                                 @endforeach
                             </li>
                             <li><i class="ti-email"></i> 
@@ -265,7 +265,7 @@
                                                     </li>									
                                                 @endforeach
                                             @endif
-                                            <!--<li class="{{Request::path()=='blog' ? 'active' : ''}}"><a href="{{route('blog')}}">Blog</a></li>									-->
+                                            <li class="{{Request::path()=='blog' ? 'active' : ''}}"><a href="{{route('blog')}}">Blog</a></li>									
                                                
                                             <li class="{{Request::path()=='contact' ? 'active' : ''}}"><a href="{{route('contact')}}">Contact Us</a></li>
                                         </ul>
