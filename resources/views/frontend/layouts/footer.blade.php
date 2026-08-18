@@ -23,13 +23,10 @@
 					<div class="col-lg-2 col-md-6 col-12">
 						<!-- Single Widget -->
 						<div class="single-footer links">
-							<h4>My Account</h4>
+							<h4>Links</h4>
 							<ul>
-								<li><a href="{{route('about-us')}}">About Us</a></li>
-								{{-- <li><a href="#">Faq</a></li> --}}
-								<li><a href="{{route('contact')}}">Contact Us</a></li>
-								{{-- <li><a href="#">Help</a></li> --}}
-								@php
+							    <!--<li><a href="{{route('about-us')}}">Terms & Conditions</a></li>-->
+							    @php
                                     $menuCategory=App\Models\Category::where('status','active')->where('is_parent', 1)->get();
                                 @endphp
 								@if($menuCategory)
@@ -38,6 +35,14 @@
                                         </li>									
                                     @endforeach
                                 @endif
+								<li><a href="{{route('blog')}}">Blogs</a></li>
+								{{-- <li><a href="#">Faq</a></li> --}}
+								<li><a href="{{route('contact')}}">Contact Us</a></li>
+								<li><a href="{{route('privacy-policy')}}">Privacy Policy</a></li>
+								<li><a href="{{route('terms-conditions')}}">Terms & Conditions</a></li>
+								<!--<li><a href="{{route('return-refund-policy')}}">Return & Refund Policy</a></li>-->
+								<!--<li><a href="{{route('exchange-policy')}}">Exchange Policy</a></li>-->
+								{{-- <li><a href="#">Help</a></li> --}}
 							</ul>
 						</div>
 						<!-- End Single Widget -->
@@ -63,10 +68,6 @@
 									<li><a href="{{ route('login.form') }}">My Wishlist</a></li>
 									<li><a href="{{ route('login.form') }}">My Cart Products</a></li>
 								@endif
-								<li><a href="{{route('privacy-policy')}}">Privacy Policy</a></li>
-								<li><a href="{{route('terms-conditions')}}">Terms & Conditions</a></li>
-								<!--<li><a href="{{route('return-refund-policy')}}">Return & Refund Policy</a></li>-->
-								<!--<li><a href="{{route('exchange-policy')}}">Exchange Policy</a></li>-->
 							</ul>
 						</div>
 						<!-- End Single Widget -->
