@@ -77,7 +77,7 @@
             <div class="row">
                 <div class="col-12">
                     <div class="product-info">
-                        <div class="nav-main text-center">
+                        <div class="nav-main text-center mb-5">
                             <!-- Tab Navigation -->
                             <ul class="nav nav-tabs justify-content-center" id="productTabs" role="tablist">
                                 <li class="nav-item">
@@ -97,17 +97,16 @@
                                 @endforeach
                             </ul>
                         </div>
-
-
-
                         <!-- Tab Content -->
                         <div class="tab-content" id="productTabContent">
                             <!-- All Products Tab -->
                             <div class="tab-pane fade show active" id="all-products" role="tabpanel">
                                 <div class="row">
                                     @foreach($product_lists as $product)
+                                        @php $sizeData = json_decode($product->size, true); @endphp
+
                                         <div class="col-sm-6 col-md-4 col-lg-3 p-b-35">
-                                            <div class="single-product">
+                                            <!-- <div class="single-product">
                                                 <div class="product-img">
                                                     <a href="{{route('product-detail',$product->slug)}}">
                                                         @php $photo = explode(',', $product->photo); @endphp
@@ -116,6 +115,93 @@
                                                 </div>
                                                 <div class="product-content text-center">
                                                     <h3><a href="{{route('product-detail',$product->slug)}}">{{$product->product_code}}</a></h3>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="custom-product-card">
+                                                <div class="card-media-wrap">
+                                                    {{-- Left Side Badges (Temporarily hidden) --}}
+                                                    {{--
+                                                    <div class="card-left-badges">
+                                                        <span class="card-badge-tag badge-hot"><i class="fa fa-fire"></i> HOT</span>
+                                                        <span class="card-badge-tag badge-discount">20% OFF</span>
+                                                    </div>
+                                                    --}}
+                                            
+                                                    {{-- Floating Action Buttons (Temporarily hidden) --}}
+                                                    {{--
+                                                    <div class="card-action-buttons">
+                                                        <a href="#" class="card-btn-action" title="Add to Wishlist">
+                                                            <i class="ti-heart"></i>
+                                                        </a>
+                                                    </div>
+                                                    --}}
+                                            
+                                                    {{-- Product Image --}}
+                                                    <a href="#" class="card-img-link">
+                                                        <img class="card-default-img" src="https://via.placeholder.com/400x400?text=Main+Image" alt="Product Image" loading="lazy">
+                                                        <img class="card-hover-img" src="https://via.placeholder.com/400x400?text=Hover+Image" alt="Product Image" loading="lazy">
+                                                    </a>
+                                                </div>
+                                            
+                                                <div class="card-content-wrap">
+                                                    {{-- Top Meta: Category on Left, Price on Right --}}
+                                                    <div class="card-meta-line">
+                                                        <span class="card-cat-name">PROD-12345</span>
+                                                        <div class="card-top-price">
+                                                            <span class="price-val">₹799.00</span>
+                                                            <del class="price-old">₹999.00</del>
+                                                        </div>
+                                                    </div>
+                                            
+                                                    {{-- Product Title --}}
+                                                    <h4 class="card-item-title">
+                                                        <a href="#" title="Sample Product Name">
+                                                            Sample Product Name
+                                                        </a>
+                                                    </h4>
+                                            
+                                                    {{-- CTA Button --}}
+                                                    <div class="card-cta-container">
+                                                        <a href="#" class="btn-card-details">
+                                                            <span>View Details</span>
+                                                            <i class="ti-arrow-right"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+
+                                            <div class="custom-product-card">
+                                                <div class="card-media-wrap">
+                                                    {{-- Product Image --}}
+                                                    <a href="{{route('product-detail',$product->slug)}}" class="card-img-link">
+                                                        @php $photo = explode(',', $product->photo); @endphp
+                                                        <img class="default-img" src="{{asset('public/'.$photo[0])}}" alt="{{$product->title}}">
+                                                    </a>
+                                                </div>
+
+                                                <div class="card-content-wrap">
+                                                    {{-- Top Meta: Category on Left, Price on Right --}}
+                                                    <div class="card-meta-line">
+                                                        <span class="card-cat-name"><a href="{{route('product-detail',$product->slug)}}">{{$product->product_code}}</a></span>
+                                                        <div class="card-top-price">
+                                                            <span class="price-val">₹{{ number_format($sizeData['price'][0], 2) }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Product Title --}}
+                                                    <h4 class="card-item-title">
+                                                        <a href="{{route('product-detail',$product->slug)}}" title="{{$product->title}}">
+                                                            {{$product->title}}
+                                                        </a>
+                                                    </h4>
+
+                                                    {{-- CTA Button --}}
+                                                    <div class="card-cta-container">
+                                                        <a href="{{route('product-detail',$product->slug)}}" class="btn-card-details">
+                                                            <span>View Details</span>
+                                                            <i class="ti-arrow-right"></i>
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -141,8 +227,9 @@
                                 <div class="tab-pane fade" id="category-{{$category->id}}" role="tabpanel">
                                     <div class="row">
                                         @foreach($categoryProducts as $product)
+                                        @php $sizeData = json_decode($product->size, true); @endphp
                                             <div class="col-sm-6 col-md-4 col-lg-3 p-b-35">
-                                                <div class="single-product">
+                                                <!-- <div class="single-product">
                                                     <div class="product-img">
                                                         <a href="{{route('product-detail',$product->slug)}}">
                                                             @php $photo = explode(',', $product->photo); @endphp
@@ -152,7 +239,41 @@
                                                     <div class="product-content text-center">
                                                         <h3><a href="{{route('product-detail',$product->slug)}}">{{$product->product_code}}</a></h3>
                                                     </div>
+                                                </div> -->
+                                                <div class="custom-product-card">
+                                                    <div class="card-media-wrap">
+                                                    {{-- Product Image --}}
+                                                    <a href="{{route('product-detail',$product->slug)}}" class="card-img-link">
+                                                        @php $photo = explode(',', $product->photo); @endphp
+                                                        <img class="default-img" src="{{asset('public/'.$photo[0])}}" alt="{{$product->title}}">
+                                                    </a>
                                                 </div>
+
+                                                <div class="card-content-wrap">
+                                                    {{-- Top Meta: Category on Left, Price on Right --}}
+                                                    <div class="card-meta-line">
+                                                        <span class="card-cat-name"><a href="{{route('product-detail',$product->slug)}}">{{$product->product_code}}</a></span>
+                                                        <div class="card-top-price">
+                                                            <span class="price-val">₹{{ number_format($sizeData['price'][0], 2) }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Product Title --}}
+                                                    <h4 class="card-item-title">
+                                                        <a href="{{route('product-detail',$product->slug)}}" title="{{$product->title}}">
+                                                            {{$product->title}}
+                                                        </a>
+                                                    </h4>
+
+                                                    {{-- CTA Button --}}
+                                                    <div class="card-cta-container">
+                                                        <a href="{{route('product-detail',$product->slug)}}" class="btn-card-details">
+                                                            <span>View Details</span>
+                                                            <i class="ti-arrow-right"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -443,71 +564,347 @@
         background: #000000;
         color:black;
         }
-
-        /*#Gslider .carousel-inner{*/
-        /*height: 550px;*/
-        /*}*/
+ 
         #Gslider .carousel-inner img{
             width: 100% !important;
             opacity: .8;
         }
-
+ 
         #Gslider .carousel-inner .carousel-caption {
         bottom: 60%;
         }
-
+ 
         #Gslider .carousel-inner .carousel-caption h1 {
         font-size: 50px;
         font-weight: bold;
         line-height: 100%;
-        color: #F7941D;
+        color: #5db845;
         }
-
+ 
         #Gslider .carousel-inner .carousel-caption p {
         font-size: 18px;
         color: black;
         margin: 28px 0 28px 0;
         }
-
+ 
         #Gslider .carousel-indicators {
         bottom: 70px;
         }
-        /*@media only screen and (max-width: 2600px){*/
-        /*    #Gslider .carousel-inner{*/
-        /*        height: 1050px;*/
-        /*    }*/
-        /*}*/
-        /*@media only screen and (max-width: 1400px){*/
-        /*    #Gslider .carousel-inner{*/
-        /*        height: 550px;*/
-        /*    }*/
-        /*}*/
-        
+       
         .nav-tabs {
-    border-bottom: none;
-}
-
-.nav-tabs .nav-item {
-    margin-right: 5px;
-}
-
-.nav-tabs .filter-btn {
-    background: white;
-    color: black;
-    font-weight: bold;
-    border: 1px solid #ddd;
-    padding: 10px 20px;
-    border-radius: 0;
-    transition: all 0.3s ease-in-out;
-}
-
-/* Active Tab */
-.nav-tabs .filter-btn.active, 
-.nav-tabs .filter-btn:hover {
-    background: black !important;
-    color: white !important;
-}
-
+            border-bottom: none;
+        }
+ 
+        .nav-tabs .nav-item {
+            margin-right: 5px;
+        }
+ 
+        .nav-tabs .filter-btn {
+            background: white;
+            color: black;
+            font-weight: bold;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 0;
+            transition: all 0.3s ease-in-out;
+        }
+ 
+        /* Active Tab */
+        .nav-tabs .filter-btn.active,
+        .nav-tabs .filter-btn:hover {
+            background: black !important;
+            color: white !important;
+        }
+ 
+        /* ==========================================================
+           MODERN CUSTOM PRODUCT CARD STYLING
+           ========================================================== */
+        .custom-product-card {
+            background: #ffffff;
+            border: 1px solid #e8edf2;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-bottom: 28px;
+        }
+ 
+        .custom-product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.09);
+            border-color: #cbd5e1;
+        }
+ 
+        .card-media-wrap {
+            position: relative;
+            background: #f8fafc;
+            height: 310px;
+            width: 100%;
+            overflow: hidden;
+            border-bottom: 1px solid #f1f5f9;
+        }
+ 
+        .card-img-link {
+            display: block;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            position: relative;
+        }
+ 
+        .card-default-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            display: block;
+            transition: transform 0.4s ease, opacity 0.3s ease;
+        }
+ 
+        .card-hover-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            opacity: 0;
+            display: block;
+            transition: opacity 0.35s ease, transform 0.4s ease;
+        }
+ 
+        .custom-product-card:hover .card-default-img {
+            transform: scale(1.05);
+        }
+ 
+        .custom-product-card:hover .card-hover-img {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+ 
+        /* Left Badges on Media */
+        .card-left-badges {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 3;
+        }
+ 
+        .card-badge-tag {
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+ 
+        .card-badge-tag.badge-hot {
+            background: #e11d48;
+            color: #ffffff;
+        }
+ 
+        .card-badge-tag.badge-hot i {
+            font-size: 10px;
+        }
+ 
+        .card-badge-tag.badge-new {
+            background: #0284c7;
+            color: #ffffff;
+        }
+ 
+        .card-badge-tag.badge-discount {
+            background: #5db845;
+            color: #ffffff;
+        }
+ 
+        .card-action-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 3;
+            opacity: 0;
+            transform: translateX(8px);
+            transition: all 0.25s ease;
+        }
+ 
+        .custom-product-card:hover .card-action-buttons {
+            opacity: 1;
+            transform: translateX(0);
+        }
+ 
+        .card-btn-action {
+            width: 34px;
+            height: 34px;
+            background: #ffffff;
+            color: #333333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+            font-size: 13px;
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+        }
+ 
+        .card-btn-action:hover {
+            background: #333333;
+            color: #ffffff !important;
+            transform: scale(1.08);
+        }
+ 
+        .card-content-wrap {
+            padding: 14px 16px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+ 
+        .card-meta-line {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+ 
+        .card-cat-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 50%;
+        }
+ 
+        .card-top-price {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+ 
+        .card-top-price .price-val {
+            font-size: 15.5px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+ 
+        .card-top-price .price-old {
+            font-size: 11.5px;
+            color: #94a3b8;
+            text-decoration: line-through;
+        }
+ 
+        .card-item-title {
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.35;
+            margin: 2px 0 10px 0;
+            min-height: 38px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+ 
+        .card-item-title a {
+            color: #1e293b;
+            transition: color 0.2s ease;
+            text-decoration: none !important;
+        }
+ 
+        .card-item-title a:hover {
+            color: #5db845;
+        }
+ 
+        .card-cta-container {
+            margin-top: auto;
+        }
+ 
+        .btn-card-details {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 8px 12px;
+            background: #111827;
+            color: #ffffff !important;
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none !important;
+            transition: all 0.25s ease;
+        }
+ 
+        .btn-card-details:hover {
+            background: #5db845;
+            box-shadow: 0 4px 12px rgba(93, 184, 69, 0.35);
+        }
+ 
+        .btn-card-details i {
+            font-size: 11px;
+            transition: transform 0.2s ease;
+        }
+ 
+        .btn-card-details:hover i {
+            transform: translateX(4px);
+        }
+ 
+        @media (max-width: 991px) {
+            .card-media-wrap {
+                height: 260px;
+            }
+        }
+ 
+        @media (max-width: 576px) {
+            .card-media-wrap {
+                height: 210px;
+            }
+            .card-content-wrap {
+                padding: 10px;
+            }
+            .card-item-title {
+                font-size: 13px;
+                min-height: 34px;
+            }
+            .price-val {
+                font-size: 15px;
+            }
+            .card-action-buttons {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            .card-btn-action {
+                width: 28px;
+                height: 28px;
+                font-size: 11px;
+            }
+            .btn-card-details {
+                font-size: 11.5px;
+                padding: 6px 8px;
+            }
+        }
     </style>
 @endpush
 
