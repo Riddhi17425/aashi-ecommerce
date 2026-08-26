@@ -15,7 +15,7 @@
                                 @foreach($settings as $data) 
                                     <a href="tel:{{ preg_replace('/\s+/', '', $data->phone) }}">
                                         {{ $data->phone }}
-                                    </a> b
+                                    </a>
                                 @endforeach
                             </li>
                             <li><i class="ti-email"></i> 
