@@ -1,6 +1,6 @@
 # Laravel
 /vendor
-/public/*
+/public/*.key
 /node_modules
 /public/build
 /public/hot
