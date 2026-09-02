@@ -20,137 +20,119 @@
     </div>
     <!-- End Breadcrumbs -->
 
-    <!-- Product Style -->
-    <form action="{{route('shop.filter')}}" method="POST">
-        @csrf
-        <section class="product-area shop-sidebar shop section">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-3 col-md-4 col-12">
-                        <div class="shop-sidebar">
-                                <!-- Single Widget -->
-                                <div class="single-widget category">
-                                    <h3 class="title">Categories</h3>
-                                    <ul class="categor-list">
-										@php
-											// $category = new Category();
-											$menu=App\Models\Category::getAllParentWithChild();
-										@endphp
-										@if($menu)
-										<li>
-											@foreach($menu as $cat_info)
-													@if($cat_info->child_cat->count()>0)
-														<li><a href="{{route('product-cat',$cat_info->slug)}}">{{$cat_info->title}}</a>
-															<ul>
-																@foreach($cat_info->child_cat as $sub_menu)
-																	<li><a href="{{route('product-sub-cat',[$cat_info->slug,$sub_menu->slug])}}">{{$sub_menu->title}}</a></li>
-																@endforeach
-															</ul>
-														</li>
-													@else
-														<li><a href="{{route('product-cat',$cat_info->slug)}}">{{$cat_info->title}}</a></li>
-													@endif
-											@endforeach
-										</li> 
-										@endif
-                                        {{-- @foreach(Helper::productCategoryList('products') as $cat)
-                                            @if($cat->is_parent==1)
-												<li><a href="{{route('product-cat',$cat->slug)}}">{{$cat->title}}</a></li>
-											@endif
-                                        @endforeach --}}
-                                    </ul>
-                                </div>
-                                <!--/ End Single Widget -->
-                                <!-- Shop By Price -->
-                                    <div class="single-widget range">
-                                        <h3 class="title">Shop by Price</h3>
-                                        <div class="price-filter">
-                                            <div class="price-filter-inner">
-                                                @php
-                                                    $max=DB::table('products')->max('price');
-                                                    // dd($max);
-                                                @endphp
-                                                <div id="slider-range" data-min="0" data-max="{{$max}}"></div>
-                                                <div class="product_filter">
-                                                    <button type="submit" class="filter_button">Filter</button>
-                                                    <div class="label-input">
-                                                        <span>Range:</span>
-                                                        <input style="" type="text" id="amount" readonly/>
-                                                        <input type="hidden" name="price_range" id="price_range" value="@if(!empty($_GET['price'])){{$_GET['price']}}@endif"/>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+    <!-- Off-Canvas Filter Drawer -->
+    <div id="filter-offcanvas" class="filter-offcanvas">
+        <div class="offcanvas-header">
+            <h5><i class="ti-filter" style="color: #5db845;"></i> Filter Products</h5>
+            <button type="button" class="close-offcanvas" id="close-filter-btn">&times;</button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="shop-sidebar p-0">
+                <!-- Single Widget -->
+                <div class="single-widget category mb-4">
+                    <h3 class="title">Categories</h3>
+                    <ul class="categor-list">
+                        @php
+                            $menu=App\Models\Category::getAllParentWithChild();
+                        @endphp
+                        @if($menu)
+                            @foreach($menu as $cat_info)
+                                @if($cat_info->child_cat->count()>0)
+                                    <li><a href="{{route('product-cat',$cat_info->slug)}}">{{$cat_info->title}}</a>
+                                        <ul>
+                                            @foreach($cat_info->child_cat as $sub_menu)
+                                                <li><a href="{{route('product-sub-cat',[$cat_info->slug,$sub_menu->slug])}}">{{$sub_menu->title}}</a></li>
+                                            @endforeach
+                                        </ul>
+                                    </li>
+                                @else
+                                    <li><a href="{{route('product-cat',$cat_info->slug)}}">{{$cat_info->title}}</a></li>
+                                @endif
+                            @endforeach
+                        @endif
+                    </ul>
+                </div>
 
+                <!-- Shop By Price -->
+                <form action="{{route('shop.filter')}}" method="POST">
+                    @csrf
+                    <div class="single-widget range mb-4">
+                        <h3 class="title">Shop by Price</h3>
+                        <div class="price-filter">
+                            <div class="price-filter-inner">
+                                @php
+                                    $max=DB::table('products')->max('price');
+                                @endphp
+                                <div id="slider-range" data-min="0" data-max="{{$max}}"></div>
+                                <div class="product_filter mt-3">
+                                    <button type="submit" class="filter_button btn btn-sm btn-dark">Filter</button>
+                                    <div class="label-input mt-2">
+                                        <span>Range:</span>
+                                        <input type="text" id="amount" readonly/>
+                                        <input type="hidden" name="price_range" id="price_range" value="@if(!empty($_GET['price'])){{$_GET['price']}}@endif"/>
                                     </div>
-                                    <!--/ End Shop By Price -->
-                                <!-- Single Widget -->
-                               
-                                <!--/ End Single Widget -->
-                                <!-- Single Widget -->
-                                <div class="single-widget category">
-                                    <h3 class="title">Brands</h3>
-                                    <ul class="categor-list">
-                                        @php
-                                            $brands=DB::table('brands')->orderBy('title','ASC')->where('status','active')->get();
-                                        @endphp
-                                        @foreach($brands as $brand)
-                                            <li><a href="{{route('product-brand',$brand->slug)}}">{{$brand->title}}</a></li>
-                                        @endforeach
-                                    </ul>
                                 </div>
-                                <!--/ End Single Widget -->
-                        </div>
-                    </div>
-                    <div class="col-lg-9 col-md-8 col-12">
-                        <div class="row">
-                            <div class="col-12">
-                                <!-- Shop Top -->
-                                <div class="shop-top">
-                                    <div class="shop-shorter">
-                                        <div class="single-shorter">
-                                            <label>Show :</label>
-                                            <select class="show" name="show" onchange="this.form.submit();">
-                                                <option value="">Default</option>
-                                                <option value="9" @if(!empty($_GET['show']) && $_GET['show']=='9') selected @endif>09</option>
-                                                <option value="15" @if(!empty($_GET['show']) && $_GET['show']=='15') selected @endif>15</option>
-                                                <option value="21" @if(!empty($_GET['show']) && $_GET['show']=='21') selected @endif>21</option>
-                                                <option value="30" @if(!empty($_GET['show']) && $_GET['show']=='30') selected @endif>30</option>
-                                            </select>
-                                        </div>
-                                        <div class="single-shorter">
-                                            <label>Sort By :</label>
-                                            <select class='sortBy' name='sortBy' onchange="this.form.submit();">
-                                                <option value="">Default</option>
-                                                <option value="title" @if(!empty($_GET['sortBy']) && $_GET['sortBy']=='title') selected @endif>Name</option>
-                                                <option value="price" @if(!empty($_GET['sortBy']) && $_GET['sortBy']=='price') selected @endif>Price</option>
-                                                <!--<option value="category" @if(!empty($_GET['sortBy']) && $_GET['sortBy']=='category') selected @endif>Category</option>-->
-                                                <!--<option value="brand" @if(!empty($_GET['sortBy']) && $_GET['sortBy']=='brand') selected @endif>Brand</option>-->
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <ul class="view-mode">
-                                       	@if(isset($sub_slug))
-                                            <ul class="view-mode">
-                                                <li><a href="{{ route('productlist-with-sub', ['slug' => $category->slug, 'sub_slug' => $sub_slug]) }}"><i class="fa fa-th-list"></i></a></li>
-                                                <li><a href="{{route('product-subgrids', ['slug' => $category->slug, 'sub_slug' => $sub_slug])}}"><i class="fa fa-th-large"></i></a></li>
-                                            </ul>
-                                         @elseif(isset($category))
-                                            <ul class="view-mode">
-                                                <li><a href="{{ route('productlist', $category->slug) }}"><i class="fa fa-th-list"></i></a></li>
-                                                <li><a href="{{route('product-grids', $category->slug)}}"><i class="fa fa-th-large"></i></a></li>
-                                    
-                                            </ul>
-                                        @endif
-                                    </ul>
-                                </div>
-                                <!--/ End Shop Top -->
                             </div>
                         </div>
-                        <div class="row">
-                            {{-- {{$products}} --}}
-                                @foreach($products as $product)
-                                    <div class="col-lg-4 col-md-6 col-12">
+                    </div>
+                </form>
+
+                <!-- Brands Widget -->
+                <div class="single-widget category">
+                    <h3 class="title">Brands</h3>
+                    <ul class="categor-list">
+                        @php
+                            $brands=DB::table('brands')->orderBy('title','ASC')->where('status','active')->get();
+                        @endphp
+                        @foreach($brands as $brand)
+                            <li><a href="{{route('product-brand',$brand->slug)}}">{{$brand->title}}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="filter-overlay" class="filter-overlay"></div>
+
+    <!-- Product Style -->
+    <section class="product-area shop-sidebar shop section pt-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <!-- Shop Top -->
+                            <div class="shop-top d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <button type="button" class="btn-filter-toggle" id="open-filter-btn">
+                                    <i class="ti-filter"></i> Filter
+                                </button>
+                                <div class="shop-shorter m-0">
+                                    <div class="single-shorter">
+                                        <label>Show :</label>
+                                        <select class="show" name="show" onchange="this.form.submit();">
+                                            <option value="">Default</option>
+                                            <option value="9" @if(!empty($_GET['show']) && $_GET['show']=='9') selected @endif>09</option>
+                                            <option value="15" @if(!empty($_GET['show']) && $_GET['show']=='15') selected @endif>15</option>
+                                            <option value="21" @if(!empty($_GET['show']) && $_GET['show']=='21') selected @endif>21</option>
+                                            <option value="30" @if(!empty($_GET['show']) && $_GET['show']=='30') selected @endif>30</option>
+                                        </select>
+                                    </div>
+                                    <div class="single-shorter">
+                                        <label>Sort By :</label>
+                                        <select class='sortBy' name='sortBy' onchange="this.form.submit();">
+                                            <option value="">Default</option>
+                                            <option value="title" @if(!empty($_GET['sortBy']) && $_GET['sortBy']=='title') selected @endif>Name</option>
+                                            <option value="price" @if(!empty($_GET['sortBy']) && $_GET['sortBy']=='price') selected @endif>Price</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--/ End Shop Top -->
+                        </div>
+                    </div>
+                    <div class="row">
+                        @foreach($products as $product)
+                            <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4">
                                         <div class="single-product">
                                             <div class="product-img">
                                                 <a href="{{route('product-detail',$product->slug)}}">
@@ -452,5 +434,104 @@
                 "  -  "+m_currency + $("#slider-range").slider("values", 1));
             }
         })
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const openBtn = document.getElementById('open-filter-btn');
+            const closeBtn = document.getElementById('close-filter-btn');
+            const offcanvas = document.getElementById('filter-offcanvas');
+            const overlay = document.getElementById('filter-overlay');
+
+            function openFilter() {
+                if (offcanvas) offcanvas.classList.add('active');
+                if (overlay) overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeFilter() {
+                if (offcanvas) offcanvas.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (openBtn) openBtn.addEventListener('click', openFilter);
+            if (closeBtn) closeBtn.addEventListener('click', closeFilter);
+            if (overlay) overlay.addEventListener('click', closeFilter);
+        });
     </script>
+@endpush
+
+@push('styles')
+<style>
+	/* Off-Canvas Filter Drawer CSS */
+	.filter-offcanvas {
+		position: fixed;
+		top: 0;
+		left: -350px;
+		width: 320px;
+		height: 100vh;
+		background: #ffffff;
+		z-index: 999999;
+		box-shadow: 4px 0 25px rgba(0,0,0,0.15);
+		transition: left 0.3s ease-in-out;
+		overflow-y: auto;
+		padding: 20px;
+	}
+	.filter-offcanvas.active {
+		left: 0;
+	}
+	.filter-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		background: rgba(0, 0, 0, 0.4);
+		z-index: 999998;
+		display: none;
+		backdrop-filter: blur(2px);
+	}
+	.filter-overlay.active {
+		display: block;
+	}
+	.offcanvas-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding-bottom: 12px;
+		border-bottom: 1px solid #e2e8f0;
+		margin-bottom: 15px;
+	}
+	.offcanvas-header h5 {
+		font-size: 16px;
+		font-weight: 700;
+		color: #1e293b;
+		margin: 0;
+	}
+	.close-offcanvas {
+		background: none;
+		border: none;
+		font-size: 24px;
+		cursor: pointer;
+		color: #64748b;
+		line-height: 1;
+	}
+	.btn-filter-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		background: #5db845;
+		color: #ffffff !important;
+		padding: 6px 16px;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 13px;
+		cursor: pointer;
+		border: none;
+		transition: background 0.2s ease;
+		height: 38px;
+	}
+	.btn-filter-toggle:hover {
+		background: #4ca336;
+	}
+</style>
 @endpush

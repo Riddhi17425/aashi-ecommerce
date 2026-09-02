@@ -195,6 +195,15 @@
                                                         </a>
                                                     </h4>
 
+                                                    {{-- Star Rating (Frontend Only) --}}
+                                                    <div class="card-rating" style="margin: 15px 0 15px 0; display: flex; align-items: center; gap: 3px;">
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                    </div>
+
                                                     {{-- CTA Button --}}
                                                     <div class="card-cta-container">
                                                         <a href="{{route('product-detail',$product->slug)}}" class="btn-card-details">
@@ -264,6 +273,15 @@
                                                             {{$product->title}}
                                                         </a>
                                                     </h4>
+
+                                                    {{-- Star Rating (Frontend Only) --}}
+                                                    <div class="card-rating" style="margin: 15px 0 15px 0; display: flex; align-items: center; gap: 3px;">
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                    </div>
 
                                                     {{-- CTA Button --}}
                                                     <div class="card-cta-container">
@@ -567,6 +585,7 @@
  
         #Gslider .carousel-inner img{
             width: 100% !important;
+            height: 100vh;
             opacity: .8;
         }
  
@@ -580,6 +599,7 @@
         line-height: 100%;
         color: #5db845;
         }
+
  
         #Gslider .carousel-inner .carousel-caption p {
         font-size: 18px;
@@ -787,14 +807,17 @@
  
         .card-cat-name {
             font-size: 11px;
-            font-weight: 700;
-            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.6px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             max-width: 50%;
+        }
+
+        .card-cat-name a {
+            color: #5db845;
+            font-weight: bold;
         }
  
         .card-top-price {
@@ -825,6 +848,7 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            margin-bottom: 0;
         }
  
         .card-item-title a {
@@ -875,6 +899,10 @@
             .card-media-wrap {
                 height: 260px;
             }
+
+            #Gslider .carousel-inner img{
+            height: 100%;
+        }
         }
  
         @media (max-width: 576px) {

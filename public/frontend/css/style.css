@@ -1547,12 +1547,12 @@ Version:1.0
 .small-banner .single-banner .content {
 	position: absolute;
 	left: 0;
-	top: 50%;
-	transform: translateY(-50%);
+	top: 15%;
+	/* transform: translateY(-50%); */
 	padding-left: 35px;
 }
 .small-banner .single-banner h3 {
-	font-size: 22px;
+	font-size: 30px;
 	font-weight: 700;
 	text-transform: capitalize;
 	color: #333;
@@ -1569,7 +1569,7 @@ Version:1.0
 }
 .small-banner .single-banner a {
 	color: #333;
-	margin-top: 22px;
+	margin-top: 15px;
 	display: block;
 	font-size: 12px;
 	font-weight:500;
@@ -3527,7 +3527,7 @@ Version:1.0
    Start Shop List CSS
 ========================================*/
 .shop-list .list-content{
-	margin-top:50px;
+	margin-top:30px;
 }
 .shop-list .list-content .product-price{}
 .shop-list .list-content .product-price span {

@@ -94,7 +94,8 @@
         -moz-appearance: textfield;
         appearance: textfield;
     }
-
-    /*
+    .preloader {
+        display: none !important;
+    }
 </style>
 @stack('styles')

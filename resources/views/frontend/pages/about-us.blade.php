@@ -42,7 +42,7 @@
 				<div class="row mb-5">
 				      <div class="col-12">
                         <div class="about-content">
-							<h3>Welcome To <span>Aashi Group of Companies</span></h3>
+							<h3>Welcome To <span>Aashi Venture</span></h3>
                             <p>A group of four companies founded by a single visionary individual, Mr. Pradeep Trivedi, engaged in diverse manufacturing sectors with a strong reputation for quality, innovation, and reliability. The group operates advanced manufacturing facilities producing premium luggage & travelling bags, rainwear products, PVC lay-flat tubing, winter wear products, and PVC packaging bags for home furnishing products, delivering excellence and customer satisfaction across various markets.</p>
                         </div>
                     </div>
