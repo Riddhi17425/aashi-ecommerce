@@ -51,12 +51,12 @@ class FrontendController extends Controller
         */
         // END - THIS CODE WE NEED TO REMOVE AFTER TESTING
 
-        $featured = Product::with('cat_info')->where('status', 'active')->where('is_featured', 1)->whereNull('deleted_at')->get()->unique('cat_id')->take(2);
+        $featured = Product::with('cat_info', 'getReview')->where('status', 'active')->where('is_featured', 1)->whereNull('deleted_at')->get()->unique('cat_id')->take(2);
         $posts=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
         $banners=Banner::where('status','active')->limit(3)->orderBy('id','ASC')->get();
         // return $banner;
         // $products=Product::where('status','active')->orderBy('id','DESC')->where('is_featured', 0)->limit(8)->get();
-        $products = Product::where('status', 'active')
+        $products = Product::with('getReview')->where('status', 'active')
         ->where('is_featured', 1)
         ->whereNull('deleted_at')
         ->whereHas('cat_info', function ($query) {
@@ -507,6 +507,49 @@ class FrontendController extends Controller
 
         return view('frontend.pages.product-lists', compact('products', 'recent_products'));
     }
+
+
+    public function searchSuggestions(Request $request)
+{
+    $search = trim($request->get('search'));
+    $categorySlug = $request->get('category');
+
+    if (empty($search)) {
+        return response()->json([]);
+    }
+
+    $query = Product::with('cat_info')
+        ->where('status', 'active')
+        ->whereNull('deleted_at')
+        ->where(function ($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+              ->orWhere('product_code', 'like', "%{$search}%")
+              ->orWhereHas('cat_info', function ($q2) use ($search) {
+                  $q2->where('title', 'like', "%{$search}%");
+              });
+        });
+
+    if (!empty($categorySlug) && strtolower($categorySlug) !== 'all') {
+        $query->whereHas('cat_info', function ($q) use ($categorySlug) {
+            $q->where('slug', $categorySlug);
+        });
+    }
+
+    $products = $query->limit(8)->get();
+
+    $results = $products->map(function ($product) {
+        $photo = explode(',', $product->photo);
+        return [
+            'title'    => $product->title,
+            'code'     => $product->product_code,
+            'category' => $product->cat_info->title ?? '',
+            'photo'    => asset('public/' . trim($photo[0])),
+            'url'      => route('product-detail', $product->slug),
+        ];
+    });
+
+    return response()->json($results);
+}
 
     public function productBrand(Request $request){
         // Redirect to the unified product list route with the brand slug in the query string

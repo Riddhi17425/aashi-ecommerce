@@ -195,13 +195,18 @@
                                                         </a>
                                                     </h4>
 
-                                                    {{-- Star Rating (Frontend Only) --}}
+                                                    {{-- Star Rating (Dynamic) --}}
+                                                    @php
+                                                        $rate = $product->getReview->count() > 0 ? ceil($product->getReview->avg('rate')) : 0;
+                                                    @endphp
                                                     <div class="card-rating" style="margin: 15px 0 15px 0; display: flex; align-items: center; gap: 3px;">
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        @for($i=1; $i<=5; $i++)
+                                                            @if($rate >= $i)
+                                                                <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                            @else
+                                                                <i class="fa fa-star-o" style="color: #F7941D; font-size: 13px;"></i>
+                                                            @endif
+                                                        @endfor
                                                     </div>
 
                                                     {{-- CTA Button --}}
@@ -221,7 +226,7 @@
                             <!-- Category Specific Products -->
                             @foreach($categories as $category)
                                 @php
-                                    $categoryProducts = \App\Models\Product::where('status', 'active')
+                                    $categoryProducts = \App\Models\Product::with('getReview')->where('status', 'active')
                                         ->where('cat_id', $category->id)
                                         ->whereNull('deleted_at')
                                         ->where('is_featured', 1)
@@ -274,13 +279,18 @@
                                                         </a>
                                                     </h4>
 
-                                                    {{-- Star Rating (Frontend Only) --}}
+                                                    {{-- Star Rating (Dynamic) --}}
+                                                    @php
+                                                        $rate = $product->getReview->count() > 0 ? ceil($product->getReview->avg('rate')) : 0;
+                                                    @endphp
                                                     <div class="card-rating" style="margin: 15px 0 15px 0; display: flex; align-items: center; gap: 3px;">
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
-                                                        <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                        @for($i=1; $i<=5; $i++)
+                                                            @if($rate >= $i)
+                                                                <i class="fa fa-star" style="color: #F7941D; font-size: 13px;"></i>
+                                                            @else
+                                                                <i class="fa fa-star-o" style="color: #F7941D; font-size: 13px;"></i>
+                                                            @endif
+                                                        @endfor
                                                     </div>
 
                                                     {{-- CTA Button --}}
