@@ -143,8 +143,8 @@
 			</div>
 			<div id="filter-overlay" class="filter-overlay"></div>
 			<!-- Main Shop Section -->
-			<section class="product-area shop-sidebar shop-list shop section pt-4">
-				<div class="container">
+			<section class="product-area shop-sidebar shop-list shop section pt-4 product_page_padding">
+				<div class="container-fluid">
 					<div class="row">
 						<div class="col-12">
 							<!-- Shop Top Bar -->
