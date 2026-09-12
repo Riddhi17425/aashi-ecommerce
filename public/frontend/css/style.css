@@ -5092,6 +5092,18 @@ Version:1.0
     /* color:#6b7280; */
     padding:22px;
   }
+
+   .product_page_padding
+        {
+            padding: 0 30px;
+        }
 		
+
+	@media (max-width: 767px) {
+		.product_page_padding
+		{
+			padding: 0 15px;
+		}
+	}
 
 		

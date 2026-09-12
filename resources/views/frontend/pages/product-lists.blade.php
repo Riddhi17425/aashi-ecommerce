@@ -151,8 +151,8 @@
     </div>
     <div id="filter-overlay" class="filter-overlay"></div>
     <!-- Main Shop Section -->
-    <section class="product-area shop-sidebar shop-list shop section pt-4">
-        <div class="container">
+    <section class="product-area shop-sidebar shop-list shop section pt-4 product_page_padding">
+        <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
                     <!-- Shop Top Bar -->
@@ -303,14 +303,14 @@
                                                     </a>
                                                 </h4>
 
-                                                <div class="card-rating my-2"
+                                                {{-- <div class="card-rating my-2"
                                                     style="display: flex; align-items: center; gap: 3px;">
                                                     <i class="fa fa-star" style="color: #F7941D; font-size: 12px;"></i>
                                                     <i class="fa fa-star" style="color: #F7941D; font-size: 12px;"></i>
                                                     <i class="fa fa-star" style="color: #F7941D; font-size: 12px;"></i>
                                                     <i class="fa fa-star" style="color: #F7941D; font-size: 12px;"></i>
                                                     <i class="fa fa-star" style="color: #F7941D; font-size: 12px;"></i>
-                                                </div>
+                                                </div> --}}
 
                                                 @if (!empty($sizeData['size']))
                                                     <div class="product-sizes my-2">
@@ -334,7 +334,16 @@
                                                 @endif
                                             </div>
 
-                                            <div class="add-to-cart mt-auto pt-2">
+                                             <div class="card-cta-container">
+                                                        <a href="{{route('product-detail',$product->slug)}}" class="btn-card-details">
+                                                            <span>View Details</span>
+                                                            <i class="ti-arrow-right"></i>
+                                                        </a>
+                                                    </div>
+
+                                            
+
+                                            {{-- <div class="add-to-cart mt-auto pt-2">
                                                 <div class="d-flex align-items-center m-0"
                                                     data-slug="{{ $product->slug }}">
                                                     @if ($product->stock > 0)
@@ -356,7 +365,7 @@
                                                             of Stock</span>
                                                     @endif
                                                 </div>
-                                            </div>
+                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>
@@ -547,6 +556,37 @@
 @endsection
 @push('styles')
     <style>
+
+        .btn-card-details {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 8px 12px;
+            background: #111827;
+            color: #ffffff !important;
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none !important;
+            transition: all 0.25s ease;
+        }
+
+         .btn-card-details:hover {
+            background: #5db845;
+            box-shadow: 0 4px 12px rgba(93, 184, 69, 0.35);
+        }
+ 
+        .btn-card-details i {
+            font-size: 11px;
+            transition: transform 0.2s ease;
+        }
+ 
+        .btn-card-details:hover i {
+            transform: translateX(4px);
+        }
+
         /* SHOP TOP BAR STYLING */
         .shop-top-bar-custom {
             display: flex;

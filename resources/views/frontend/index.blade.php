@@ -65,8 +65,8 @@
 <!-- End Small Banner -->
 
 <!-- Start Product Area -->
-<div class="product-area section">
-        <div class="container">
+<div class="product-area section product_page_padding">
+        <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
                     <div class="section-title">
@@ -587,6 +587,8 @@
 
 @push('styles')
     <style>
+
+       
         /* Banner Sliding */
         #Gslider .carousel-inner {
         background: #000000;
@@ -672,7 +674,7 @@
         .card-media-wrap {
             position: relative;
             background: #f8fafc;
-            height: 310px;
+            /* height: 310px; */
             width: 100%;
             overflow: hidden;
             border-bottom: 1px solid #f1f5f9;
