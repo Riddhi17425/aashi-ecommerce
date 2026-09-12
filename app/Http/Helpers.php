@@ -82,109 +82,127 @@ class Helper{
         }
         return PostCategory::has('posts')->orderBy('id','DESC')->get();
     }
-    // Cart Count
+
+    /**
+     * Cart Count (Guest + Logged-in both supported -)
+     */
     public static function cartCount($user_id=''){
-       
-        if(Auth::check()){
-            if($user_id=="") $user_id=auth()->user()->id;
-            return Cart::where('user_id',$user_id)->where('order_id',null)->sum('quantity');
+        $query = Cart::where('order_id', null);
+        if (Auth::check()) {
+            $user_id = $user_id ?: auth()->id();
+            $query->where('user_id', $user_id);
+        } else {
+            $query->where('session_id', session()->getId());
         }
-        else{
-            return 0;
-        }
+        return $query->sum('quantity');
     }
+
     // relationship cart with product
     public function product(){
         return $this->hasOne('App\Models\Product','id','product_id');
     }
- 
+
+    /**
+     * Get all cart items (Guest + Logged-in both supported -)
+     */
     public static function getAllProductFromCart($user_id=''){
-        if(Auth::check()){
-            if($user_id=="") $user_id=auth()->user()->id;
-            $cart = Cart::with('product')->where('user_id',$user_id)->where('order_id',null)->get();
-            if(isset($cart) && is_countable($cart) && count($cart) > 0){
-                foreach($cart as $k => $v){
-                    $images = [];
-                    if(isset($v->color_id) && $v->color_id != null){
-                        $color = Color::find($v->color_id);
-                        $images = $color->images->pluck('image')->map(function($image) {
-                            return asset('public/storage/products/'.$image);
-                        });
-                    }
-                    if(isset($images) && is_countable($images) && count($images)){
-                        $v->color_img = $images[0] ?? null;
-                    }
-                    
-                    $sizeData = json_decode($v->product->size, true);
-                    if(isset($v->price) && $v->price != null)
-                        $v->price = $v->price;
-                    else
-                        $v->price = $sizeData['price'][0];
-                    
-                    $afterDiscount = 0;
-                    if(isset($v->product->discount) && $v->product->discount > 0){
-                        $sizes = json_decode($v->product->size);
-                        $priceArr = $sizes->price;
-                        $productPrice = 0;
-                        foreach($priceArr as $key => $val){
-                            $productPrice = $val;
-                        }
-                        $afterDiscount = ($productPrice-($productPrice*$v->product->discount)/100);
-                    }
-                    $v->after_discount = $afterDiscount;
+        $query = Cart::with('product')->where('order_id', null);
+        if (Auth::check()) {
+            $user_id = $user_id ?: auth()->id();
+            $query->where('user_id', $user_id);
+        } else {
+            $query->where('session_id', session()->getId());
+        }
+        $cart = $query->get();
+
+        if(isset($cart) && is_countable($cart) && count($cart) > 0){
+            foreach($cart as $k => $v){
+                $images = [];
+                if(isset($v->color_id) && $v->color_id != null){
+                    $color = Color::find($v->color_id);
+                    $images = $color->images->pluck('image')->map(function($image) {
+                        return asset('public/storage/products/'.$image);
+                    });
                 }
+                if(isset($images) && is_countable($images) && count($images)){
+                    $v->color_img = $images[0] ?? null;
+                }
+                
+                $sizeData = json_decode($v->product->size, true);
+                if(isset($v->price) && $v->price != null)
+                    $v->price = $v->price;
+                else
+                    $v->price = $sizeData['price'][0];
+                
+                $afterDiscount = 0;
+                if(isset($v->product->discount) && $v->product->discount > 0){
+                    $sizes = json_decode($v->product->size);
+                    $priceArr = $sizes->price;
+                    $productPrice = 0;
+                    foreach($priceArr as $key => $val){
+                        $productPrice = $val;
+                    }
+                    $afterDiscount = ($productPrice-($productPrice*$v->product->discount)/100);
+                }
+                $v->after_discount = $afterDiscount;
             }
-            
-            return $cart;
         }
-        else{
-            return collect();
-        }
+        
+        return $cart;
     }
-    // Total amount cart
+
+    /**
+     * Total cart amount (Guest + Logged-in both supported - )
+     */
     public static function totalCartPrice($user_id=''){
-        if(Auth::check()){
-            if($user_id=="") $user_id=auth()->user()->id;
-            return Cart::where('user_id',$user_id)->where('order_id',null)->sum('amount');
+        $query = Cart::where('order_id', null);
+        if (Auth::check()) {
+            $user_id = $user_id ?: auth()->id();
+            $query->where('user_id', $user_id);
+        } else {
+            $query->where('session_id', session()->getId());
         }
-        else{
-            return 0;
-        }
+        return $query->sum('amount');
     }
     
+    /**
+     * Total GST amount (Guest + Logged-in both supported - )
+     */
     public static function totalGstPrice($user_id=''){
-        if(Auth::check()){
-            if($user_id=="") $user_id=auth()->user()->id;
-            $cart = Cart::where('user_id',$user_id)->where('order_id',null)->get();
-            $totalGstAmount = 0;
-            if(isset($cart) && is_countable($cart) && count($cart) > 0){
-                foreach($cart as $key => $val){
-                    $product = Product::with(['cat_info:id,gst'])->select('id', 'cat_id' , 'gst_percent')->where('id', $val->product_id)->first();
-                    $gstPercent = $gstAmt = 0;
-                    if($product){
-                        if($product->gst_percent){
-                            $gstPercent = $product->gst_percent ?? 0;
-                        }else{
-                            $gstPercent = $product->cat_info->gst ?? 0;
-                        }
+        $query = Cart::where('order_id', null);
+        if (Auth::check()) {
+            $user_id = $user_id ?: auth()->id();
+            $query->where('user_id', $user_id);
+        } else {
+            $query->where('session_id', session()->getId());
+        }
+        $cart = $query->get();
+
+        $totalGstAmount = 0;
+        if(isset($cart) && is_countable($cart) && count($cart) > 0){
+            foreach($cart as $key => $val){
+                $product = Product::with(['cat_info:id,gst'])->select('id', 'cat_id' , 'gst_percent')->where('id', $val->product_id)->first();
+                $gstPercent = $gstAmt = 0;
+                if($product){
+                    if($product->gst_percent){
+                        $gstPercent = $product->gst_percent ?? 0;
+                    }else{
+                        $gstPercent = $product->cat_info->gst ?? 0;
                     }
-                    if($gstPercent != 0){
-                        $totalGstAmount += ($val->amount * $gstPercent) / 100;
-                        $gstAmt += ($val->amount * $gstPercent) / 100;
-                    }
-                    $val->gst_percent = $gstPercent;
-                    $val->gst_amt = $gstAmt;
-                    $val->save();
                 }
+                if($gstPercent != 0){
+                    $totalGstAmount += ($val->amount * $gstPercent) / 100;
+                    $gstAmt += ($val->amount * $gstPercent) / 100;
+                }
+                $val->gst_percent = $gstPercent;
+                $val->gst_amt = $gstAmt;
+                $val->save();
             }
-            return $totalGstAmount;
         }
-        else{
-            return 0;
-        }
+        return $totalGstAmount;
     }
     
-    // Wishlist Count
+    // Wishlist Count (Unchanged - login required rahega)
     public static function wishlistCount($user_id=''){
        
         if(Auth::check()){

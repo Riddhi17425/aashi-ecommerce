@@ -37,85 +37,74 @@
 							</tr>
 						</thead>
 						<tbody id="cart_item_list">
-							<form action="{{route('cart.update')}}" method="POST" id="cart-update-form">
-								@csrf
-								@if(Helper::getAllProductFromCart()->count() > 0)
-									@foreach(Helper::getAllProductFromCart() as $key=>$cart)
-										@php
-											$price = json_decode($cart->size_price,true) ?? [];
+							@if(Helper::getAllProductFromCart()->count() > 0)
+								@foreach(Helper::getAllProductFromCart() as $key=>$cart)
+									@php
+										$price = json_decode($cart->size_price,true) ?? [];
+									@endphp
+									
+									<tr id="cart-row-{{$cart->id}}" class="cart-item-row">
+										@php 
+										$photo=explode(',',$cart->product['photo']);
 										@endphp
-										
-										<tr>
-											@php 
-											$photo=explode(',',$cart->product['photo']);
-											@endphp
-											<td class="image" data-title="No">
-												@if(isset($cart->color_img) && $cart->color_img != null) 
-													<img src="{{$cart->color_img}}" alt="{{ $cart->color_img }}">
-												@else
-													<img src="{{asset('public/'.$photo[0])}}" alt="{{asset('public/'.$photo[0])}}">
-												@endif
-											</td>
-											<td class="product-des" data-title="Description">
-												<p class="product-name"><a href="{{route('product-detail',$cart->product['slug'])}}" target="_blank">{{$cart->product['product_code']}}@if(isset($cart->color_id) && $cart->color_id != NULL) ({{optional($cart->color)->color_name}}) @endif</a></p>
-												<p class="product-des">{!!($cart['summary']) !!}</p>
-											</td>
-											<td class="price" data-title="Price"><span>{{ $price['size']}}</span></td>
+										<td class="image" data-title="No">
+											@if(isset($cart->color_img) && $cart->color_img != null) 
+												<img src="{{$cart->color_img}}" alt="{{ $cart->color_img }}">
+											@else
+												<img src="{{asset('public/'.$photo[0])}}" alt="{{asset('public/'.$photo[0])}}">
+											@endif
+										</td>
+										<td class="product-des" data-title="Description">
+											<p class="product-name"><a href="{{route('product-detail',$cart->product['slug'])}}" target="_blank">{{$cart->product['product_code']}}@if(isset($cart->color_id) && $cart->color_id != NULL) ({{optional($cart->color)->color_name}}) @endif</a></p>
+											<p class="product-des">{!!($cart['summary']) !!}</p>
+										</td>
+										<td class="price" data-title="Price"><span>{{ $price['size']}}</span></td>
 
-											<td class="price" data-title="Price"><span>
-											₹{{number_format($cart['price'],2)}}</span>
-											</td>
-											<td class="qty" data-title="Qty"><!-- Input Order -->
-												<div class="input-group">
-													<div class="button minus"> 
-														<button type="button" class="btn btn-primary btn-number" data-type="minus" data-field="quant[{{$key}}]" min="1">
-															<i class="ti-minus"></i>
-														</button>
-													</div>
-
-													<input type="text" name="quant[{{$key}}]" class="input-number"  data-min="1" data-max="100" value="{{$cart->quantity}}" readonly>
-													<input type="hidden" name="qty_id[]" value="{{$cart->id}}">
-
-													<div class="button plus">
-														<button type="button" class="btn btn-primary btn-number" data-type="plus" data-field="quant[{{$key}}]">
-															<i class="ti-plus"></i>
-														</button>
-													</div>
+										<td class="price" data-title="Price"><span class="unit-price" data-price="{{ $cart['price'] }}">
+										₹{{number_format($cart['price'],2)}}</span>
+										</td>
+										<td class="qty" data-title="Qty">
+											<!-- Input Order -->
+											<div class="input-group increment_decrement" data-cart-id="{{$cart->id}}" data-stock="{{$cart->product->stock}}">
+												<div class="button minus"> 
+													<button type="button" class="btn btn-primary btn-number dec_btn">
+														<i class="ti-minus"></i>
+													</button>
 												</div>
-												<!--/ End Input Order -->
-											</td>
-											<td class="total-amount cart_single_price" data-title="Total"><span class="money">₹{{$cart['amount']}}</span></td>
 
-											<td class="action" data-title="Remove"><a href="{{route('cart-delete',$cart->id)}}"><i class="ti-trash remove-icon"></i></a></td>
-										</tr>
-									@endforeach
-									<track>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										{{-- <td class="float-right">
-											<button class="btn float-right" type="submit">Update</button>
-										</td> --}}
-									</track>
-								@else
-										<tr>
-											<td class="text-center">
-												There are no any carts available. <a href="{{route('product-lists')}}" style="color:blue;">Continue shopping</a>
+												<input type="text" class="input-number qty_input" data-min="1" data-max="100" value="{{$cart->quantity}}" readonly>
 
-											</td>
-										</tr>
-								@endif
+												<div class="button plus">
+													<button type="button" class="btn btn-primary btn-number inc_btn">
+														<i class="ti-plus"></i>
+													</button>
+												</div>
+											</div>
+											<!--/ End Input Order -->
+										</td>
+										<td class="total-amount cart_single_price" data-title="Total"><span class="money row-total">₹{{$cart['amount']}}</span></td>
 
-							</form>
+										<td class="action" data-title="Remove">
+											<a href="javascript:void(0);" class="delete-cart-item" data-id="{{$cart->id}}">
+												<i class="ti-trash remove-icon"></i>
+											</a>
+										</td>
+									</tr>
+								@endforeach
+							@else
+									<tr>
+										<td class="text-center" colspan="7">
+											There are no any carts available. <a href="{{route('product-lists')}}" style="color:blue;">Continue shopping</a>
+										</td>
+									</tr>
+							@endif
 						</tbody>
 					</table>
 					<!--/ End Shopping Summery -->
 				</div>
 			</div>
 			@if(Helper::getAllProductFromCart()->count() > 0)
-			<div class="row">
+			<div class="row" id="calculation-section">
 				<div class="col-12">
 					<!-- Total Amount -->
 					<div class="total-amount">
@@ -123,33 +112,14 @@
 							<div class="col-lg-8 col-md-5 col-12">
 								<div class="left">
 									<div class="coupon">
-										{{-- <form action="{{route('coupon-store')}}" method="POST">
-											@csrf
-											<input name="code" placeholder="Enter Your Coupon" value="{{ old('code') }}">
-											<button class="btn">Apply</button>
-										</form> --}}
-										{{-- REMOVE COUPON --}}
-										{{-- @if(session()->has('coupon'))
-											<form action="{{ route('coupon-remove') }}" method="POST" class="mt-2">
-												@csrf
-												<button type="submit" class="btn btn-danger">
-													Remove Coupon ({{ session('coupon.code') }})
-												</button>
-											</form>
-										@endif --}}
+										{{-- coupon form remains same --}}
 									</div> 
-									{{-- <div class="checkbox">`
-										@php
-											$shipping=DB::table('shippings')->where('status','active')->limit(1)->get();
-										@endphp
-										<label class="checkbox-inline" for="2"><input name="news" id="2" type="checkbox" onchange="showMe('shipping');"> Shipping</label>
-									</div> --}}
 								</div>
 							</div>
 							<div class="col-lg-4 col-md-7 col-12">
 								<div class="right">
 									<ul>
-										<li class="order_subtotal" data-price="{{Helper::totalCartPrice()}}">Cart Subtotal<span>₹{{number_format(Helper::totalCartPrice(),2)}}</span></li>
+										<li class="order_subtotal" data-price="{{Helper::totalCartPrice()}}">Cart Subtotal<span id="cart-subtotal">₹{{number_format(Helper::totalCartPrice(),2)}}</span></li>
 
 										@if(session()->has('coupon'))
 										<li class="coupon_price" data-price="{{Session::get('coupon')['value']}}">You Save<span>₹{{number_format(Session::get('coupon')['value'],2)}}</span></li>
@@ -165,14 +135,11 @@
 											@php $total_amount += $gstTotal; @endphp
 											<li class="last" id="gst_amount">GST Amount<span>₹{{number_format($gstTotal,2)}}</span></li>
 										@endif
-										@if(session()->has('coupon'))
-											<li class="last" id="order_total_price">You Pay<span>₹{{number_format($total_amount,2)}}</span></li>
-										@else
-											<li class="last" id="order_total_price">You Pay<span>₹{{number_format($total_amount,2)}}</span></li>
-										@endif
+										<li class="last" id="order_total_price">You Pay<span id="you-pay">₹{{number_format($total_amount,2)}}</span></li>
 									</ul>
 									<div class="button5">
-										<a href="{{route('checkout')}}" class="btn">Checkout</a>
+										{{-- <a class="btn" @auth href="{{route('checkout')}}" @else data-bs-toggle="modal" data-bs-target="#checkoutAuthModal" href="javascript:void(0);" @endauth>Checkout</a> --}}
+										<a class="btn" @auth href="{{route('checkout')}}" @else data-toggle="modal" data-target="#checkoutAuthModal" href="javascript:void(0);" @endauth>Checkout</a>
 										<a href="{{route('product-lists')}}" class="btn">Continue shopping</a>
 									</div>
 								</div>
@@ -186,6 +153,74 @@
 		</div>
 	</div>
 	<!--/ End Shopping Cart -->
+
+	<!-- Checkout Authentication Modal (HNOWW pattern) -->
+	<div class="modal fade" id="checkoutAuthModal" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title w-100 text-center" id="checkoutAuthTitle">Login to Checkout</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+				<div class="modal-body text-center">
+					<form id="checkout-auth-form">
+						@csrf
+
+						<div id="checkout-auth-alert" class="alert alert-danger d-none py-2 px-3 mb-3 text-start"></div>
+
+						<div id="step-email" class="auth-step">
+							<p>Please enter your email address to continue.</p>
+							<div class="form-group text-start">
+								<label>Email address</label>
+								<input type="email" name="email" id="checkout_email" class="form-control" required>
+							</div>
+							<div class="d-flex flex-column align-items-center gap-2 mt-4">
+								<button type="button" id="btn-email-next" class="btn w-100">Continue</button>
+								<button type="button" class="btn-auth-secondary" data-dismiss="modal">Cancel</button>
+							</div>
+						</div>
+
+						<div id="step-login" class="auth-step d-none">
+							<p>This email is already registered. Please enter your password to continue.</p>
+							<div class="form-group text-start">
+								<label>Password</label>
+								<input type="password" name="password" id="checkout_password" class="form-control">
+							</div>
+							<div class="d-flex flex-column align-items-center gap-2 mt-4">
+								<button type="submit" id="btn-login-submit" class="btn w-100">Login & Checkout</button>
+								<button type="button" id="btn-login-back" class="btn btn-link">&larr; Back</button>
+							</div>
+						</div>
+
+						<div id="step-register" class="auth-step d-none">
+							<p>It looks like you are new here. Create an account to complete your checkout.</p>
+							<div class="form-group text-start">
+								<label>Full Name</label>
+								<input type="text" name="name" id="checkout_name" class="form-control">
+							</div>
+							<div class="form-group text-start">
+								<label>Email Address</label>
+								<input type="email" name="register_email" id="checkout_register_email" class="form-control" readonly>
+							</div>
+							<div class="form-group text-start">
+								<label>Password (min 6 characters)</label>
+								<input type="password" name="reg_password" id="checkout_reg_password" class="form-control">
+							</div>
+							<div class="form-group text-start">
+								<label>Confirm Password</label>
+								<input type="password" name="reg_password_confirmation" id="checkout_reg_password_confirmation" class="form-control">
+							</div>
+							<div class="d-flex flex-column align-items-center gap-2 mt-4">
+								<button type="submit" id="btn-register-submit" class="btn w-100">Register & Checkout</button>
+								<button type="button" id="btn-register-back" class="btn btn-link">&larr; Back</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Checkout Authentication Modal -->
 
 	<!-- Start Shop Services Area  -->
 	<section class="shop-services section mb-4">
@@ -256,9 +291,132 @@
 		.form-select .nice-select::after {
 			top: 14px;
 		}
+
+		/* ===== CHECKOUT AUTH MODAL - CUSTOM STYLING (Bootstrap independent) ===== */
+		#checkoutAuthModal.modal {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.6);
+			z-index: 99999;
+			display: none;
+			align-items: center;
+			justify-content: center;
+		}
+		#checkoutAuthModal.modal.show {
+			display: flex !important;
+		}
+		#checkoutAuthModal .modal-dialog {
+			max-width: 460px;
+			width: 90%;
+			margin: 20px auto;
+		}
+		#checkoutAuthModal .modal-content {
+			background: #ffffff;
+			border-radius: 8px;
+			border: none;
+			padding: 30px 25px;
+			box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+			position: relative;
+		}
+		#checkoutAuthModal .modal-header {
+			border-bottom: none;
+			padding: 0 0 15px 0;
+			position: relative;
+			display: block;
+			text-align: center;
+		}
+		#checkoutAuthModal .modal-title {
+			font-size: 24px;
+			font-weight: 700;
+			color: #1e293b;
+			margin: 0;
+		}
+		#checkoutAuthModal .close {
+			position: absolute;
+			top: -10px;
+			right: -10px;
+			background: #f1f5f9;
+			border: none;
+			border-radius: 50%;
+			width: 32px;
+			height: 32px;
+			font-size: 20px;
+			line-height: 1;
+			color: #475569;
+			opacity: 1;
+		}
+		#checkoutAuthModal .modal-body {
+			padding: 0;
+		}
+		#checkoutAuthModal .form-group {
+			margin-bottom: 18px;
+		}
+		#checkoutAuthModal .form-group label {
+			display: block;
+			font-size: 13px;
+			font-weight: 600;
+			color: #475569;
+			margin-bottom: 6px;
+			text-align: left;
+		}
+		#checkoutAuthModal .form-control {
+			width: 100%;
+			padding: 10px 14px;
+			border: 1px solid #cbd5e1;
+			border-radius: 6px;
+			font-size: 14px;
+		}
+		#checkoutAuthModal .btn.w-100 {
+			display: block;
+			width: 100%;
+			background: #111827;
+			color: #ffffff;
+			border: none;
+			padding: 12px;
+			border-radius: 6px;
+			font-weight: 600;
+			font-size: 14px;
+			cursor: pointer;
+			text-transform: uppercase;
+		}
+		#checkoutAuthModal .btn.w-100:hover {
+			background: #5db845;
+		}
+		#checkoutAuthModal .btn-auth-secondary,
+		#checkoutAuthModal .btn-link {
+			background: none;
+			border: none;
+			color: #64748b;
+			font-size: 13px;
+			text-decoration: underline;
+			cursor: pointer;
+			padding: 8px;
+		}
+		#checkoutAuthModal p {
+			text-align: center;
+			color: #64748b;
+			font-size: 13.5px;
+			margin-bottom: 20px;
+		}
+		#checkoutAuthModal .d-none {
+			display: none !important;
+		}
+		#checkoutAuthModal .alert-danger {
+			background: #fef2f2;
+			border: 1px solid #fecaca;
+			color: #dc2626;
+			padding: 10px 14px;
+			border-radius: 6px;
+			font-size: 13px;
+		}
 	</style>
 @endpush
 @push('scripts')
+{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script> --}}
+<script src="{{ asset('public/frontend/js/sweetalert.min.js') }}"></script>
 	<script src="{{asset('public/frontend/js/nice-select/js/jquery.nice-select.min.js')}}"></script>
 	<script src="{{ asset('public/frontend/js/select2/js/select2.min.js') }}"></script>
 	<script>
@@ -266,25 +424,20 @@
   		$('select.nice-select').niceSelect();
 	</script>
 	<script>
-		$(document).ready(function(){
-			$('.shipping select[name=shipping]').change(function(){
-				let cost = parseFloat( $(this).find('option:selected').data('price') ) || 0;
-				let subtotal = parseFloat( $('.order_subtotal').data('price') );
-				let coupon = parseFloat( $('.coupon_price').data('price') ) || 0;
-				// alert(coupon);
-				$('#order_total_price span').text('$'+(subtotal + cost-coupon).toFixed(2));
-			});
-
-		});
-
-		$(document).on('change', '.input-number', function () {
-			clearTimeout(window.cartTimer);
-
-			window.cartTimer = setTimeout(function () {
-				$('#cart-update-form').submit();
-			}, 300); // debounce
-		});
-
+	window.appCsrfToken = "{{ csrf_token() }}";
+	window.appRoutes = {
+		cartUpdate: "{{ route('cart.update') }}",
+		cartDeleteBase: "{{ url('cart-delete') }}",
+		checkoutCheckEmail: "{{ route('checkout.check-email') }}",
+		checkoutLogin: "{{ route('checkout.login') }}",
+		checkoutRegister: "{{ route('checkout.register') }}"
+	};
+	window.appData = {
+		emptyCartImage: "{{ asset('public/frontend/img/empty-cart.png') }}",
+		homeUrl: "{{ route('home') }}",
+		productListUrl: "{{ route('product-lists') }}"
+	};
 	</script>
+	<script src="{{ asset('public/frontend/js/cart-ajax.js') }}"></script>
 
 @endpush

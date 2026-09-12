@@ -112,12 +112,15 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::get('/filter-products', [FrontendController::class, 'filterProducts'])->name('filter-products');
 
 
-// Cart section
-    Route::get('/add-to-cart/{slug}/{color_id?}', [CartController::class, 'addToCart'])->name('add-to-cart')->middleware('user');
-    Route::Post('/add-to-carts/{slug}', [CartController::class, 'addToCarts'])->name('add-to-carts')->middleware('user');
-    Route::post('/add-to-cart', [CartController::class, 'singleAddToCart'])->name('single-add-to-cart')->middleware('user');
+// Cart section (UPDATED -guest-friendly, no forced login)
+    Route::post('/add-to-cart', [CartController::class, 'singleAddToCart'])->name('single-add-to-cart');
     Route::get('cart-delete/{id}', [CartController::class, 'cartDelete'])->name('cart-delete');
     Route::post('cart-update', [CartController::class, 'cartUpdate'])->name('cart.update');
+
+    // CHECKOUT AUTHENTICATION FLOW (Naye Routes )
+    Route::post('/checkout/check-email', [FrontendController::class, 'checkoutCheckEmail'])->name('checkout.check-email');
+    Route::post('/checkout/login', [FrontendController::class, 'checkoutLogin'])->name('checkout.login');
+    Route::post('/checkout/register', [FrontendController::class, 'checkoutRegister'])->name('checkout.register');
 
     Route::get('/get-color-images/{colorId}', function($colorId) {
         $color = Color::find($colorId);
@@ -130,7 +133,7 @@ use App\Http\Controllers\ShiprocketWebhookController;
     
     Route::get('/cart', function () {
         return view('frontend.pages.cart');
-    })->name('cart')->middleware('user');
+    })->name('cart');
     Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('myorders')->middleware('user');
     Route::get('/order-details/{id}', [OrderController::class, 'orderDetails'])->name('order.dertails')->middleware('user');
     Route::post('/order/update-status', [OrderController::class, 'orderUpdate'])->name('order.update.status')->middleware('user');

@@ -203,12 +203,16 @@ class FrontendController extends Controller
             }
 
             // Sort
-            if ($request->has('sortBy') && !empty($request->sortBy)) {
+            if ($request->has('sortBy') && !empty($request->sortBy) && $request->sortBy != 'default') {
                 if ($request->sortBy == 'title') {
                     $productsQuery->orderBy('title', 'ASC');
                 } elseif ($request->sortBy == 'price') {
-                    $productsQuery->orderBy('price', 'ASC');
+                    $productsQuery->orderByRaw(
+                        "CASE WHEN JSON_VALID(`size`) THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(`size`, '$.price[0]')) AS UNSIGNED) ELSE 0 END ASC"
+                    );
                 }
+            } else {
+                $productsQuery->orderBy('id', 'DESC');
             }
 
             // Pagination / show
@@ -294,12 +298,16 @@ class FrontendController extends Controller
                     }
                 }
 
-                if ($request->has('sortBy') && !empty($request->sortBy)) {
+                if ($request->has('sortBy') && !empty($request->sortBy) && $request->sortBy != 'default') {
                     if ($request->sortBy == 'title') {
                         $productsQuery->orderBy('title', 'ASC');
                     } elseif ($request->sortBy == 'price') {
-                        $productsQuery->orderBy('price', 'ASC');
+                        $productsQuery->orderByRaw(
+                            "CASE WHEN JSON_VALID(`size`) THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(`size`, '$.price[0]')) AS UNSIGNED) ELSE 0 END ASC"
+                        );
                     }
+                } else {
+                    $productsQuery->orderBy('id', 'DESC');
                 }
 
                 if ($request->has('price') && !empty($request->price)) {
@@ -388,12 +396,16 @@ class FrontendController extends Controller
             $products->whereIn('brand_id', $brand_ids);
         }
 
-        if (!empty($_GET['sortBy'])) {
+        if (!empty($_GET['sortBy']) && $_GET['sortBy'] != 'default') {
             if ($_GET['sortBy'] == 'title') {
                 $products = $products->where('status', 'active')->orderBy('title', 'ASC');
             } elseif ($_GET['sortBy'] == 'price') {
-                $products = $products->orderBy('price', 'ASC');
+                $products = $products->orderByRaw(
+                    "CASE WHEN JSON_VALID(`size`) THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(`size`, '$.price[0]')) AS UNSIGNED) ELSE 0 END ASC"
+                );
             }
+        } else {
+            $products = $products->orderBy('id', 'DESC');
         }
 
         if (!empty($_GET['price'])) {
@@ -880,5 +892,160 @@ class FrontendController extends Controller
                 return back();
             }
     }
-    
-}
+
+    /**
+     * STEP 1: Check if email is already registered (Checkout Auth Flow - )
+     */
+    public function checkoutCheckEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $userExists = User::where('email', $request->email)->exists();
+
+        return response()->json([
+            'success'    => true,
+            'registered' => $userExists,
+        ]);
+    }
+
+    /**
+     * STEP 2a: Login existing user during checkout + merge guest cart 
+     */
+    public function checkoutLogin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email'    => 'required|email|max:255|exists:users,email',
+            'password' => 'required|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $oldSessionId = session()->getId();
+
+        $credentials = [
+            'email'    => $request->email,
+            'password' => $request->password,
+            'role'     => 'user',
+            'status'   => 'active',
+        ];
+
+        if (Auth::attempt($credentials)) {
+            Session::regenerate();
+            Session::put('user', $request->email);
+
+            // MERGE GUEST CART INTO USER 
+            $guestCarts = Cart::where('session_id', $oldSessionId)->whereNull('order_id')->get();
+
+            foreach ($guestCarts as $guestCart) {
+                $sizeData     = json_decode($guestCart->size_price, true);
+                $guestSize    = $sizeData['size'] ?? null;
+
+                $existing = Cart::where('user_id', Auth::id())
+                    ->where('product_id', $guestCart->product_id)
+                    ->where('color_id', $guestCart->color_id)
+                    ->whereNull('order_id')
+                    ->whereJsonContains('size_price->size', $guestSize)
+                    ->first();
+
+                if ($existing) {
+                    $newQty = $existing->quantity + $guestCart->quantity;
+                    if ($guestCart->product && $guestCart->product->stock < $newQty) {
+                        $newQty = $guestCart->product->stock;
+                    }
+                    $existing->quantity = $newQty;
+                    $existing->amount   = $existing->price * $newQty;
+                    $existing->save();
+                    $guestCart->delete();
+                } else {
+                    $guestCart->session_id = null;
+                    $guestCart->user_id    = Auth::id();
+                    $guestCart->save();
+                }
+            }
+
+            return response()->json([
+                'success'      => true,
+                'redirect_url' => route('checkout'),
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid email or password.',
+        ]);
+    }
+
+    /**
+     * STEP 2b: Register new user during checkout + merge guest cart 
+     */
+    public function checkoutRegister(Request $request)
+    {
+        $registeredMessage = 'This email is already registered. Please login or use another email.';
+
+        $validator = Validator::make($request->all(), [
+            'email'        => 'required|email|max:255|unique:users,email',
+            'name'         => 'required|string|min:2|max:255',
+            'reg_password' => 'required|min:6|confirmed',
+        ], [
+            'email.unique'          => $registeredMessage,
+            'reg_password.confirmed' => 'Password and confirm password must match.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $oldSessionId = session()->getId();
+
+        $user = User::create([
+            'name'     => trim($request->name),
+            'email'    => $request->email,
+            'password' => Hash::make($request->reg_password),
+            'role'     => 'user',
+            'status'   => 'active',
+        ]);
+
+        if ($user) {
+            Auth::login($user);
+            Session::put('user', $request->email);
+
+            // MERGE GUEST CART INTO USER 
+            $guestCarts = Cart::where('session_id', $oldSessionId)->whereNull('order_id')->get();
+
+            foreach ($guestCarts as $guestCart) {
+                $guestCart->session_id = null;
+                $guestCart->user_id    = Auth::id();
+                $guestCart->save();
+            }
+
+            return response()->json([
+                'success'      => true,
+                'redirect_url' => route('checkout'),
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Registration failed, please try again.',
+        ]);
+    }
+
+}    
+

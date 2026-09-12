@@ -17,392 +17,269 @@ class CartController extends Controller
         $this->product=$product;
     }
 
-    public function addToCart(Request $request){
-        // dd($request->all()); 
-        if (empty($request->slug)) {
-            request()->session()->flash('error','Invalid Products');
-            return back();
-        }        
-        $product = Product::where('slug', $request->slug)->first();
-        
-        // Decode size JSON
-        $sizeData = json_decode($product->size, true);
-
-        // Get first size and price
-        $selectedSize  = $sizeData['size'][0] ?? null;
-        $selectedPrice = $sizeData['price'][0] ?? null;
-        $selectedColor = $request->color_id ?? null;
-
-        if (empty($product)) {
-            request()->session()->flash('error','Invalid Products');
-            return back();
-        }
-
-        $already_cart = Cart::where('user_id', auth()->user()->id)
-                        ->where('order_id',null)
-                        ->whereJsonContains('size_price->size', $selectedSize)
-                        //->whereJsonContains('size_price->price', $selectedPrice)
-                        ->where('product_id', $product->id);
-        if($selectedColor != null){
-            $already_cart = $already_cart->where('color_id', $selectedColor);
-        }
-        $already_cart = $already_cart->first();
-        if($already_cart) {
-             
-            $already_cart->quantity = $already_cart->quantity + 1;
-            $already_cart->amount = $selectedPrice + $already_cart->amount;
-            // return $already_cart->quantity;
-            if ($already_cart->product->stock < $already_cart->quantity || $already_cart->product->stock <= 0) return back()->with('error','Stock not sufficient!.');
-            $already_cart->save();
-            
-        }else{
-            
-            $data = [
-                'size' => $selectedSize,
-                'price' => $selectedPrice,
-            ];
-
-            $cart = new Cart;
-            $cart->user_id = auth()->user()->id;
-            $cart->product_id = $product->id;
-            $cart->price = ($selectedPrice-($selectedPrice*$product->discount)/100);
-            $cart->quantity = 1;
-            $cart->size_price = json_encode($data);
-            $cart->amount=$cart->price*$cart->quantity;
-            $cart->color_id = $selectedColor;
-            if ($cart->product->stock < $cart->quantity || $cart->product->stock <= 0) return back()->with('error','Stock not sufficient!.');
-            $cart->save();
-            $wishlist=Wishlist::where('user_id',auth()->user()->id)->where('product_id' , $product->id)->where('cart_id',null)->delete();
-            
-           
-        }
-        
-        if($request->buy_now == 'buyNow'){
-            return redirect()->route('checkout'); 
-        }
-        
-        request()->session()->flash('success','Product successfully added to cart');
-        return back();       
-    }  
-
-    public function addToCarts(Request $request){
-        if (!auth()->check()) {
-            return redirect('user/login');
-        }
-         
-        if (empty($request->slug)) {
-            request()->session()->flash('error','Invalid Products');
-            return back();
-        }        
-        $product = Product::where('slug', $request->slug)->first();
-        // return $product;
-        if (empty($product)) {
-            request()->session()->flash('error','Invalid Products');
-            return back();
-        }
-
-
-        $selectedSize = $request->selected_size ?? null;
-        $selectedPrice = $request->selected_price ?? null;
-        $selectedColor = $request->selected_color ?? null;
-
-        $already_cart = Cart::where('user_id', auth()->user()->id)->where('order_id',null)->whereJsonContains('size_price->size', $selectedSize)->whereJsonContains('size_price->price', $selectedPrice)->where('product_id', $product->id);
-        if($selectedColor != null){
-            $productColor = Color::where('product_id', $product->id)->where('id', $selectedColor)->exists();
-            if(!$productColor){
-                request()->session()->flash('error','Invalid Color Selected');
-                return back();
-            }
-            $already_cart = $already_cart->where('color_id', $selectedColor);
-        }                           
-        $already_cart = $already_cart->first();
-        // return $already_cart;
-        if($already_cart) {
-            // dd($already_cart);
-            $already_cart->quantity = $already_cart->quantity + 1;
-            $already_cart->amount = $selectedPrice + $already_cart->amount;
-            // return $already_cart->quantity;
-            if ($already_cart->product->stock < $already_cart->quantity || $already_cart->product->stock <= 0) return back()->with('error','Stock not sufficient!.');
-            $already_cart->save();
-            
-        }else{
-            $data = [
-                'size' => $selectedSize,
-                'price' => $selectedPrice,
-            ];
-            //$setPrice = $selectedPrice-($selectedPrice*$product->discount)/100;
-            $cart = new Cart;
-            $cart->user_id = auth()->user()->id;
-            $cart->product_id = $product->id;
-            //$cart->price = $setPrice;
-            $cart->price = $selectedPrice;
-            $cart->quantity = 1;
-            $cart->size_price = json_encode($data);
-            $cart->amount=$cart->price*$cart->quantity;
-            $cart->color_id = $selectedColor;
-            if ($cart->product->stock < $cart->quantity || $cart->product->stock <= 0) return back()->with('error','Stock not sufficient!.');
-            $cart->save();
-            $wishlist=Wishlist::where('user_id',auth()->user()->id)->where('product_id' , $product->id)->where('cart_id',null)->delete();
-        }
-        request()->session()->flash('success','Product successfully added to cart');
-        return back();       
-    }
-
-     public function singleAddToCart(Request $request){
-        $request->validate([
-            'slug'      =>  'required',
-            'quant'      =>  'required',
+    /**
+     * Add product to cart via AJAX (Guest + Logged-in both supported)
+     * : session_id for guest, user_id for logged-in
+     */
+    public function singleAddToCart(Request $request){
+        $validator = \Validator::make($request->all(), [
+            'slug'  => 'required',
+            'quant' => 'required',
         ]);
-        
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
         $product = Product::where('slug', $request->slug)->first();
 
-            // Decode size JSON
-        $sizeData = json_decode($product->size, true);
-        // Get first size and price
-        $selectedSize  = $request->selected_size ?? null; 
-        $selectedPrice = $request->selected_price ?? null;
-        $selectedColor = $request->selected_color ?? null;
-        $selectedColorName = $request->selected_color_name ?? null;
+        if (empty($product)) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Invalid Product',
+            ]);
+        }
 
-        if($product->stock <$request->quant[1]){
-            return back()->with('error','Out of stock, You can add other products.');
-        } 
-        if ( ($request->quant[1] < 1) || empty($product) ) {
-            request()->session()->flash('error','Invalid Products');
-            return back();
-        }    
+        $selectedSize      = $request->selected_size ?? null;
+        $selectedPrice     = $request->selected_price ?? null;
+        $selectedColor     = $request->selected_color ?? null;
+        $qty               = isset($request->quant[1]) ? (int) $request->quant[1] : 1;
 
-        $already_cart = Cart::where('user_id', auth()->user()->id)->where('order_id',null)->where('product_id', $product->id);
-        if($selectedColor != null){
+        if ($qty < 1) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Invalid quantity',
+            ]);
+        }
+
+        if ($product->stock < $qty || $product->stock <= 0) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Out of stock, You can add other products.',
+            ]);
+        }
+
+        // GUEST vs LOGGED-IN 
+        $user_id    = Auth::check() ? Auth::id() : null;
+        $session_id = Auth::check() ? null : session()->getId();
+
+        $already_cart = Cart::where('order_id', null)->where('product_id', $product->id);
+
+        if ($user_id) {
+            $already_cart = $already_cart->where('user_id', $user_id);
+        } else {
+            $already_cart = $already_cart->where('session_id', $session_id);
+        }
+
+        if ($selectedColor != null) {
             $productColor = Color::where('product_id', $product->id)->where('id', $selectedColor)->exists();
-            if(!$productColor){
-                request()->session()->flash('error','Invalid Color Selected');
-                return back();
+            if (!$productColor) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Invalid Color Selected',
+                ]);
             }
             $already_cart = $already_cart->where('color_id', $selectedColor);
         }
-        $already_cart = $already_cart->whereJsonContains('size_price->size', $selectedSize)->whereJsonContains('size_price->price', $selectedPrice)
+
+        $already_cart = $already_cart->whereJsonContains('size_price->size', $selectedSize)
+                        ->whereJsonContains('size_price->price', $selectedPrice)
                         ->first();
- 
-        // return $already_cart;
 
-        if($already_cart) {
-            $already_cart->quantity = $already_cart->quantity + $request->quant[1];
-            // $already_cart->price = ($product->price * $request->quant[1]) + $already_cart->price ;
-            $already_cart->amount = ($selectedPrice * $request->quant[1])+ $already_cart->amount;
+        if ($already_cart) {
+            $newQty = $already_cart->quantity + $qty;
 
-            if ($already_cart->product->stock < $already_cart->quantity || $already_cart->product->stock <= 0) return back()->with('error','Stock not sufficient!.');
+            if ($product->stock < $newQty || $product->stock <= 0) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Stock not sufficient!',
+                    'data'    => [
+                        'available_stock' => $product->stock,
+                        'already_in_cart' => $already_cart->quantity,
+                    ],
+                ]);
+            }
 
+            $already_cart->quantity = $newQty;
+            $already_cart->amount   = $selectedPrice * $newQty;
             $already_cart->save();
-            
-        }else{
+
+        } else {
             $data = [
-                'size' => $selectedSize,
+                'size'  => $selectedSize,
                 'price' => $selectedPrice,
             ];
-            //$setPrice = $selectedPrice-($selectedPrice*$product->discount)/100;
-            $cart = new Cart;
-            $cart->user_id = auth()->user()->id;
-            $cart->product_id = $product->id;
-            $cart->color_id = $selectedColor;
-            //$cart->price = $setPrice;
-            $cart->price = $selectedPrice;
-            $cart->size_price = json_encode($data);
-            $cart->quantity = $request->quant[1];
-            //$cart->amount=($setPrice * $request->quant[1]);
-            $cart->amount=($selectedPrice * $request->quant[1]);
-            if ($cart->product->stock < $cart->quantity || $cart->product->stock <= 0) return back()->with('error','Stock not sufficient!.');
-            // dd($product->price);
+
+            $cart              = new Cart;
+            $cart->user_id     = $user_id;
+            $cart->session_id  = $session_id;
+            $cart->product_id  = $product->id;
+            $cart->color_id    = $selectedColor;
+            $cart->price       = $selectedPrice;
+            $cart->size_price  = json_encode($data);
+            $cart->quantity    = $qty;
+            $cart->amount      = $selectedPrice * $qty;
             $cart->save();
         }
-        request()->session()->flash('success','Product successfully added to cart.');
-        return back();       
-    } 
-    
-    public function cartDelete(Request $request){
-        $cart = Cart::find($request->id);
-        if ($cart) {
-            $cart->delete();
-            request()->session()->flash('success','Cart successfully removed');
-            return back();  
+
+        // Calculate cart count for header badge
+        $cartCountQuery = Cart::where('order_id', null);
+        if ($user_id) {
+            $cartCountQuery->where('user_id', $user_id);
+        } else {
+            $cartCountQuery->where('session_id', $session_id);
         }
-        request()->session()->flash('error','Error please try again');
-        return back();       
-    }     
+        $cartCount = $cartCountQuery->sum('quantity');
 
-    public function cartUpdate(Request $request){
-        // dd($request->all());
-        if($request->quant){
-            $error = array();
-            $success = '';
-            // return $request->quant;
-            foreach ($request->quant as $k=>$quant) {
-                // return $k;
-                $id = $request->qty_id[$k];
-                // return $id;
-                $cart = Cart::find($id);
-                // return $cart;
-                if($quant > 0 && $cart) {
-                    // return $quant;
-
-                    if($cart->product->stock < $quant){
-                        request()->session()->flash('error','Out of stock');
-                        return back();
-                    }
-                    $cart->quantity = ($cart->product->stock > $quant) ? $quant  : $cart->product->stock;
-                    // return $cart;
-                    
-                    if ($cart->product->stock <=0) continue;
-                    
-                    $cart_stored_price = json_decode($cart->size_price, true);
-                    $stored_price  = $cart_stored_price['price'] ?? 0;
-                    // return $stored_price;
-
-                    //$after_price=($stored_price-($stored_price*$cart->product->discount)/100);
-                    //$cart->amount = $after_price * $quant;
-                    $cart->amount = $stored_price * $quant;
-                    // return $cart->price;
-                    $cart->save();
-                    $success = 'Cart successfully updated!';
-                }else{
-                    $error[] = 'Cart Invalid!';
-                }
-            }
-            
-            /* ===============================
-                RE-VALIDATE COUPON HERE
-            =============================== */
-
-            if (session()->has('coupon')) {
-                $total_price = Cart::where('user_id', auth()->user()->id)
-                    ->whereNull('order_id')
-                    ->sum('amount');
-
-                $couponData = session('coupon');
-                $coupon=Coupon::where('id',$couponData['id'])->first();
-                // coupon deleted or inactive
-                if (!$coupon) {
-                    session()->forget('coupon');
-                    return back()->with('error', 'Coupon removed (invalid)');
-                }
-                $discountAmount = $coupon->discount($total_price);
-                if ($discountAmount >= $total_price || ($total_price - $discountAmount) < 100) {
-                    session()->forget('coupon');
-                    return back()->with(
-                        'error',
-                        'Coupon removed because cart total no longer meets minimum amount'
-                    );
-                }
-                // update discount value if total changed
-                session()->put('coupon.value', $discountAmount);
-            }
-            return back()->with($error)->with('success', $success);
-        }else{
-            return back()->with('Cart Invalid!');
-        }    
+        return response()->json([
+            'status'     => true,
+            'message'    => 'Product successfully added to cart.',
+            'cart_count' => $cartCount,
+        ]);
     }
 
-    // public function addToCart(Request $request){
-    //     // return $request->all();
-    //     if(Auth::check()){
-    //         $qty=$request->quantity;
-    //         $this->product=$this->product->find($request->pro_id);
-    //         if($this->product->stock < $qty){
-    //             return response(['status'=>false,'msg'=>'Out of stock','data'=>null]);
-    //         }
-    //         if(!$this->product){
-    //             return response(['status'=>false,'msg'=>'Product not found','data'=>null]);
-    //         }
-    //         // $session_id=session('cart')['session_id'];
-    //         // if(empty($session_id)){
-    //         //     $session_id=Str::random(30);
-    //         //     // dd($session_id);
-    //         //     session()->put('session_id',$session_id);
-    //         // }
-    //         $current_item=array(
-    //             'user_id'=>auth()->user()->id,
-    //             'id'=>$this->product->id,
-    //             // 'session_id'=>$session_id,
-    //             'title'=>$this->product->title,
-    //             'summary'=>$this->product->summary,
-    //             'link'=>route('product-detail',$this->product->slug),
-    //             'price'=>$this->product->price,
-    //             'photo'=>$this->product->photo,
-    //         );
-            
-    //         $price=$this->product->price;
-    //         if($this->product->discount){
-    //             $price=($price-($price*$this->product->discount)/100);
-    //         }
-    //         $current_item['price']=$price;
+    /**
+     * Update cart quantity via AJAX (Guest + Logged-in both supported)
+     */
+    public function cartUpdate(Request $request){
+        if (!$request->quant) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Cart Invalid!',
+            ]);
+        }
 
-    //         $cart=session('cart') ? session('cart') : null;
+        $user_id    = Auth::check() ? Auth::id() : null;
+        $session_id = Auth::check() ? null : session()->getId();
 
-    //         if($cart){
-    //             // if anyone alreay order products
-    //             $index=null;
-    //             foreach($cart as $key=>$value){
-    //                 if($value['id']==$this->product->id){
-    //                     $index=$key;
-    //                 break;
-    //                 }
-    //             }
-    //             if($index!==null){
-    //                 $cart[$index]['quantity']=$qty;
-    //                 $cart[$index]['amount']=ceil($qty*$price);
-    //                 if($cart[$index]['quantity']<=0){
-    //                     unset($cart[$index]);
-    //                 }
-    //             }
-    //             else{
-    //                 $current_item['quantity']=$qty;
-    //                 $current_item['amount']=ceil($qty*$price);
-    //                 $cart[]=$current_item;
-    //             }
-    //         }
-    //         else{
-    //             $current_item['quantity']=$qty;
-    //             $current_item['amount']=ceil($qty*$price);
-    //             $cart[]=$current_item;
-    //         }
+        $error   = [];
+        $success = '';
 
-    //         session()->put('cart',$cart);
-    //         return response(['status'=>true,'msg'=>'Cart successfully updated','data'=>$cart]);
-    //     }
-    //     else{
-    //         return response(['status'=>false,'msg'=>'You need to login first','data'=>null]);
-    //     }
-    // }
+        foreach ($request->quant as $k => $quant) {
+            $id   = $request->qty_id[$k];
+            $cart = Cart::find($id);
 
-    // public function removeCart(Request $request){
-    //     $index=$request->index;
-    //     // return $index;
-    //     $cart=session('cart');
-    //     unset($cart[$index]);
-    //     session()->put('cart',$cart);
-    //     return redirect()->back()->with('success','Successfully remove item');
-    // }
+            // Ownership check (guest / user dono ke liye)
+            if (!$cart) {
+                $error[] = 'Cart item not found!';
+                continue;
+            }
+            if ($user_id && $cart->user_id != $user_id) {
+                continue; // skip - not this user's cart item
+            }
+            if (!$user_id && $cart->session_id != $session_id) {
+                continue; // skip - not this session's cart item
+            }
 
+            if ($quant > 0 && $cart) {
+                if ($cart->product->stock < $quant) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Out of stock',
+                    ]);
+                }
+
+                $cart->quantity = ($cart->product->stock > $quant) ? $quant : $cart->product->stock;
+
+                if ($cart->product->stock <= 0) continue;
+
+                $cart_stored_price = json_decode($cart->size_price, true);
+                $stored_price       = $cart_stored_price['price'] ?? 0;
+
+                $cart->amount = $stored_price * $quant;
+                $cart->save();
+                $success = 'Cart successfully updated!';
+            } else {
+                $error[] = 'Cart Invalid!';
+            }
+        }
+
+        /* ===============================
+            RE-VALIDATE COUPON HERE
+        =============================== */
+        if (session()->has('coupon')) {
+            $totalQuery = Cart::where('order_id', null);
+            if ($user_id) {
+                $totalQuery->where('user_id', $user_id);
+            } else {
+                $totalQuery->where('session_id', $session_id);
+            }
+            $total_price = $totalQuery->sum('amount');
+
+            $couponData = session('coupon');
+            $coupon = Coupon::where('id', $couponData['id'])->first();
+
+            if (!$coupon) {
+                session()->forget('coupon');
+                return response()->json([
+                    'status'  => true,
+                    'message' => 'Coupon removed (invalid)',
+                ]);
+            }
+
+            $discountAmount = $coupon->discount($total_price);
+            if ($discountAmount >= $total_price || ($total_price - $discountAmount) < 100) {
+                session()->forget('coupon');
+                return response()->json([
+                    'status'  => true,
+                    'message' => 'Coupon removed because cart total no longer meets minimum amount',
+                ]);
+            }
+            session()->put('coupon.value', $discountAmount);
+        }
+
+        return response()->json([
+            'status'  => empty($error),
+            'message' => $success ?: implode(', ', $error),
+        ]);
+    }
+
+    /**
+     * Delete cart item via AJAX (Guest + Logged-in both supported)
+     */
+    public function cartDelete(Request $request, $id = null){
+        $cartId = $id ?? $request->cart_id;
+        $cart   = Cart::find($cartId);
+
+        if (!$cart) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Cart item not found.',
+            ]);
+        }
+
+        // Ownership check (guest / user dono ke liye)
+        $user_id    = Auth::check() ? Auth::id() : null;
+        $session_id = Auth::check() ? null : session()->getId();
+
+        if ($user_id && $cart->user_id != $user_id) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Unauthorized action.',
+            ]);
+        }
+        if (!$user_id && $cart->session_id != $session_id) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Unauthorized action.',
+            ]);
+        }
+
+        $cart->delete();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Item removed from cart.',
+        ]);
+    }
+
+    /**
+     * Checkout page (Auth protected - middleware('user') lagaya hai route me)
+     */
     public function checkout(Request $request){
-        // $cart=session('cart');
-        // $cart_index=\Str::random(10);
-        // $sub_total=0;
-        // foreach($cart as $cart_item){
-        //     $sub_total+=$cart_item['amount'];
-        //     $data=array(
-        //         'cart_id'=>$cart_index,
-        //         'user_id'=>$request->user()->id,
-        //         'product_id'=>$cart_item['id'],
-        //         'quantity'=>$cart_item['quantity'],
-        //         'amount'=>$cart_item['amount'],
-        //         'status'=>'new',
-        //         'price'=>$cart_item['price'],
-        //     );
-
-        //     $cart=new Cart();
-        //     $cart->fill($data);
-        //     $cart->save();
-        // }
         return view('frontend.pages.checkout');
     }
 }

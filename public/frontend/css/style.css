@@ -1040,7 +1040,8 @@ Version:1.0
 .header.shop .right-bar .sinlge-bar .single-icon:hover{
 	color:#5db845;
 }
-.header.shop .right-bar .sinlge-bar .single-icon .total-count {
+.header.shop .right-bar .sinlge-bar .single-icon .total-count,
+.header.shop .right-bar .sinlge-bar .single-icon .wishlist-total-count {
 	position: absolute;
 	top: -7px;
 	right: -8px;
@@ -1053,6 +1054,7 @@ Version:1.0
 	border-radius: 100%;
 	font-size: 11px;
 }
+
 .header.shop .right-bar .sinlge-bar{
 	display:inline-block;
 	margin-right:25px;

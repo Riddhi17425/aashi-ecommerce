@@ -148,14 +148,14 @@
                                                     @endif
                                                 </a>
                                                 <div class="button-head">
-                                                    <div class="product-action">
-                                                        <a data-toggle="modal" data-target="#{{$product->id}}" title="Quick View" href="#"><i class=" ti-eye"></i><span>Quick Shop</span></a>
-                                                        <a title="Wishlist" href="{{route('add-to-wishlist',$product->slug)}}" class="wishlist" data-id="{{$product->id}}"><i class=" ti-heart "></i><span>Add to Wishlist</span></a>
-                                                    </div>
-                                                    <div class="product-action-2">
-                                                        <a title="Add to cart" href="{{route('add-to-cart',$product->slug)}}">Add to cart</a>
-                                                    </div>
-                                                </div>
+    <div class="product-action">
+        <a data-toggle="modal" data-target="#{{$product->id}}" title="Quick View" href="#"><i class=" ti-eye"></i><span>Quick Shop</span></a>
+        <a title="Wishlist" href="{{route('add-to-wishlist',$product->slug)}}" class="wishlist" data-id="{{$product->id}}"><i class=" ti-heart "></i><span>Add to Wishlist</span></a>
+    </div>
+    <div class="product-action-2">
+        <a title="Add to cart" href="javascript:void(0);" class="quick-add-to-cart-btn" data-slug="{{ $product->slug }}">Add to cart</a>
+    </div>
+</div>
                                             </div>
                                             <div class="product-content">
                                                 <h3><a href="{{route('product-detail',$product->slug)}}">{{$product->product_code }}</a></h3>
@@ -370,7 +370,50 @@
 @endpush
 @push('scripts')
 <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script> --}}
+    <script src="{{ asset('public/frontend/js/sweetalert.min.js') }}"></script>
+    <script>
+$(document).on('click', '.quick-add-to-cart-btn', function () {
+    let slug = $(this).data('slug');
+
+    $.ajax({
+        url: "{{ route('single-add-to-cart') }}",
+        method: "POST",
+        data: {
+            _token: "{{ csrf_token() }}",
+            slug: slug,
+            quant: { 1: 1 },
+            selected_size: '',
+            selected_price: '',
+            selected_color: ''
+        },
+        success: function (response) {
+            if (response.status) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: response.message,
+                    confirmButtonColor: '#F7941D',
+                });
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: response.message,
+                    confirmButtonColor: '#F7941D',
+                });
+            }
+        },
+        error: function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Something went wrong!',
+            });
+        }
+    });
+});
+</script>
     {{-- <script>
         $('.cart').click(function(){
             var quantity=1;
