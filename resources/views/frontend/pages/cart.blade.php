@@ -92,7 +92,7 @@
 									</tr>
 								@endforeach
 							@else
-									<tr>
+									<tr class="empty-cart-row">
 										<td class="text-center" colspan="7">
 											There are no any carts available. <a href="{{route('product-lists')}}" style="color:blue;">Continue shopping</a>
 										</td>
