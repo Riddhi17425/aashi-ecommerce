@@ -676,7 +676,7 @@
                                                             @endif
                                                         </div>
                                                         <div class="rating-des">
-                                                            <h6>{{ $data->user_info['name'] }}</h6>
+                                                            <h6>{{ $data->user_info['name'] ?? '' }}</h6>
                                                             <div class="ratings">
                                                                 <ul class="rating">
                                                                     @for ($i = 1; $i <= 5; $i++)
