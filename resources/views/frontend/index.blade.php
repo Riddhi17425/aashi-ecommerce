@@ -1027,7 +1027,7 @@
 
         @media (max-width: 991px) {
             .card-media-wrap {
-                height: 260px;
+                /* height: 260px; */
             }
 
             #Gslider .carousel-inner img {
@@ -1037,7 +1037,7 @@
 
         @media (max-width: 576px) {
             .card-media-wrap {
-                height: 210px;
+                /* height: 210px; */
             }
 
             .card-content-wrap {

@@ -66,7 +66,7 @@
     <div class="middle-inner">
         <div class="container">
             <div class="row">
-                <div class="col-lg-2 col-md-2 col-12">
+                <div class="col-lg-2 col-md-2 col-12 mobile-header-row">
                     <!-- Logo -->
                     <div class="logo">
                         @php
@@ -308,6 +308,28 @@
                             @endauth
                             <!--/ End Shopping Item -->
                         </div>
+                        <!-- Mobile User Menu -->
+                        <div class="sinlge-bar shopping user-menu mobile-user-menu">
+                            <a href="#" class="single-icon"><i class="ti-user"></i></a>
+                            <div class="shopping-item" style="padding: 15px; min-width: 200px; right: 0; left: auto;">
+                                <ul class="user-dropdown-list" style="margin: 0; padding: 0; list-style: none;">
+                                    @auth
+                                        @if(Auth::user()->role != 'admin')
+                                            <li style="padding: 10px 0; border-bottom: 1px solid #f6f6f6;"><i class="ti-location-pin" style="margin-right: 10px; color: #F7941D;"></i> <a href="{{route('order.track')}}" style="color: #333; font-weight: 500;">Track Order</a></li>
+                                            <li style="padding: 10px 0; border-bottom: 1px solid #f6f6f6;"><i class="ti-user" style="margin-right: 10px; color: #F7941D;"></i> <a href="{{route('user-profile')}}" style="color: #333; font-weight: 500;">My Profile</a></li>
+                                            <li style="padding: 10px 0; border-bottom: 1px solid #f6f6f6;"><i class="ti-shopping-cart" style="margin-right: 10px; color: #F7941D;"></i> <a href="{{route('myorders')}}" style="color: #333; font-weight: 500;">My Orders</a></li>
+                                            <li style="padding: 10px 0;"><i class="ti-power-off" style="margin-right: 10px; color: #F7941D;"></i> <a href="{{route('user.logout')}}" style="color: #333; font-weight: 500;">Logout</a></li>
+                                        @else
+                                            <li style="padding: 10px 0; border-bottom: 1px solid #f6f6f6;"><i class="ti-location-pin" style="margin-right: 10px; color: #F7941D;"></i> <a href="{{route('login.form')}}" style="color: #333; font-weight: 500;">Track Order</a></li>
+                                            <li style="padding: 10px 0;"><i class="ti-power-off" style="margin-right: 10px; color: #F7941D;"></i><a href="{{route('login.form')}}" style="color: #333; font-weight: 500;">Login /</a> <a href="{{route('register.form')}}" style="color: #333; font-weight: 500;">Register</a></li>
+                                        @endif
+                                    @else
+                                        <li style="padding: 10px 0;"><i class="ti-power-off" style="margin-right: 10px; color: #F7941D;"></i><a href="{{route('login.form')}}" style="color: #333; font-weight: 500;">Login /</a> <a href="{{route('register.form')}}" style="color: #333; font-weight: 500;">Register</a></li>
+                                    @endauth
+                                </ul>
+                            </div>
+                        </div>
+                        <!--/ End Mobile User Menu -->
                     </div>
                 </div>
             </div>
@@ -400,5 +422,38 @@ window.addEventListener('load', function() {
     }
     */
 });
+
+// Mobile layout adjustments for search bar and wishlist/cart icons
+// Running this synchronously prevents FOUC (layout shift) on page load!
+if (window.innerWidth <= 767) {
+    // Move right-bar to mobile-nav's parent so it sits in the top header
+    var rightBar = document.querySelector('.right-bar');
+    var mobileNav = document.querySelector('.mobile-nav');
+    if (rightBar && mobileNav) {
+        mobileNav.parentNode.insertBefore(rightBar, mobileNav);
+    }
+
+    // Move search bar inside slicknav menu
+    // We use an interval to wait for slicknav to be fully generated
+    var checkSlickNav = setInterval(function() {
+        var slickNav = document.querySelector('.slicknav_nav');
+        var searchBar = document.querySelector('.search-bar-top');
+        if (slickNav && searchBar) {
+            var li = document.createElement('li');
+            li.className = 'mobile-search-item';
+            li.style.padding = '10px 15px';
+            li.style.background = '#fff';
+            li.style.borderBottom = '1px solid #eee';
+            li.appendChild(searchBar);
+            slickNav.insertBefore(li, slickNav.firstChild);
+            clearInterval(checkSlickNav);
+        }
+    }, 100);
+    
+    // Stop checking after 5 seconds just in case
+    setTimeout(function() {
+        clearInterval(checkSlickNav);
+    }, 5000);
+}
 </script>
 </header>

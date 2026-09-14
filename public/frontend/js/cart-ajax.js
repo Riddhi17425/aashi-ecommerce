@@ -111,7 +111,7 @@ $(document).on('click', '.delete-cart-item', function () {
                         updateHeaderCartCount();
 
                         if ($('#cart_item_list .cart-item-row').length === 0) {
-                            let emptyRow = `<tr><td class="text-center" colspan="7">
+                            let emptyRow = `<tr class="empty-cart-row"><td class="text-center" colspan="7">
                                 There are no any carts available. <a href="${window.appData.productListUrl}" style="color:blue;">Continue shopping</a>
                             </td></tr>`;
                             $('#cart_item_list').html(emptyRow);
