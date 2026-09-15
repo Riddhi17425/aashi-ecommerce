@@ -12,7 +12,7 @@
 						@endphp
 						<div class="single-footer about">
 							<div class="logo">
-								<a href="{{route('home')}}"><img src="@foreach($settings as $data) {{asset('public'.$data->logo)}} @endforeach" alt="#" width="220px"></a>
+								<a href="{{route('home')}}"><img src="@foreach($settings as $data) {{asset('public'.$data->logo)}} @endforeach" alt="#" width="250px"></a>
 							</div>
 							
 							<p class="text">@foreach($settings as $data) {!! $data->short_des !!} @endforeach</p>
