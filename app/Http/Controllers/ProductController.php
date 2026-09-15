@@ -64,7 +64,7 @@ class ProductController extends Controller
             'status'=>'required|in:active,inactive',
             'condition'=>'nullable|in:default,new,hot',
             'discount'=>'nullable|numeric',
-            'hsn_code' => 'required',
+            'hsn_code' => 'nullable',
             'gst_percent' => 'required|numeric|min:0|max:100',
             'stock' => 'required|numeric',
             
@@ -271,7 +271,7 @@ class ProductController extends Controller
             'status'=>'required|in:active,inactive',
             'condition'=>'nullable|in:default,new,hot',
             'discount'=>'nullable|numeric',
-            'hsn_code' => 'required',
+            'hsn_code' => 'nullable',
             'gst_percent' => 'required|numeric|min:0|max:100',
             'stock' => 'required|numeric',
             
@@ -298,15 +298,15 @@ class ProductController extends Controller
             'price.*.min'      => 'Price must be zero or greater.',
         ]);
         // Add manual slug validation
-        $validator->after(function ($validator) use ($slug, $product) {
-            $exists = Product::where('slug', $slug)
-                ->whereNull('deleted_at')
-                ->where('id', '!=', $product->id)
-                ->first();
-            if ($exists) {
-                $validator->errors()->add('title', 'Product title already exists.');
-            }
-        });
+        // $validator->after(function ($validator) use ($slug, $product) {
+        //     $exists = Product::where('slug', $slug)
+        //         ->whereNull('deleted_at')
+        //         ->where('id', '!=', $product->id)
+        //         ->first();
+        //     if ($exists) {
+        //         $validator->errors()->add('title', 'Product title already exists.');
+        //     }
+        // });
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)

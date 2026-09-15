@@ -94,8 +94,12 @@
         -moz-appearance: textfield;
         appearance: textfield;
     }
-    .preloader {
-        display: none !important;
+    body {
+        animation: smoothFadeIn 0.5s ease-in-out;
+    }
+    @keyframes smoothFadeIn {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
     }
 </style>
 @stack('styles')
