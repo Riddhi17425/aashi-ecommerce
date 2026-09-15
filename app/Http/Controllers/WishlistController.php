@@ -5,6 +5,8 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Wishlist;
+use Helper;
+
 class WishlistController extends Controller
 {
     protected $product=null;
@@ -13,15 +15,16 @@ class WishlistController extends Controller
     }
 
     public function wishlist(Request $request){
-        //echo "<pre>"; print_r($request->all()); die;
-        // dd($request->all());
+        $isAjax = $request->ajax() || $request->wantsJson();
+
         if (empty($request->slug)) {
+            if ($isAjax) return response()->json(['status'=>false,'message'=>'Invalid Products']);
             request()->session()->flash('error','Invalid Products');
             return back();
         }        
         $product = Product::where('slug', $request->slug)->first();
-        // return $product;
         if (empty($product)) {
+            if ($isAjax) return response()->json(['status'=>false,'message'=>'Invalid Products']);
             request()->session()->flash('error','Invalid Products');
             return back();
         }
@@ -31,9 +34,17 @@ class WishlistController extends Controller
             $already_wishlist = $already_wishlist->where('color_id', $request->color_id);
         }
         $already_wishlist = $already_wishlist->where('product_id', $product->id)->first();
-        // return $already_wishlist;
+
         if($already_wishlist) {
             $already_wishlist->delete();
+            if ($isAjax) {
+                return response()->json([
+                    'status'=>true,
+                    'message'=>'Product removed from wishlist',
+                    'wishlisted'=>false,
+                    'wishlist_count'=>Helper::wishlistCount()
+                ]);
+            }
             request()->session()->flash('success','Product Removed to wishlist');
             return back();
         }else{
@@ -49,12 +60,25 @@ class WishlistController extends Controller
             $wishlist->quantity = 1;
             $wishlist->amount=$wishlist->price*$wishlist->quantity;
             $wishlist->color_id=$request->color_id ?? null;
-            if ($wishlist->product->stock < $wishlist->quantity || $wishlist->product->stock <= 0) return back()->with('error','Stock not sufficient!.');
+
+            if ($wishlist->product->stock < $wishlist->quantity || $wishlist->product->stock <= 0) {
+                if ($isAjax) return response()->json(['status'=>false,'message'=>'Stock not sufficient!']);
+                return back()->with('error','Stock not sufficient!.');
+            }
             $wishlist->save();
+
+            if ($isAjax) {
+                return response()->json([
+                    'status'=>true,
+                    'message'=>'Product successfully added to wishlist',
+                    'wishlisted'=>true,
+                    'wishlist_count'=>Helper::wishlistCount()
+                ]);
+            }
         }
         request()->session()->flash('success','Product successfully added to wishlist');
         return back();       
-    }  
+    }
     
     public function wishlistDelete(Request $request){
         $wishlist = Wishlist::find($request->id);

@@ -252,10 +252,12 @@
                                 <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4">
                                     <div class="custom-product-card list-content">
                                         <div class="card-media-wrap">
-                                            <a href="{{ route('product-detail', $product->slug) }}" class="card-img-link">
+                                            <a href="{{ route('product-detail', $product->slug) }}"
+                                                class="card-img-link">
                                                 @php $photo=explode(',',$product->photo); @endphp
                                                 <img class="default-img card-default-img"
-                                                    src="{{ asset('public/' . $photo[0]) }}" alt="{{ $product->title }}">
+                                                    src="{{ asset('public/' . $photo[0]) }}"
+                                                    alt="{{ $product->title }}">
                                                 @if (isset($photo[1]))
                                                     <img class="hover-img card-hover-img"
                                                         src="{{ asset('public/' . $photo[1]) }}"
@@ -303,6 +305,46 @@
                                                     </a>
                                                 </h4>
 
+                                                {{-- Dynamic Product Rating --}}
+                                                @php
+                                                    $reviewCount = $product->getReview->count();
+                                                    $rate =
+                                                        $reviewCount > 0
+                                                            ? round($product->getReview->avg('rate'), 1)
+                                                            : 0;
+                                                @endphp
+
+                                                @if ($reviewCount > 0)
+                                                    <div class="card-rating my-2"
+                                                        style="
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #F7941D;
+            padding: 4px 8px;
+            border-radius: 4px;
+        ">
+
+
+
+                                                        <span style="font-size: 12px; color: #fff; margin-left: 2px;">
+                                                            {{ number_format($rate, 1) }}
+                                                        </span>
+
+                                                        <i class="fa fa-star" style="color: #fff; font-size: 12px;"></i>
+
+                                                        <span style="font-size: 12px; color: #fff; margin-left: 4px;">
+                                                            |
+                                                        </span>
+
+                                                        <span style="font-size: 12px; color: #fff; margin-left: 2px;">
+                                                            {{ $reviewCount }}
+                                                        </span>
+
+                                                    </div>
+                                                @endif
+
+
                                                 {{-- <div class="card-rating my-2"
                                                     style="display: flex; align-items: center; gap: 3px;">
                                                     <i class="fa fa-star" style="color: #F7941D; font-size: 12px;"></i>
@@ -334,14 +376,15 @@
                                                 @endif
                                             </div>
 
-                                             <div class="card-cta-container">
-                                                        <a href="{{route('product-detail',$product->slug)}}" class="btn-card-details">
-                                                            <span>View Details</span>
-                                                            <i class="ti-arrow-right"></i>
-                                                        </a>
-                                                    </div>
+                                            <div class="card-cta-container">
+                                                <a href="{{ route('product-detail', $product->slug) }}"
+                                                    class="btn-card-details">
+                                                    <span>View Details</span>
+                                                    <i class="ti-arrow-right"></i>
+                                                </a>
+                                            </div>
 
-                                            
+
 
                                             {{-- <div class="add-to-cart mt-auto pt-2">
                                                 <div class="d-flex align-items-center m-0"
@@ -556,7 +599,6 @@
 @endsection
 @push('styles')
     <style>
-
         .btn-card-details {
             display: flex;
             align-items: center;
@@ -573,16 +615,16 @@
             transition: all 0.25s ease;
         }
 
-         .btn-card-details:hover {
+        .btn-card-details:hover {
             background: #5db845;
             box-shadow: 0 4px 12px rgba(93, 184, 69, 0.35);
         }
- 
+
         .btn-card-details i {
             font-size: 11px;
             transition: transform 0.2s ease;
         }
- 
+
         .btn-card-details:hover i {
             transform: translateX(4px);
         }
@@ -1042,7 +1084,7 @@
 @endpush
 @push('scripts')
     {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script> --}}
-	<script src="{{ asset('public/frontend/js/sweetalert.min.js') }}"></script>
+    <script src="{{ asset('public/frontend/js/sweetalert.min.js') }}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1135,52 +1177,54 @@
         });
     </script>
 
-	<script>
-$(document).on('click', '.quick-add-to-cart-btn', function () {
-    let btn = $(this);
-    let slug = btn.data('slug');
-    let productBox = btn.closest('.list-content');
+    <script>
+        $(document).on('click', '.quick-add-to-cart-btn', function() {
+            let btn = $(this);
+            let slug = btn.data('slug');
+            let productBox = btn.closest('.list-content');
 
-    let selectedSize  = productBox.find('.selected_size').val() || '';
-    let selectedPrice = productBox.find('.selected_price').val() || '';
-    let selectedColor = productBox.find('.selected_color, [id^="selected_color"]').val() || '';
+            let selectedSize = productBox.find('.selected_size').val() || '';
+            let selectedPrice = productBox.find('.selected_price').val() || '';
+            let selectedColor = productBox.find('.selected_color, [id^="selected_color"]').val() || '';
 
-    $.ajax({
-        url: "{{ route('single-add-to-cart') }}",
-        method: "POST",
-        data: {
-            _token: "{{ csrf_token() }}",
-            slug: slug,
-            quant: { 1: 1 },
-            selected_size: selectedSize,
-            selected_price: selectedPrice,
-            selected_color: selectedColor
-        },
-        success: function (response) {
-            if (response.status) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: response.message,
-                    confirmButtonColor: '#F7941D',
-                });
-            } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Warning',
-                    text: response.message,
-                    confirmButtonColor: '#F7941D',
-                });
-            }
-        },
-        error: function () {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Something went wrong!',
+            $.ajax({
+                url: "{{ route('single-add-to-cart') }}",
+                method: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    slug: slug,
+                    quant: {
+                        1: 1
+                    },
+                    selected_size: selectedSize,
+                    selected_price: selectedPrice,
+                    selected_color: selectedColor
+                },
+                success: function(response) {
+                    if (response.status) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            confirmButtonColor: '#F7941D',
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: response.message,
+                            confirmButtonColor: '#F7941D',
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Something went wrong!',
+                    });
+                }
             });
-        }
-    });
-});
-</script>
+        });
+    </script>
 @endpush

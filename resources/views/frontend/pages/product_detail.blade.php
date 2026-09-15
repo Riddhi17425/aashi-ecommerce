@@ -104,232 +104,289 @@
                                     <div class="rating-main">
                                         <ul class="rating">
                                             @php
-                                                $rate = ceil($product_detail->getReview->avg('rate'));
+                                                $reviewCount = $product_detail->getReview->count();
+                                                $rate =
+                                                    $reviewCount > 0
+                                                        ? round($product_detail->getReview->avg('rate'), 1)
+                                                        : 0;
                                             @endphp
-                                            @for ($i = 1; $i <= 5; $i++)
-                                                @if ($rate >= $i)
-                                                    <li><i class="fa fa-star"></i></li>
-                                                @else
-                                                    <li><i class="fa fa-star-o"></i></li>
-                                                @endif
-                                            @endfor
-                                        </ul>
-                                        <a href="javascript:void(0);"class="total-review">({{ $product_detail['getReview']->count() }})
-                                            Review</a>
-                                    </div>
-                                    @php
-                                        //$after_discount=($product_detail->price-(($product_detail->price*$product_detail->discount)/100));
-                                        $sizes = json_decode($product_detail->size);
-                                        $priceArr = $sizes->price;
-                                        $productPrice = 0;
-                                        //foreach($priceArr as $k => $v){
-                                        $productPrice = $priceArr[0];
-                                        //}
-                                        $after_discount =
-                                            $productPrice - ($productPrice * $product_detail->discount) / 100;
-                                        $sizeData = json_decode($product_detail->size, true);
-                                    @endphp
-                                    {{-- @if ($product_detail->discount > 0)
+
+                                            @if ($reviewCount > 0)
+                                                <div class="rating-main"
+                                                    style="display: flex; align-items: center; gap: 6px;">
+
+                                                    {{-- Stars --}}
+                                                    <ul class="rating"
+                                                        style="display: flex; align-items: center; margin: 0; gap: 2px;">
+
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            @php
+                                                                $fillPercentage = max(
+                                                                    0,
+                                                                    min(100, ($rate - ($i - 1)) * 100),
+                                                                );
+                                                            @endphp
+
+                                                            <li style="line-height: 1;">
+                                                                <i class="fa fa-star"
+                                                                    style="
+                            font-size: 14px;
+                            background: linear-gradient(
+                                to right,
+                                #F7941D {{ $fillPercentage }}%,
+                                #d9d9d9 {{ $fillPercentage }}%
+                            );
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            background-clip: text;
+                        ">
+                                                                </i>
+                                                            </li>
+                                                        @endfor
+
+                                                    </ul>
+
+                                                    {{-- Rating Info Box --}}
+                                                    <div
+                                                        style="
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #F7941D;
+            padding: 4px 8px;
+            border-radius: 4px;
+        ">
+
+                                                        <span style="font-size: 13px; color: #fff;">
+                                                            {{ number_format($rate, 1) }}
+                                                        </span>
+
+                                                        <span style="font-size: 13px; color: #fff;">
+                                                            |
+                                                        </span>
+
+                                                        <span style="font-size: 13px; color: #fff;">
+                                                            {{ $reviewCount }} Rating
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+                                            @endif @php
+                                                //$after_discount=($product_detail->price-(($product_detail->price*$product_detail->discount)/100));
+                                                $sizes = json_decode($product_detail->size);
+                                                $priceArr = $sizes->price;
+                                                $productPrice = 0;
+                                                //foreach($priceArr as $k => $v){
+                                                $productPrice = $priceArr[0];
+                                                //}
+                                                $after_discount =
+                                                    $productPrice - ($productPrice * $product_detail->discount) / 100;
+                                                $sizeData = json_decode($product_detail->size, true);
+                                            @endphp
+                                            {{-- @if ($product_detail->discount > 0)
                         @if (isset($sizeData['price'][0]) && is_numeric($sizeData['price'][0]))
                         <p class="price" > <small><del class="text-muted">₹{{number_format($sizeData['price'][0], 2)}}</del></small> <span class ="discount" id="targetDivId" >₹{{ number_format($after_discount, 2) }}</span></p>
                         @endif
                         @else
                         <p class="price" ><span  class ="discount" id="targetDivId" >₹{{ number_format($sizeData['price'][0], 2) }}</span></p>
                         @endif --}}
-                                    <p class="price" data-discount="{{ $product_detail->discount }}">
-                                        @if ($product_detail->discount > 0)
-                                            <small class="original-price">
-                                                <del class="text-muted">
-                                                    ₹{{ number_format($sizeData['price'][0], 2) }}
-                                                </del>
-                                            </small>
-                                            <span class="discounted-price" id="targetDivId">
-                                                ₹{{ number_format($after_discount, 2) }}
-                                            </span>
-                                        @else
-                                            <span class="discounted-price" id="targetDivId">
-                                                ₹{{ number_format($sizeData['price'][0], 2) }}
-                                            </span>
-                                        @endif
-                                    </p>
-                                </div>
-                                <!--/ End Description -->
-                                <!-- Color -->
-                                @if ($product_detail->color->first())
-                                    <div class="color mt-4">
-                                        <h4>Available Options <span>Color</span></h4>
-                                        <!--<ul id="color-options">-->
-                                        <!--	@foreach ($product_detail->color as $key => $color)
+                                            <p class="price" data-discount="{{ $product_detail->discount }}">
+                                                @if ($product_detail->discount > 0)
+                                                    <small class="original-price">
+                                                        <del class="text-muted">
+                                                            ₹{{ number_format($sizeData['price'][0], 2) }}
+                                                        </del>
+                                                    </small>
+                                                    <span class="discounted-price" id="targetDivId">
+                                                        ₹{{ number_format($after_discount, 2) }}
+                                                    </span>
+                                                @else
+                                                    <span class="discounted-price" id="targetDivId">
+                                                        ₹{{ number_format($sizeData['price'][0], 2) }}
+                                                    </span>
+                                                @endif
+                                            </p>
+                                    </div>
+                                    <!--/ End Description -->
+                                    <!-- Color -->
+                                    @if ($product_detail->color->first())
+                                        <div class="color mt-4">
+                                            <h4>Available Options <span>Color</span></h4>
+                                            <!--<ul id="color-options">-->
+                                            <!--	@foreach ($product_detail->color as $key => $color)
     -->
-                                        <!--		<li>-->
-                                        <!--			<a style="background-color: {{ $color->color_code }};" href="javascript:void(0);" class="one color-selector {{ $key == 0 ? 'set_active' : '' }}" data-color-id="{{ $color->id }}" data-color-name="{{ $color->color_name }}" onclick="setPriceId(this)">-->
-                                        <!--				<i class="ti-check {{ $loop->first ? 'selected' : '' }}"></i>-->
-                                        <!--			</a>-->
-                                        <!--		</li>-->
-                                        <!--
+                                            <!--		<li>-->
+                                            <!--			<a style="background-color: {{ $color->color_code }};" href="javascript:void(0);" class="one color-selector {{ $key == 0 ? 'set_active' : '' }}" data-color-id="{{ $color->id }}" data-color-name="{{ $color->color_name }}" onclick="setPriceId(this)">-->
+                                            <!--				<i class="ti-check {{ $loop->first ? 'selected' : '' }}"></i>-->
+                                            <!--			</a>-->
+                                            <!--		</li>-->
+                                            <!--
     @endforeach-->
-                                        <!--</ul>-->
-                                        <ul id="color-options">
-                                            @foreach ($product_detail->color as $key => $color)
-                                                @php
-                                                    $isWhite =
-                                                        strtolower($color->color_code) == '#ffffff' ||
-                                                        strtolower($color->color_code) == '#fff' ||
-                                                        strtolower($color->color_name) == 'white';
-                                                @endphp
-                                                <li>
-                                                    <a style="
+                                            <!--</ul>-->
+                                            <ul id="color-options">
+                                                @foreach ($product_detail->color as $key => $color)
+                                                    @php
+                                                        $isWhite =
+                                                            strtolower($color->color_code) == '#ffffff' ||
+                                                            strtolower($color->color_code) == '#fff' ||
+                                                            strtolower($color->color_name) == 'white';
+                                                    @endphp
+                                                    <li>
+                                                        <a style="
                                  background-color: {{ $color->color_code }};
                                  border: {{ $isWhite ? '1px solid #eee' : '1px solid transparent' }};
                                  "
-                                                        href="javascript:void(0);"
-                                                        class="one color-selector {{ $key == 0 ? 'set_active' : '' }}"
-                                                        data-color-id="{{ $color->id }}"
-                                                        data-color-name="{{ $color->color_name }}"
-                                                        onclick="setPriceId(this)">
-                                                        <i class="ti-check {{ $loop->first ? 'selected' : '' }}"
-                                                            style="color: {{ $isWhite ? '#000' : '#fff' }};">
-                                                        </i>
-                                                    </a>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                @endif
-                                <!--/ End Color -->
-                                <!-- Size -->
-                                @if ($product_detail->size)
-                                    <div class="size mt-4  product-sizeoptions">
-                                        <h4>Size</h4>
-                                        <ul id="size-options">
-                                            @php
-                                                $sizes = json_decode($product_detail->size, true);
-                                            @endphp
-                                            @foreach ($sizes['size'] as $key => $size)
-                                                <li><a href="javascript:void(0);"
-                                                        data-price-id="{{ $sizes['price'][$key] }}"
-                                                        data-size-id="{{ $sizes['size'][$key] }}"
-                                                        class="one {{ $key == 0 ? 'set_active' : '' }}"
-                                                        onclick="setPriceId(this)">{{ $size }}</a>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                @endif
-                                <!--/ End Size -->
-                                <!-- Product Buy -->
-                                <div class="">
-                                    <div id="add-to-cart-wrapper">
-                                        @if ($product_detail->stock > 0)
-                                            <div class="quantity mt-3">
-                                                <h6>Quantity :</h6>
-                                                <!-- Input Order -->
-                                                <div class="input-group">
-                                                    <div class="button minus">
-                                                        <button type="button" class="btn btn-primary btn-number"
-                                                            disabled="disabled" data-type="minus" data-field="quant[1]">
-                                                            <i class="ti-minus"></i>
-                                                        </button>
-                                                    </div>
-                                                    <input type="hidden" name="slug" id="product_slug"
-                                                        value="{{ $product_detail->slug }}">
-                                                    <input type="text" name="quant[1]" class="input-number"
-                                                        data-min="1" data-max="1000" value="1" id="quantity">
-                                                    <div class="button plus">
-                                                        <button type="button" class="btn btn-primary btn-number"
-                                                            data-type="plus" data-field="quant[1]">
-                                                            <i class="ti-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <!--/ End Input Order -->
-                                            </div>
-                                        @endif
-                                        <?php
-                                        $defaultColorId = $product_detail->color->first()->id ?? null;
-                                        $whishlist_check = App\Models\Wishlist::where('user_id', Auth::id() ?? 0)->where('product_id', $product_detail->id);
-                                        if ($defaultColorId != null) {
-                                            $whishlist_check = $whishlist_check->where('color_id', $defaultColorId);
-                                        }
-                                        $whishlist_check = $whishlist_check->first();
-                                        $wishlisted = '';
-                                        if ($whishlist_check) {
-                                            $wishlisted = 'active';
-                                        } else {
-                                            $wishlisted = '';
-                                        }
-                                        ?>
-                                        <div class="add-to-cart mt-4">
-                                            <input type="hidden" name="selected_size" id="selected_size"
-                                                value="{{ $sizes['size'][0] ?? '' }}">
-                                            <input type="hidden" name="selected_price" id="selected_price"
-                                                value="{{ $sizeData['price'][0], 2 ?? '' }}">
-                                            <input type="hidden" name="selected_color" id="selected_color"
-                                                value="{{ $product_detail->color[0]->id }}">
-                                            <input type="hidden" name="selected_color_name" id="selected_color_name"
-                                                value="{{ $product_detail->color[0]->color_name }}">
+                                                            href="javascript:void(0);"
+                                                            class="one color-selector {{ $key == 0 ? 'set_active' : '' }}"
+                                                            data-color-id="{{ $color->id }}"
+                                                            data-color-name="{{ $color->color_name }}"
+                                                            onclick="setPriceId(this)">
+                                                            <i class="ti-check {{ $loop->first ? 'selected' : '' }}"
+                                                                style="color: {{ $isWhite ? '#000' : '#fff' }};">
+                                                            </i>
+                                                        </a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
+                                    <!--/ End Color -->
+                                    <!-- Size -->
+                                    @if ($product_detail->size)
+                                        <div class="size mt-4  product-sizeoptions">
+                                            <h4>Size</h4>
+                                            <ul id="size-options">
+                                                @php
+                                                    $sizes = json_decode($product_detail->size, true);
+                                                @endphp
+                                                @foreach ($sizes['size'] as $key => $size)
+                                                    <li><a href="javascript:void(0);"
+                                                            data-price-id="{{ $sizes['price'][$key] }}"
+                                                            data-size-id="{{ $sizes['size'][$key] }}"
+                                                            class="one {{ $key == 0 ? 'set_active' : '' }}"
+                                                            onclick="setPriceId(this)">{{ $size }}</a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
+                                    <!--/ End Size -->
+                                    <!-- Product Buy -->
+                                    <div class="">
+                                        <div id="add-to-cart-wrapper">
                                             @if ($product_detail->stock > 0)
-                                                <button type="button" class="btn add_to_cart_btn"
-                                                    data-product-id="{{ $product_detail->id }}">Add to cart</button>
-                                                <a href="javascript:void(0);"
-                                                    class="add-to-wishlist btn min {{ $wishlisted }}"><i
-                                                        class="ti-heart"></i></a>
-                                                <button type="button" class="btn cart buy-now-btn"
-                                                    data-id="{{ $product_detail->id }}">
-                                                    Buy Now!
-                                                </button>
-                                            @else
-                                                <button type="button" class="btn" disabled>Out of Stock</button>
+                                                <div class="quantity mt-3">
+                                                    <h6>Quantity :</h6>
+                                                    <!-- Input Order -->
+                                                    <div class="input-group">
+                                                        <div class="button minus">
+                                                            <button type="button" class="btn btn-primary btn-number"
+                                                                disabled="disabled" data-type="minus"
+                                                                data-field="quant[1]">
+                                                                <i class="ti-minus"></i>
+                                                            </button>
+                                                        </div>
+                                                        <input type="hidden" name="slug" id="product_slug"
+                                                            value="{{ $product_detail->slug }}">
+                                                        <input type="text" name="quant[1]" class="input-number"
+                                                            data-min="1" data-max="1000" value="1"
+                                                            id="quantity">
+                                                        <div class="button plus">
+                                                            <button type="button" class="btn btn-primary btn-number"
+                                                                data-type="plus" data-field="quant[1]">
+                                                                <i class="ti-plus"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <!--/ End Input Order -->
+                                                </div>
                                             @endif
+                                            <?php
+                                            $defaultColorId = $product_detail->color->first()->id ?? null;
+                                            $whishlist_check = App\Models\Wishlist::where('user_id', Auth::id() ?? 0)->where('product_id', $product_detail->id);
+                                            if ($defaultColorId != null) {
+                                                $whishlist_check = $whishlist_check->where('color_id', $defaultColorId);
+                                            }
+                                            $whishlist_check = $whishlist_check->first();
+                                            $wishlisted = '';
+                                            if ($whishlist_check) {
+                                                $wishlisted = 'active';
+                                            } else {
+                                                $wishlisted = '';
+                                            }
+                                            ?>
+                                            <div class="add-to-cart mt-4">
+                                                <input type="hidden" name="selected_size" id="selected_size"
+                                                    value="{{ $sizes['size'][0] ?? '' }}">
+                                                <input type="hidden" name="selected_price" id="selected_price"
+                                                    value="{{ $sizeData['price'][0], 2 ?? '' }}">
+                                                <input type="hidden" name="selected_color" id="selected_color"
+                                                    value="{{ $product_detail->color[0]->id }}">
+                                                <input type="hidden" name="selected_color_name" id="selected_color_name"
+                                                    value="{{ $product_detail->color[0]->color_name }}">
+                                                @if ($product_detail->stock > 0)
+                                                    <button type="button" class="btn add_to_cart_btn"
+                                                        data-product-id="{{ $product_detail->id }}">Add to cart</button>
+                                                    <a href="javascript:void(0);"
+                                                        class="add-to-wishlist btn min {{ $wishlisted }}"><i
+                                                            class="ti-heart"></i></a>
+                                                    <button type="button" class="btn cart buy-now-btn"
+                                                        data-id="{{ $product_detail->id }}">
+                                                        Buy Now!
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn" disabled>Out of Stock</button>
+                                                @endif
+                                            </div>
+                                            <div class="product-share mt-3">
+                                                <h6>Share Product :</h6>
+                                                @php
+                                                    $shareUrl = route('product-detail', $product_detail->slug);
+                                                    $shareText = urlencode(
+                                                        $product_detail->title . ' - Check this product',
+                                                    );
+                                                @endphp
+                                                <a href="https://wa.me/?text={{ $shareText }}%20{{ urlencode($shareUrl) }}"
+                                                    target="_blank" class="share-btn whatsapp">
+                                                    <i class="fa fa-whatsapp"></i>
+                                                </a>
+                                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($shareUrl) }}"
+                                                    target="_blank" class="share-btn facebook">
+                                                    <i class="fa fa-facebook"></i>
+                                                </a>
+                                                <a href="https://www.instagram.com/" target="_blank"
+                                                    class="share-btn instagram">
+                                                    <i class="fa fa-instagram"></i>
+                                                </a>
+                                            </div>
                                         </div>
-                                        <div class="product-share mt-3">
-                                            <h6>Share Product :</h6>
-                                            @php
-                                                $shareUrl = route('product-detail', $product_detail->slug);
-                                                $shareText = urlencode(
-                                                    $product_detail->title . ' - Check this product',
-                                                );
-                                            @endphp
-                                            <a href="https://wa.me/?text={{ $shareText }}%20{{ urlencode($shareUrl) }}"
-                                                target="_blank" class="share-btn whatsapp">
-                                                <i class="fa fa-whatsapp"></i>
-                                            </a>
-                                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($shareUrl) }}"
-                                                target="_blank" class="share-btn facebook">
-                                                <i class="fa fa-facebook"></i>
-                                            </a>
-                                            <a href="https://www.instagram.com/" target="_blank"
-                                                class="share-btn instagram">
-                                                <i class="fa fa-instagram"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <p class="cat">Category :<a
-                                            href="{{ route('product-cat', $product_detail->cat_info['slug']) }}">{{ $product_detail->cat_info['title'] }}</a>
-                                    </p>
-                                    @if ($product_detail->sub_cat_info)
-                                        <p class="cat mt-1">Sub Category :<a
-                                                href="{{ route('product-sub-cat', [$product_detail->cat_info['slug'], $product_detail->sub_cat_info['slug']]) }}">{{ $product_detail->sub_cat_info['title'] }}</a>
+                                        <p class="cat">Category :<a
+                                                href="{{ route('product-cat', $product_detail->cat_info['slug']) }}">{{ $product_detail->cat_info['title'] }}</a>
                                         </p>
-                                    @endif
-                                    @if ($product_detail->size_chart)
-                                        <p class="mt-3"> <a class="View-Size-Chart" href="javascript:void(0);"
-                                                data-toggle="modal" data-target="#sizeChartModal">
-                                                <b>View Size Chart</b>
-                                            </a></p>
-                                    @endif
-                                    <!-- <p class="availability">Stock : @if ($product_detail->stock > 0)
+                                        @if ($product_detail->sub_cat_info)
+                                            <p class="cat mt-1">Sub Category :<a
+                                                    href="{{ route('product-sub-cat', [$product_detail->cat_info['slug'], $product_detail->sub_cat_info['slug']]) }}">{{ $product_detail->sub_cat_info['title'] }}</a>
+                                            </p>
+                                        @endif
+                                        @if ($product_detail->size_chart)
+                                            <p class="mt-3"> <a class="View-Size-Chart" href="javascript:void(0);"
+                                                    data-toggle="modal" data-target="#sizeChartModal">
+                                                    <b>View Size Chart</b>
+                                                </a></p>
+                                        @endif
+                                        <!-- <p class="availability">Stock : @if ($product_detail->stock > 0)
     <span class="badge badge-success">{{ $product_detail->stock }}</span>
 @else
     <span class="badge badge-danger">{{ $product_detail->stock }}</span>
     @endif
-                    </p> -->
-                                    @if ($product_detail->product_features)
-                                        <p class="cat mb-2"> <b style="font-size:20px;">Features :</b>
-                                            {!! $product_detail->product_features !!}</p>
-                                    @endif
-                                </div>
-                                {{-- 
+                                    </p> -->
+                                        @if ($product_detail->product_features)
+                                            <p class="cat mb-2"> <b style="font-size:20px;">Features :</b>
+                                                {!! $product_detail->product_features !!}</p>
+                                        @endif
+                                    </div>
+                                    {{-- 
                      <div class="row">
                         <div class="col-12">
                            <div class="product-info">
@@ -397,12 +454,12 @@
                         </div>
                      </div>
                      --}}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
     </section>
     <section class="shop single pt-0 pb-5">
         <div class="container">
@@ -980,6 +1037,80 @@
     </div>
     <!-- Modal end -->
 
+    <!-- Checkout Authentication Modal (guest Buy Now flow: email -> login/register -> checkout) -->
+    <div class="modal fade" id="checkoutAuthModal" tabindex="-1" aria-hidden="true" data-backdrop="static"
+        data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title w-100 text-center" id="checkoutAuthTitle">Login to Checkout</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body text-center">
+                    <form id="checkout-auth-form">
+                        @csrf
+
+                        <div id="checkout-auth-alert" class="alert alert-danger d-none py-2 px-3 mb-3 text-start"></div>
+
+                        <div id="step-email" class="auth-step">
+                            <p>Please enter your email address to continue.</p>
+                            <div class="form-group text-start">
+                                <label>Email address</label>
+                                <input type="email" name="email" id="checkout_email" class="form-control" required>
+                            </div>
+                            <div class="d-flex flex-column align-items-center gap-2 mt-4">
+                                <button type="button" id="btn-email-next" class="btn w-100">Continue</button>
+                                <button type="button" class="btn-auth-secondary" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+
+                        <div id="step-login" class="auth-step d-none">
+                            <p>This email is already registered. Please enter your password to continue.</p>
+                            <div class="form-group text-start">
+                                <label>Password</label>
+                                <input type="password" name="password" id="checkout_password" class="form-control">
+                            </div>
+                            <div class="d-flex flex-column align-items-center gap-2 mt-4">
+                                <button type="submit" id="btn-login-submit" class="btn w-100">Login & Checkout</button>
+                                <button type="button" id="btn-login-back" class="btn btn-link">&larr; Back</button>
+                            </div>
+                        </div>
+
+                        <div id="step-register" class="auth-step d-none">
+                            <p>It looks like you are new here. Create an account to complete your checkout.</p>
+                            <div class="form-group text-start">
+                                <label>Full Name</label>
+                                <input type="text" name="name" id="checkout_name" class="form-control">
+                            </div>
+                            <div class="form-group text-start">
+                                <label>Email Address</label>
+                                <input type="email" name="register_email" id="checkout_register_email"
+                                    class="form-control" readonly>
+                            </div>
+                            <div class="form-group text-start">
+                                <label>Password (min 6 characters)</label>
+                                <input type="password" name="reg_password" id="checkout_reg_password"
+                                    class="form-control">
+                            </div>
+                            <div class="form-group text-start">
+                                <label>Confirm Password</label>
+                                <input type="password" name="reg_password_confirmation"
+                                    id="checkout_reg_password_confirmation" class="form-control">
+                            </div>
+                            <div class="d-flex flex-column align-items-center gap-2 mt-4">
+                                <button type="submit" id="btn-register-submit" class="btn w-100">Register &
+                                    Checkout</button>
+                                <button type="button" id="btn-register-back" class="btn btn-link">&larr; Back</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Checkout Authentication Modal -->
+
 
     @if ($product_detail->size_chart)
         <div class="modal fade size-chart-modal" id="sizeChartModal" tabindex="-1" role="dialog"
@@ -1294,12 +1425,152 @@
         }
     </style>
 @endpush
-@push('scripts')
-    {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script> --}}
+
+{{-- Checkout Auth Modal styling (guest Buy Now flow) --}}
+@push('styles')
+    <style>
+        #checkoutAuthModal.modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #checkoutAuthModal.modal.show {
+            display: flex !important;
+        }
+
+        #checkoutAuthModal .modal-dialog {
+            max-width: 460px;
+            width: 90%;
+            margin: 20px auto;
+        }
+
+        #checkoutAuthModal .modal-content {
+            background: #ffffff;
+            border-radius: 8px;
+            border: none;
+            padding: 30px 25px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+            position: relative;
+        }
+
+        #checkoutAuthModal .modal-header {
+            border-bottom: none;
+            padding: 0 0 15px 0;
+            position: relative;
+            display: block;
+            text-align: center;
+        }
+
+        #checkoutAuthModal .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        #checkoutAuthModal .close {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 20px;
+            line-height: 1;
+            color: #475569;
+            opacity: 1;
+        }
+
+        #checkoutAuthModal .modal-body {
+            padding: 0;
+        }
+
+        #checkoutAuthModal .form-group {
+            margin-bottom: 18px;
+        }
+
+        #checkoutAuthModal .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 6px;
+            text-align: left;
+        }
+
+        #checkoutAuthModal .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        #checkoutAuthModal .btn.w-100 {
+            display: block;
+            width: 100%;
+            background: #111827;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #checkoutAuthModal .btn.w-100:hover {
+            background: #5db845;
+        }
+
+        #checkoutAuthModal .btn-auth-secondary,
+        #checkoutAuthModal .btn-link {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 13px;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        #checkoutAuthModal p {
+            text-align: center;
+            color: #64748b;
+            font-size: 13.5px;
+            margin-bottom: 20px;
+        }
+
+        #checkoutAuthModal .d-none {
+            display: none !important;
+        }
+
+        #checkoutAuthModal .alert-danger {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+    </style>
+@endpush
+
+ @push('scripts')
     <script src="{{ asset('public/frontend/js/sweetalert.min.js') }}"></script>
     <script>
         function setPriceId(element) {
-            // console.log(element);
             var priceId = element.getAttribute('data-price-id');
             var sizeId = element.getAttribute('data-size-id');
             var colorId = element.getAttribute('data-color-id');
@@ -1310,7 +1581,6 @@
             var selectedColor = document.getElementById('selected_color').value;
             var selectedColorName = document.getElementById('selected_color_name').value;
 
-            // Set the selected size and price in hidden inputs	
             document.getElementById('selected_size').value = sizeId != null ? sizeId : selectedSize;
             document.getElementById('selected_price').value = priceId != null ? priceId : selectedPrice;
             document.getElementById('selected_color').value = colorId != null ? colorId : selectedColor;
@@ -1320,8 +1590,6 @@
                 priceId = document.getElementById('selected_price').value;
             }
 
-            // const targetDiv = document.getElementById('targetDivId');
-            // targetDiv.textContent = '₹'+priceId+'.00';
             const priceWrapper = document.querySelector('.price');
             const discountPercent = parseFloat(priceWrapper.dataset.discount || 0);
             const basePrice = parseFloat(priceId);
@@ -1329,18 +1597,13 @@
 
             if (discountPercent > 0) {
                 finalPrice = basePrice - (basePrice * discountPercent / 100);
-                // Update strike price
                 const originalPriceEl = priceWrapper.querySelector('.original-price del');
                 if (originalPriceEl) {
                     originalPriceEl.innerText = '₹' + basePrice.toFixed(2);
                 }
             }
-            // Update discounted / final price
-            document.getElementById('targetDivId').innerText =
-                '₹' + finalPrice.toFixed(2);
-            // Update hidden input (important for cart)
+            document.getElementById('targetDivId').innerText = '₹' + finalPrice.toFixed(2);
             document.getElementById('selected_price').value = finalPrice.toFixed(2);
-
 
             const links = document.querySelectorAll('.one');
             links.forEach(link => {
@@ -1349,32 +1612,121 @@
             element.classList.add('set_active');
             checkWishlistStatus();
         }
+
+        function checkWishlistStatus() {
+            let productId = "{{ $product_detail->id }}";
+            let colorId = $('#selected_color').val();
+
+            $.ajax({
+                url: "{{ route('wishlist.check') }}",
+                type: "GET",
+                data: {
+                    product_id: productId,
+                    color_id: colorId
+                },
+                success: function(res) {
+                    if (res.wishlisted) {
+                        $('.add-to-wishlist').addClass('active');
+                    } else {
+                        $('.add-to-wishlist').removeClass('active');
+                    }
+                }
+            });
+        }
+
+        function fetchColorImages(colorId) {
+            var fetchUrl = '{{ url('get-color-images') }}' + '/' + colorId;
+            $.ajax({
+                url: fetchUrl,
+                type: 'GET',
+                success: function(response) {
+                    $('.main-banner').slick('unslick');
+                    $('.small-banner').slick('unslick');
+                    $('.main-banner').empty();
+                    $('.small-banner').empty();
+
+                    $.each(response.images, function(index, image) {
+                        $('.main-banner').append(
+                            '<div><img src="' + image + '" alt="Main Image ' + (index + 1) + '"></div>'
+                        );
+                    });
+                    $.each(response.images, function(index, image) {
+                        $('.small-banner').append(
+                            '<div><img src="' + image + '" alt="Thumbnail Image ' + (index + 1) + '"></div>'
+                        );
+                    });
+
+                    $('.main-banner').slick({
+                        slidesToShow: 1,
+                        slidesToScroll: 1,
+                        arrows: false,
+                        fade: true,
+                        asNavFor: '.small-banner'
+                    });
+
+                    $('.small-banner').slick({
+                        slidesToShow: 3,
+                        slidesToScroll: 1,
+                        asNavFor: '.main-banner',
+                        dots: true,
+                        centerMode: true,
+                        focusOnSelect: true,
+                        arrows: true
+                    });
+                },
+                error: function(xhr) {
+                    console.error("Error fetching color images: ", xhr);
+                }
+            });
+        }
+
         $(document).ready(function() {
             checkWishlistStatus();
-            // When a size is clicked
-            // $('#size-options a').click(function(e) {
-            //     e.preventDefault(); // Prevent default action of the link
 
-            //     // Remove 'set_active' from all links and add to the clicked one
-            //     $('#size-options a').removeClass('set_active');
-            //     $(this).addClass('set_active');
-
-            //     // Get the price associated with the clicked size
-            //     var price = $(this).data('price');
-
-            //     // Update the price display
-            //     $('#price-display').text(parseFloat(price).toFixed(2));
-            // });
-
+            // ---- WISHLIST (AJAX, no page reload) ----
             $('.add-to-wishlist').on('click', function(e) {
                 e.preventDefault();
 
+                let btn = $(this);
                 let baseUrl = "{{ route('add-to-wishlist', $product_detail->slug) }}";
                 let colorId = $('#selected_color').val();
 
-                window.location.href = baseUrl + '?color_id=' + colorId;
+                $.ajax({
+                    url: baseUrl,
+                    method: "GET",
+                    data: { color_id: colorId },
+                    success: function(response) {
+                        if (response.status) {
+                            btn.toggleClass('active', response.wishlisted);
+                            $('.wishlist-total-count').text(response.wishlist_count); 
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message,
+                                showConfirmButton: true,
+                                confirmButtonColor: '#F7941D',
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning',
+                                text: response.message,
+                                showConfirmButton: true,
+                                confirmButtonColor: '#F7941D',
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Something went wrong!',
+                        });
+                    }
+                });
             });
 
+            // ---- ADD TO CART ----
             $(document).on('click', '.add_to_cart_btn', function() {
                 let productId = $(this).data('product-id');
                 let qty = $('#quantity').val() || 1;
@@ -1385,9 +1737,7 @@
                     data: {
                         _token: "{{ csrf_token() }}",
                         slug: $('#product_slug').val(),
-                        quant: {
-                            1: qty
-                        },
+                        quant: { 1: qty },
                         selected_size: $('#selected_size').val(),
                         selected_price: $('#selected_price').val(),
                         selected_color: $('#selected_color').val(),
@@ -1427,6 +1777,7 @@
                 });
             });
 
+            // ---- BUY NOW ----
             $(document).on('click', '.buy-now-btn', function(e) {
                 e.preventDefault();
                 let qty = $('#quantity').val() || 1;
@@ -1437,9 +1788,7 @@
                     data: {
                         _token: "{{ csrf_token() }}",
                         slug: $('#product_slug').val(),
-                        quant: {
-                            1: qty
-                        },
+                        quant: { 1: qty },
                         selected_size: $('#selected_size').val(),
                         selected_price: $('#selected_price').val(),
                         selected_color: $('#selected_color').val(),
@@ -1447,7 +1796,17 @@
                     },
                     success: function(response) {
                         if (response.status) {
-                            window.location.href = "{{ route('cart') }}";
+                            @auth
+                                window.location.href = "{{ route('checkout') }}";
+                            @else
+                                $('.auth-step').addClass('d-none');
+                                $('#step-email').removeClass('d-none');
+                                $('#checkoutAuthTitle').text('Login to Checkout');
+                                $('#checkout_email').val('');
+                                $('#checkout-auth-alert').addClass('d-none').text('');
+                                $('#checkoutAuthModal').addClass('show').css('display', 'flex');
+                                $('body').addClass('modal-open');
+                            @endauth
                         } else {
                             Swal.fire({
                                 icon: 'warning',
@@ -1468,117 +1827,24 @@
                 });
             });
 
-            function checkWishlistStatus() {
-                let productId = "{{ $product_detail->id }}";
-                let colorId = $('#selected_color').val();
+            // ---- COLOR SELECTOR ----
+            var defaultColorId = $('#color-options .color-selector').first().data('color-id');
 
-                $.ajax({
-                    url: "{{ route('wishlist.check') }}",
-                    type: "GET",
-                    data: {
-                        product_id: productId,
-                        color_id: colorId
-                    },
-                    success: function(res) {
-                        console.log("RES - " + JSON.stringify(res));
-                        if (res.wishlisted) {
-                            $('.add-to-wishlist').addClass('active');
-                        } else {
-                            $('.add-to-wishlist').removeClass('active');
-                        }
-                    }
-                });
-            }
+            $('.color-selector').on('click', function(e) {
+                e.preventDefault();
+                $('#color-options i').removeClass('selected');
+                $(this).find('i').addClass('selected');
+                var colorId = $(this).data('color-id');
+                fetchColorImages(colorId);
+            });
 
-            $(document).ready(function() {
-                // Show the first color's thumbnails and main image by default
-                var defaultColorId = $('#color-options .color-selector').first().data('color-id');
-
-                // Handle color selection
-                $('.color-selector').on('click', function(e) {
-                    e.preventDefault(); // Prevent default anchor behavior
-
-                    // Remove 'selected' class from all color icons
-                    $('#color-options i').removeClass('selected');
-
-                    // Add 'selected' class to the clicked color icon
-                    $(this).find('i').addClass('selected');
-
-                    // Get the color ID of the selected color
-                    var colorId = $(this).data('color-id');
-
-                    // Fetch thumbnails and main image for the selected color
-                    fetchColorImages(colorId);
-                });
-
-                // On thumbnail click, update the main image
-                $(document).on('click', '.thumbnail', function() {
-                    var newImageSrc = $(this).data('image');
-                    $('#main-img').attr('src', newImageSrc); // Update main image
-                });
-
-                // Function to fetch and update the image list based on color ID
-                function fetchColorImages(colorId) {
-                    // Make an AJAX request to fetch the images for the selected color
-                    var fetchUrl = '{{ url('get-color-images') }}' + '/' + colorId;
-                    $.ajax({
-                        url: fetchUrl,
-                        type: 'GET',
-                        success: function(response) {
-                            // Clear existing sliders (both main and small banners)
-                            $('.main-banner').slick(
-                                'unslick'); // Uninitialize Slick before updating
-                            $('.small-banner').slick(
-                                'unslick'); // Uninitialize Slick before updating
-                            $('.main-banner').empty(); // Clear the current images
-                            $('.small-banner').empty(); // Clear the thumbnails
-
-                            // Append new images to the main banner
-                            $.each(response.images, function(index, image) {
-                                $('.main-banner').append(
-                                    '<div><img src="' + image +
-                                    '" alt="Main Image ' + (index +
-                                        1) + '"></div>'
-                                );
-                            });
-
-                            // Append new images to the thumbnail slider
-                            $.each(response.images, function(index, image) {
-                                $('.small-banner').append(
-                                    '<div><img src="' + image +
-                                    '" alt="Thumbnail Image ' + (
-                                        index + 1) + '"></div>'
-                                );
-                            });
-
-                            // Reinitialize Slick for both sliders after appending new images
-                            $('.main-banner').slick({
-                                slidesToShow: 1,
-                                slidesToScroll: 1,
-                                arrows: false,
-                                fade: true,
-                                asNavFor: '.small-banner'
-                            });
-
-                            $('.small-banner').slick({
-                                slidesToShow: 3,
-                                slidesToScroll: 1,
-                                asNavFor: '.main-banner',
-                                dots: true,
-                                centerMode: true,
-                                focusOnSelect: true,
-                                arrows: true
-                            });
-                        },
-                        error: function(xhr) {
-                            console.error("Error fetching color images: ", xhr);
-                        }
-                    });
-                }
-
+            $(document).on('click', '.thumbnail', function() {
+                var newImageSrc = $(this).data('image');
+                $('#main-img').attr('src', newImageSrc);
             });
         });
     </script>
+
     <!-- Slick JS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel/slick/slick.min.js"></script>
     <script type="text/javascript">
@@ -1588,7 +1854,7 @@
                 slidesToScroll: 1,
                 arrows: false,
                 fade: false,
-                asNavFor: '.small-banner' // This links the main banner with the thumbnail banner
+                asNavFor: '.small-banner'
             });
 
             $('.small-banner').slick({
@@ -1600,4 +1866,15 @@
             });
         });
     </script>
+@endpush
+{{-- Checkout Auth Modal wiring (email check / login / register AJAX from cart-ajax.js, reused here) --}}
+@push('scripts')
+    <script>
+        window.appCsrfToken = window.appCsrfToken || "{{ csrf_token() }}";
+        window.appRoutes = window.appRoutes || {};
+        window.appRoutes.checkoutCheckEmail = "{{ route('checkout.check-email') }}";
+        window.appRoutes.checkoutLogin = "{{ route('checkout.login') }}";
+        window.appRoutes.checkoutRegister = "{{ route('checkout.register') }}";
+    </script>
+    <script src="{{ asset('public/frontend/js/cart-ajax.js') }}"></script>
 @endpush
