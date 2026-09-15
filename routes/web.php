@@ -150,7 +150,7 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::get('/wishlist', function () {
         return view('frontend.pages.wishlist');
     })->name('wishlist');
-    Route::get('/wishlist/{slug}', [WishlistController::class, 'wishlist'])->name('add-to-wishlist')->middleware('user');
+    Route::get('/wishlist/{slug}', [WishlistController::class, 'wishlist'])->name('add-to-wishlist');
     Route::get('wishlist-delete/{id}', [WishlistController::class, 'wishlistDelete'])->name('wishlist-delete');
     Route::get('/wishlist-check', [WishlistController::class, 'check'])->name('wishlist.check');
     Route::post('cart/order', [OrderController::class, 'store'])->name('cart.order');

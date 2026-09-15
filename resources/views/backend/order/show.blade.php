@@ -88,7 +88,7 @@
                         <td> : ₹ {{$order->shiping_charges}}</td>
                     </tr>
                     <tr>
-                        <td>Shipping Charge</td>
+                        <td>GST Amount</td>
                         <td> : ₹ {{$order->total_gst_amount ?? ''}}</td>
                     </tr>
                     @if(isset($order->coupon) && $order->coupon != null)

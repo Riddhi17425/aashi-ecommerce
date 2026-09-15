@@ -599,6 +599,21 @@
 @endsection
 @push('styles')
     <style>
+        /* Blinking text cursor (caret) ko page me kahin bhi na dikhaye */
+* {
+    caret-color: transparent;
+}
+
+/* Sirf typing wale fields me caret wapas normal */
+input,
+textarea,
+select,
+[contenteditable="true"],
+.form-control,
+.input-number,
+.select-custom {
+    caret-color: auto !important;
+}
         .btn-card-details {
             display: flex;
             align-items: center;

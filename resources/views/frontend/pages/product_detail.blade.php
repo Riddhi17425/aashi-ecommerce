@@ -333,7 +333,7 @@
                                                             class="ti-heart"></i></a>
                                                     <button type="button" class="btn cart buy-now-btn"
                                                         data-id="{{ $product_detail->id }}">
-                                                        Buy Now!
+                                                        Buy Now
                                                     </button>
                                                 @else
                                                     <button type="button" class="btn" disabled>Out of Stock</button>
@@ -380,7 +380,7 @@
 @else
     <span class="badge badge-danger">{{ $product_detail->stock }}</span>
     @endif
-                                    </p> -->
+                                        </p> -->
                                         @if ($product_detail->product_features)
                                             <p class="cat mb-2"> <b style="font-size:20px;">Features :</b>
                                                 {!! $product_detail->product_features !!}</p>
@@ -481,11 +481,11 @@
                                         <div class="col-12">
                                             <div class="single-des">
                                                 <p>{!! $product_detail->description !!}</p>
-                                                @if ($product_detail->cat_info->slug == 'rainwear')
-                                                    <div id="accordion" class="custom-accordion mt-4">
-                                                        <!-- Item 1 -->
-                                                        @php $productName = strtolower($product_detail->product_code); @endphp
-                                                        @if (!in_array($productName, ['apt poncho', 'apn poncho', 'jlpc-101', 'rlpc-104']))
+                                                {{-- @if ($product_detail->cat_info->slug == 'rainwear') --}}
+                                                <div id="accordion" class="custom-accordion mt-4">
+                                                    @php $productName = strtolower($product_detail->product_code); @endphp
+                                                    @if (!in_array($productName, ['apt poncho', 'apn poncho', 'jlpc-101', 'rlpc-104']))
+                                                        @if ($product_detail->cat_info->slug == 'rainwear')
                                                             <div class="card">
                                                                 <div class="card-header">
                                                                     <button class="btn btn-link" data-toggle="collapse"
@@ -515,242 +515,226 @@
                                                                 </div>
                                                             </div>
                                                         @endif
-                                                        <!-- Item 2 -->
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <button class="btn btn-link collapsed"
-                                                                    data-toggle="collapse" data-target="#collapseTwo">
-                                                                    <i class="fa fa-truck accordion-left-icon"></i>
-                                                                    Shipping Instructions
-                                                                    <span class="plus-minus">
-                                                                        <i class=" fa fa-plus"></i>
-                                                                        <i class="fa fa-minus"></i>
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                            <div id="collapseTwo" class="collapse"
-                                                                data-parent="#accordion">
-                                                                <div class="card-body">
-                                                                    <ul>
-                                                                        <li>Orders are usually processed within 24–48 hours
-                                                                            after confirmation.</li>
-                                                                        <li>Delivery timelines may vary depending on your
-                                                                            location and courier availability</li>
-                                                                        <li>Please provide a complete and accurate shipping
-                                                                            address with a valid contact number.</li>
-                                                                        <li>Delivery timelines may be affected due to bad
-                                                                            weather conditions or unforeseen courier delays.
-                                                                        </li>
-                                                                        <li>Once your order is shipped, tracking details
-                                                                            will be shared via SMS or email.</li>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
+                                                    @endif
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseTwo">
+                                                                <i class="fa fa-truck accordion-left-icon"></i>
+                                                                Shipping Instructions
+                                                                <span class="plus-minus">
+                                                                    <i class=" fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
                                                         </div>
-                                                        <!-- Item 3 -->
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <button class="btn btn-link collapsed"
-                                                                    data-toggle="collapse" data-target="#collapseThree">
-                                                                    <i class="fa fa-exchange accordion-left-icon"></i>
-                                                                    7-Day Easy Exchange
-                                                                    <span class="plus-minus">
-                                                                        <i class="fa fa-plus"></i>
-                                                                        <i class="fa fa-minus"></i>
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                            <div id="collapseThree" class="collapse"
-                                                                data-parent="#accordion">
-                                                                <div class="card-body">
-                                                                    <ul>
-                                                                        <li>Free Exchange Available.</li>
-                                                                        <li>Request an exchange within 7 days of delivery.
-                                                                        </li>
-                                                                        {{-- 
-                                                <li>Click here to exchange your product.(Link Paste here)</li>
-                                                --}}
-                                                                        <li>Exchange is not applicable on free products or
-                                                                            promotional items.</li>
-                                                                        {{-- <li>Size and color exchanges are subject to stock availability.</li> --}}
-                                                                        <li>Only one-time exchange is allowed per order.
-                                                                        </li>
-                                                                        {{-- <li>If you receive a wrong product, please share an unboxing video of the package for verification.</li> --}}
-                                                                        <li>If you receive a wrong product, please share an
-                                                                            images of the Product for verification.</li>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <!-- Item 4 -->
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <button class="btn btn-link collapsed"
-                                                                    data-toggle="collapse" data-target="#collapseFour">
-                                                                    <i class="fa fa-refresh accordion-left-icon"></i>
-                                                                    7-Day Easy Return & Refund
-                                                                    <span class="plus-minus">
-                                                                        <i class="fa fa-plus"></i>
-                                                                        <i class="fa fa-minus"></i>
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                            <div id="collapseFour" class="collapse"
-                                                                data-parent="#accordion">
-                                                                <div class="card-body">
-                                                                    <ul>
-                                                                        <li>We offer a 7-day return policy for eligible
-                                                                            products.</li>
-                                                                        {{-- 
-                                                <li>Click here to initiate your return request(Paste Return Link)</li>
-                                                --}}
-                                                                        <li>To be eligible for a return, the product must be
-                                                                            unused and in its original condition and
-                                                                            packaging.</li>
-                                                                        <li>Returns cannot be initiated before the product
-                                                                            is delivered.</li>
-                                                                        <li>Refunds will be processed to the original
-                                                                            payment method after the returned item is
-                                                                            received and verified.</li>
-                                                                        <li>For Cash on Delivery (COD) orders, customers
-                                                                            will be required to provide bank account details
-                                                                            for refund processing.</li>
-                                                                        <li>Refunds are usually initiated within 2–4 working
-                                                                            days after receiving the returned product.</li>
-                                                                        <li>If you receive a wrong product, please share an
-                                                                            images of the Product for verification purposes.
-                                                                        </li>
-                                                                        <li>In case your pin code is not serviceable for
-                                                                            reverse pickup, you may be required to self-ship
-                                                                            the product.</li>
-                                                                        <li>Please do not accept the package if it appears
-                                                                            tampered with or damaged.</li>
-                                                                        <li>Do not share the OTP (One-Time Password) with
-                                                                            the delivery partner unless you have received
-                                                                            the package</li>
-                                                                        {{-- <li>To cancel an order, please contact us through the “Contact Us” page. Our team will respond within 24 hours.</li> --}}
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <!-- Item 5 -->
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <button class="btn btn-link collapsed"
-                                                                    data-toggle="collapse" data-target="#collapseFive">
-                                                                    <i class="fa fa-tint accordion-left-icon"></i>
-                                                                    Wash & Care Instructions
-                                                                    <span class="plus-minus">
-                                                                        <i class="fa fa-plus"></i>
-                                                                        <i class="fa fa-minus"></i>
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                            <div id="collapseFive" class="collapse"
-                                                                data-parent="#accordion">
-                                                                <div class="card-body">
-                                                                    <ul>
-                                                                        <li>Clean the product using running water.</li>
-                                                                        <li>Do not iron the garment.</li>
-                                                                        <li>Do not tumble dry.</li>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <!-- Item 6 -->
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <button class="btn btn-link collapsed"
-                                                                    data-toggle="collapse" data-target="#collapseSix">
-                                                                    <i class="fa fa-globe accordion-left-icon"></i>
-                                                                    Country Origin
-                                                                    <span class="plus-minus">
-                                                                        <i class="fa fa-plus"></i>
-                                                                        <i class="fa fa-minus"></i>
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                            <div id="collapseSix" class="collapse"
-                                                                data-parent="#accordion">
-                                                                <div class="card-body">
-                                                                    <ul>
-                                                                        <li>India</li>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <!-- Item 7 -->
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <button class="btn btn-link collapsed"
-                                                                    data-toggle="collapse" data-target="#collapseSeven">
-                                                                    <i class="fa fa-industry accordion-left-icon"></i>
-                                                                    Manufactured and Marketed By
-                                                                    <span class="plus-minus">
-                                                                        <i class="fa fa-plus"></i>
-                                                                        <i class="fa fa-minus"></i>
-                                                                    </span>
-                                                                </button>
-                                                            </div>
-                                                            <div id="collapseSeven" class="collapse"
-                                                                data-parent="#accordion">
-                                                                <div class="card-body">
-                                                                    <ul>
-                                                                        <li>NEW AASHI RAINWEAR, 843/2, NIDHI IND ESTATE,
-                                                                            RAKANPUR, Gandhinagar, Gujarat, 382721</li>
-                                                                    </ul>
-                                                                </div>
+                                                        <div id="collapseTwo" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Orders are usually processed within 24–48 hours
+                                                                        after confirmation.</li>
+                                                                    <li>Delivery timelines may vary depending on your
+                                                                        location and courier availability</li>
+                                                                    <li>Please provide a complete and accurate shipping
+                                                                        address with a valid contact number.</li>
+                                                                    <li>Delivery timelines may be affected due to bad
+                                                                        weather conditions or unforeseen courier delays.
+                                                                    </li>
+                                                                    <li>Once your order is shipped, tracking details
+                                                                        will be shared via SMS or email.</li>
+                                                                </ul>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endif
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseThree">
+                                                                <i class="fa fa-exchange accordion-left-icon"></i>
+                                                                7-Day Easy Exchange
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseThree" class="collapse"
+                                                            data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Free Exchange Available.</li>
+                                                                    <li>Request an exchange within 7 days of delivery.
+                                                                    </li>
+                                                                    <li>Exchange is not applicable on free products or
+                                                                        promotional items.</li>
+                                                                    <li>Only one-time exchange is allowed per order.
+                                                                    </li>
+                                                                    <li>If you receive a wrong product, please share an
+                                                                        images of the Product for verification.</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseFour">
+                                                                <i class="fa fa-refresh accordion-left-icon"></i>
+                                                                7-Day Easy Return & Refund
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseFour" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>We offer a 7-day return policy for eligible
+                                                                        products.</li>
+
+                                                                    <li>To be eligible for a return, the product must be
+                                                                        unused and in its original condition and
+                                                                        packaging.</li>
+                                                                    <li>Returns cannot be initiated before the product
+                                                                        is delivered.</li>
+                                                                    <li>Refunds will be processed to the original
+                                                                        payment method after the returned item is
+                                                                        received and verified.</li>
+                                                                    <li>For Cash on Delivery (COD) orders, customers
+                                                                        will be required to provide bank account details
+                                                                        for refund processing.</li>
+                                                                    <li>Refunds are usually initiated within 2–4 working
+                                                                        days after receiving the returned product.</li>
+                                                                    <li>If you receive a wrong product, please share an
+                                                                        images of the Product for verification purposes.
+                                                                    </li>
+                                                                    <li>In case your pin code is not serviceable for
+                                                                        reverse pickup, you may be required to self-ship
+                                                                        the product.</li>
+                                                                    <li>Please do not accept the package if it appears
+                                                                        tampered with or damaged.</li>
+                                                                    <li>Do not share the OTP (One-Time Password) with
+                                                                        the delivery partner unless you have received
+                                                                        the package</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseFive">
+                                                                <i class="fa fa-tint accordion-left-icon"></i>
+                                                                Wash & Care Instructions
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseFive" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Clean the product using running water.</li>
+                                                                    <li>Do not iron the garment.</li>
+                                                                    <li>Do not tumble dry.</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseSix">
+                                                                <i class="fa fa-globe accordion-left-icon"></i>
+                                                                Country Origin
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseSix" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>India</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseSeven">
+                                                                <i class="fa fa-industry accordion-left-icon"></i>
+                                                                Manufactured and Marketed By
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseSeven" class="collapse"
+                                                            data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>NEW AASHI RAINWEAR, 843/2, NIDHI IND ESTATE,
+                                                                        RAKANPUR, Gandhinagar, Gujarat, 382721</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                        {{-- @endif --}}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="tab-pane fade" id="reviews" role="tabpanel">
-                                <div class="tab-single review-panel">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="ratting-main">
-                                                <div class="avg-ratting">
-                                                    <h4>{{ ceil($product_detail->getReview->avg('rate')) }}
-                                                        <span>(Overall)</span>
-                                                    </h4>
-                                                    <span>Based on {{ $product_detail->getReview->count() }}
-                                                        Comments</span>
-                                                </div>
-                                                @foreach ($product_detail['getReview'] as $data)
-                                                    <div class="single-rating">
-                                                        <div class="rating-author">
-                                                            @if ($data->user_info['photo'])
-                                                                <img src="{{ asset('public/' . $data->user_info['photo']) }}"
-                                                                    alt="{{ $data->user_info['photo'] }}">
-                                                            @else
-                                                                <img src="{{ asset('public/backend/img/avatar.png') }}"
-                                                                    alt="Profile.jpg">
-                                                            @endif
+                                    <div class="tab-pane fade" id="reviews" role="tabpanel">
+                                        <div class="tab-single review-panel">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="ratting-main">
+                                                        <div class="avg-ratting">
+                                                            <h4>{{ ceil($product_detail->getReview->avg('rate')) }}
+                                                                <span>(Overall)</span>
+                                                            </h4>
+                                                            <span>Based on {{ $product_detail->getReview->count() }}
+                                                                Comments</span>
                                                         </div>
-                                                        <div class="rating-des">
-                                                            <h6>{{ $data->user_info['name'] ?? '' }}</h6>
-                                                            <div class="ratings">
-                                                                <ul class="rating">
-                                                                    @for ($i = 1; $i <= 5; $i++)
-                                                                        @if ($data->rate >= $i)
-                                                                            <li><i class="fa fa-star"></i></li>
-                                                                        @else
-                                                                            <li><i class="fa fa-star-o"></i></li>
-                                                                        @endif
-                                                                    @endfor
-                                                                </ul>
-                                                                <div class="rate-count">(<span>{{ $data->rate }}</span>)
+                                                        @foreach ($product_detail['getReview'] as $data)
+                                                            <div class="single-rating">
+                                                                <div class="rating-author">
+                                                                    @if ($data->user_info['photo'])
+                                                                        <img src="{{ asset('public/' . $data->user_info['photo']) }}"
+                                                                            alt="{{ $data->user_info['photo'] }}">
+                                                                    @else
+                                                                        <img src="{{ asset('public/backend/img/avatar.png') }}"
+                                                                            alt="Profile.jpg">
+                                                                    @endif
+                                                                </div>
+                                                                <div class="rating-des">
+                                                                    <h6>{{ $data->user_info['name'] ?? '' }}</h6>
+                                                                    <div class="ratings">
+                                                                        <ul class="rating">
+                                                                            @for ($i = 1; $i <= 5; $i++)
+                                                                                @if ($data->rate >= $i)
+                                                                                    <li><i class="fa fa-star"></i></li>
+                                                                                @else
+                                                                                    <li><i class="fa fa-star-o"></i></li>
+                                                                                @endif
+                                                                            @endfor
+                                                                        </ul>
+                                                                        <div class="rate-count">
+                                                                            (<span>{{ $data->rate }}</span>)
+                                                                        </div>
+                                                                    </div>
+                                                                    <p>{{ $data->review }}</p>
                                                                 </div>
                                                             </div>
-                                                            <p>{{ $data->review }}</p>
-                                                        </div>
+                                                        @endforeach
                                                     </div>
-                                                @endforeach
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -759,8 +743,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
     </section>
     {{-- REVIEW SECTION --}}
     @auth
@@ -1051,17 +1033,21 @@
                     <form id="checkout-auth-form">
                         @csrf
 
-                        <div id="checkout-auth-alert" class="alert alert-danger d-none py-2 px-3 mb-3 text-start"></div>
-
                         <div id="step-email" class="auth-step">
                             <p>Please enter your email address to continue.</p>
                             <div class="form-group text-start">
                                 <label>Email address</label>
                                 <input type="email" name="email" id="checkout_email" class="form-control" required>
+                                <span id="alert-step-email" class="field-error d-none"></span>
                             </div>
                             <div class="d-flex flex-column align-items-center gap-2 mt-4">
                                 <button type="button" id="btn-email-next" class="btn w-100">Continue</button>
                                 <button type="button" class="btn-auth-secondary" data-dismiss="modal">Cancel</button>
+                                <p class="mb-0 mt-2" style="font-size:13px; color:#1e293b;">
+                                    Don't have an account?
+                                    <a href="javascript:void(0);" id="btn-goto-signup"
+                                        style="color:#5db845; font-weight:700; text-decoration:underline;">Sign Up</a>
+                                </p>
                             </div>
                         </div>
 
@@ -1070,6 +1056,12 @@
                             <div class="form-group text-start">
                                 <label>Password</label>
                                 <input type="password" name="password" id="checkout_password" class="form-control">
+                                <span id="alert-step-login" class="field-error d-none"></span>
+                            </div>
+                            <div class="text-end" style="margin-top:-4px; margin-bottom:10px;">
+                                <a href="{{ route('password.request') }}" target="_blank"
+                                    style="font-size:12.5px; color:#5db845; font-weight:700; text-decoration:underline;">Forgot
+                                    Password?</a>
                             </div>
                             <div class="d-flex flex-column align-items-center gap-2 mt-4">
                                 <button type="submit" id="btn-login-submit" class="btn w-100">Login & Checkout</button>
@@ -1078,7 +1070,7 @@
                         </div>
 
                         <div id="step-register" class="auth-step d-none">
-                            <p>It looks like you are new here. Create an account to complete your checkout.</p>
+                            <p>New here? Create an account to continue checkout.</p>
                             <div class="form-group text-start">
                                 <label>Full Name</label>
                                 <input type="text" name="name" id="checkout_name" class="form-control">
@@ -1097,6 +1089,7 @@
                                 <label>Confirm Password</label>
                                 <input type="password" name="reg_password_confirmation"
                                     id="checkout_reg_password_confirmation" class="form-control">
+                                <span id="alert-step-register" class="field-error d-none"></span>
                             </div>
                             <div class="d-flex flex-column align-items-center gap-2 mt-4">
                                 <button type="submit" id="btn-register-submit" class="btn w-100">Register &
@@ -1143,6 +1136,22 @@
 @endsection
 @push('styles')
     <style>
+
+        /* Blinking text cursor (caret) ko page me kahin bhi na dikhaye */
+* {
+    caret-color: transparent;
+}
+
+/* Sirf typing wale fields me caret wapas normal */
+input,
+textarea,
+select,
+[contenteditable="true"],
+.form-control,
+.input-number,
+.select-custom {
+    caret-color: auto !important;
+}
         /*modal css start*/
         /* Modal Width */
         #sizeChartModal .modal-dialog {
@@ -1456,7 +1465,7 @@
             background: #ffffff;
             border-radius: 8px;
             border: none;
-            padding: 30px 25px;
+            padding: 20px 25px;
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
             position: relative;
         }
@@ -1496,7 +1505,7 @@
         }
 
         #checkoutAuthModal .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 12px;
         }
 
         #checkoutAuthModal .form-group label {
@@ -1556,18 +1565,18 @@
             display: none !important;
         }
 
-        #checkoutAuthModal .alert-danger {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 13px;
+        #checkoutAuthModal .field-error {
+             display: block;
+                color: #dc2626;
+                font-size: 12.5px;
+                font-weight: 500;
+                margin-top: 6px;
+                text-align: left;
         }
     </style>
 @endpush
 
- @push('scripts')
+@push('scripts')
     <script src="{{ asset('public/frontend/js/sweetalert.min.js') }}"></script>
     <script>
         function setPriceId(element) {
@@ -1647,12 +1656,14 @@
 
                     $.each(response.images, function(index, image) {
                         $('.main-banner').append(
-                            '<div><img src="' + image + '" alt="Main Image ' + (index + 1) + '"></div>'
+                            '<div><img src="' + image + '" alt="Main Image ' + (index + 1) +
+                            '"></div>'
                         );
                     });
                     $.each(response.images, function(index, image) {
                         $('.small-banner').append(
-                            '<div><img src="' + image + '" alt="Thumbnail Image ' + (index + 1) + '"></div>'
+                            '<div><img src="' + image + '" alt="Thumbnail Image ' + (index + 1) +
+                            '"></div>'
                         );
                     });
 
@@ -1694,11 +1705,13 @@
                 $.ajax({
                     url: baseUrl,
                     method: "GET",
-                    data: { color_id: colorId },
+                    data: {
+                        color_id: colorId
+                    },
                     success: function(response) {
                         if (response.status) {
                             btn.toggleClass('active', response.wishlisted);
-                            $('.wishlist-total-count').text(response.wishlist_count); 
+                            $('.wishlist-total-count').text(response.wishlist_count);
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Success',
@@ -1737,7 +1750,9 @@
                     data: {
                         _token: "{{ csrf_token() }}",
                         slug: $('#product_slug').val(),
-                        quant: { 1: qty },
+                        quant: {
+                            1: qty
+                        },
                         selected_size: $('#selected_size').val(),
                         selected_price: $('#selected_price').val(),
                         selected_color: $('#selected_color').val(),
@@ -1779,69 +1794,71 @@
 
             // ---- BUY NOW ----
             $(document).on('click', '.buy-now-btn', function(e) {
-                e.preventDefault();
-                let qty = $('#quantity').val() || 1;
+                    e.preventDefault();
+                    let qty = $('#quantity').val() || 1;
 
-                $.ajax({
-                    url: "{{ route('single-add-to-cart') }}",
-                    method: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        slug: $('#product_slug').val(),
-                        quant: { 1: qty },
-                        selected_size: $('#selected_size').val(),
-                        selected_price: $('#selected_price').val(),
-                        selected_color: $('#selected_color').val(),
-                        selected_color_name: $('#selected_color_name').val()
-                    },
-                    success: function(response) {
-                        if (response.status) {
-                            @auth
-                                window.location.href = "{{ route('checkout') }}";
-                            @else
-                                $('.auth-step').addClass('d-none');
-                                $('#step-email').removeClass('d-none');
-                                $('#checkoutAuthTitle').text('Login to Checkout');
-                                $('#checkout_email').val('');
-                                $('#checkout-auth-alert').addClass('d-none').text('');
-                                $('#checkoutAuthModal').addClass('show').css('display', 'flex');
-                                $('body').addClass('modal-open');
-                            @endauth
-                        } else {
+                    $.ajax({
+                            url: "{{ route('single-add-to-cart') }}",
+                            method: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                slug: $('#product_slug').val(),
+                                quant: {
+                                    1: qty
+                                },
+                                selected_size: $('#selected_size').val(),
+                                selected_price: $('#selected_price').val(),
+                                selected_color: $('#selected_color').val(),
+                                selected_color_name: $('#selected_color_name').val()
+                            },
+                            success: function(response) {
+                                if (response.status) {
+                                    @auth
+                                    window.location.href = "{{ route('checkout') }}";
+                                @else
+                                    $('.auth-step').addClass('d-none');
+                                    $('#step-email').removeClass('d-none');
+                                    $('#checkoutAuthTitle').text('Login to Checkout');
+                                    $('#checkout_email').val('');
+                                    $('.auth-step .field-error').addClass('d-none').text('');
+                                    $('#checkoutAuthModal').addClass('show').css('display', 'flex');
+                                    $('body').addClass('modal-open');
+                                @endauth
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning',
+                                    text: response.message,
+                                    showConfirmButton: true,
+                                    confirmButtonColor: '#F7941D',
+                                });
+                            }
+                        },
+                        error: function() {
                             Swal.fire({
-                                icon: 'warning',
-                                title: 'Warning',
-                                text: response.message,
-                                showConfirmButton: true,
-                                confirmButtonColor: '#F7941D',
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Something went wrong!',
                             });
                         }
-                    },
-                    error: function() {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Something went wrong!',
-                        });
-                    }
-                });
+                    });
             });
 
-            // ---- COLOR SELECTOR ----
-            var defaultColorId = $('#color-options .color-selector').first().data('color-id');
+        // ---- COLOR SELECTOR ----
+        var defaultColorId = $('#color-options .color-selector').first().data('color-id');
 
-            $('.color-selector').on('click', function(e) {
-                e.preventDefault();
-                $('#color-options i').removeClass('selected');
-                $(this).find('i').addClass('selected');
-                var colorId = $(this).data('color-id');
-                fetchColorImages(colorId);
-            });
+        $('.color-selector').on('click', function(e) {
+            e.preventDefault();
+            $('#color-options i').removeClass('selected');
+            $(this).find('i').addClass('selected');
+            var colorId = $(this).data('color-id');
+            fetchColorImages(colorId);
+        });
 
-            $(document).on('click', '.thumbnail', function() {
-                var newImageSrc = $(this).data('image');
-                $('#main-img').attr('src', newImageSrc);
-            });
+        $(document).on('click', '.thumbnail', function() {
+            var newImageSrc = $(this).data('image');
+            $('#main-img').attr('src', newImageSrc);
+        });
         });
     </script>
 

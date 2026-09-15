@@ -114,68 +114,68 @@
 
                                         <div class="col-sm-6 col-md-4 col-lg-3 p-b-35">
                                             <!-- <div class="single-product">
-                                                    <div class="product-img">
-                                                        <a href="{{ route('product-detail', $product->slug) }}">
-                                                            @php $photo = explode(',', $product->photo); @endphp
-                                                            <img class="default-img" src="{{ asset('public/' . $photo[0]) }}" alt="{{ $product->title }}">
-                                                        </a>
-                                                    </div>
-                                                    <div class="product-content text-center">
-                                                        <h3><a href="{{ route('product-detail', $product->slug) }}">{{ $product->product_code }}</a></h3>
-                                                    </div>
-                                                </div> -->
+                                                                <div class="product-img">
+                                                                    <a href="{{ route('product-detail', $product->slug) }}">
+                                                                        @php $photo = explode(',', $product->photo); @endphp
+                                                                        <img class="default-img" src="{{ asset('public/' . $photo[0]) }}" alt="{{ $product->title }}">
+                                                                    </a>
+                                                                </div>
+                                                                <div class="product-content text-center">
+                                                                    <h3><a href="{{ route('product-detail', $product->slug) }}">{{ $product->product_code }}</a></h3>
+                                                                </div>
+                                                            </div> -->
                                             <!-- <div class="custom-product-card">
-                                                    <div class="card-media-wrap">
-                                                        {{-- Left Side Badges (Temporarily hidden) --}}
-                                                        {{--
+                                                                <div class="card-media-wrap">
+                                                                    {{-- Left Side Badges (Temporarily hidden) --}}
+                                                                    {{--
                                                     <div class="card-left-badges">
                                                         <span class="card-badge-tag badge-hot"><i class="fa fa-fire"></i> HOT</span>
                                                         <span class="card-badge-tag badge-discount">20% OFF</span>
                                                     </div>
                                                     --}}
-                                                
-                                                        {{-- Floating Action Buttons (Temporarily hidden) --}}
-                                                        {{--
+                                                            
+                                                                    {{-- Floating Action Buttons (Temporarily hidden) --}}
+                                                                    {{--
                                                     <div class="card-action-buttons">
                                                         <a href="#" class="card-btn-action" title="Add to Wishlist">
                                                             <i class="ti-heart"></i>
                                                         </a>
                                                     </div>
                                                     --}}
-                                                
-                                                        {{-- Product Image --}}
-                                                        <a href="#" class="card-img-link">
-                                                            <img class="card-default-img" src="https://via.placeholder.com/400x400?text=Main+Image" alt="Product Image" loading="lazy">
-                                                            <img class="card-hover-img" src="https://via.placeholder.com/400x400?text=Hover+Image" alt="Product Image" loading="lazy">
-                                                        </a>
-                                                    </div>
-                                                
-                                                    <div class="card-content-wrap">
-                                                        {{-- Top Meta: Category on Left, Price on Right --}}
-                                                        <div class="card-meta-line">
-                                                            <span class="card-cat-name">PROD-12345</span>
-                                                            <div class="card-top-price">
-                                                                <span class="price-val">₹799.00</span>
-                                                                <del class="price-old">₹999.00</del>
-                                                            </div>
-                                                        </div>
-                                                
-                                                        {{-- Product Title --}}
-                                                        <h4 class="card-item-title">
-                                                            <a href="#" title="Sample Product Name">
-                                                                Sample Product Name
-                                                            </a>
-                                                        </h4>
-                                                
-                                                        {{-- CTA Button --}}
-                                                        <div class="card-cta-container">
-                                                            <a href="#" class="btn-card-details">
-                                                                <span>View Details</span>
-                                                                <i class="ti-arrow-right"></i>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div> -->
+                                                            
+                                                                    {{-- Product Image --}}
+                                                                    <a href="#" class="card-img-link">
+                                                                        <img class="card-default-img" src="https://via.placeholder.com/400x400?text=Main+Image" alt="Product Image" loading="lazy">
+                                                                        <img class="card-hover-img" src="https://via.placeholder.com/400x400?text=Hover+Image" alt="Product Image" loading="lazy">
+                                                                    </a>
+                                                                </div>
+                                                            
+                                                                <div class="card-content-wrap">
+                                                                    {{-- Top Meta: Category on Left, Price on Right --}}
+                                                                    <div class="card-meta-line">
+                                                                        <span class="card-cat-name">PROD-12345</span>
+                                                                        <div class="card-top-price">
+                                                                            <span class="price-val">₹799.00</span>
+                                                                            <del class="price-old">₹999.00</del>
+                                                                        </div>
+                                                                    </div>
+                                                            
+                                                                    {{-- Product Title --}}
+                                                                    <h4 class="card-item-title">
+                                                                        <a href="#" title="Sample Product Name">
+                                                                            Sample Product Name
+                                                                        </a>
+                                                                    </h4>
+                                                            
+                                                                    {{-- CTA Button --}}
+                                                                    <div class="card-cta-container">
+                                                                        <a href="#" class="btn-card-details">
+                                                                            <span>View Details</span>
+                                                                            <i class="ti-arrow-right"></i>
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div> -->
 
                                             <div class="custom-product-card">
                                                 <div class="card-media-wrap">
@@ -218,47 +218,43 @@
 
                                                     @if ($reviewCount > 0)
                                                         <div class="card-rating"
-                                                            style="
-            margin: 15px 0 15px 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            background: #F7941D;
-            padding: 4px 8px;
-            border-radius: 4px;
-        ">
+    style="
+        margin: 15px 0 15px 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 4px 0;
+    ">
 
-                                                            <i class="fa fa-star" style="color: #fff; font-size: 12px;">
-                                                            </i>
+    <i class="fa fa-star"
+        style="color: #F7941D; font-size: 12px;">
+    </i>
 
-                                                            <span
-                                                                style="
-            font-size: 12px;
-            color: #fff;
-            margin-left: 2px;
-        ">
-                                                                {{ number_format($rate, 1) }}
-                                                            </span>
+    <span style="
+        font-size: 12px;
+        color: #000;
+        margin-left: 2px;
+    ">
+        {{ number_format($rate, 1) }}
+    </span>
 
-                                                            <span
-                                                                style="
-            font-size: 12px;
-            color: #fff;
-            margin-left: 4px;
-        ">
-                                                                |
-                                                            </span>
+    <span style="
+        font-size: 12px;
+        color: #000;
+        margin-left: 4px;
+    ">
+        |
+    </span>
 
-                                                            <span
-                                                                style="
-            font-size: 12px;
-            color: #fff;
-            margin-left: 2px;
-        ">
-                                                                {{ $reviewCount }} Rating
-                                                            </span>
+    <span style="
+        font-size: 12px;
+        color: #000;
+        margin-left: 2px;
+    ">
+        {{ $reviewCount }} Rating
+    </span>
 
-                                                        </div>
+</div>
                                                     @endif
 
                                                     {{-- CTA Button --}}
@@ -298,16 +294,16 @@
                                             @php $sizeData = json_decode($product->size, true); @endphp
                                             <div class="col-sm-6 col-md-4 col-lg-3 p-b-35">
                                                 <!-- <div class="single-product">
-                                                        <div class="product-img">
-                                                            <a href="{{ route('product-detail', $product->slug) }}">
-                                                                @php $photo = explode(',', $product->photo); @endphp
-                                                                <img class="default-img" src="{{ asset('public/' . $photo[0]) }}" alt="{{ $product->title }}">
-                                                            </a>
-                                                        </div>
-                                                        <div class="product-content text-center">
-                                                            <h3><a href="{{ route('product-detail', $product->slug) }}">{{ $product->product_code }}</a></h3>
-                                                        </div>
-                                                    </div> -->
+                                                                    <div class="product-img">
+                                                                        <a href="{{ route('product-detail', $product->slug) }}">
+                                                                            @php $photo = explode(',', $product->photo); @endphp
+                                                                            <img class="default-img" src="{{ asset('public/' . $photo[0]) }}" alt="{{ $product->title }}">
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="product-content text-center">
+                                                                        <h3><a href="{{ route('product-detail', $product->slug) }}">{{ $product->product_code }}</a></h3>
+                                                                    </div>
+                                                                </div> -->
                                                 <div class="custom-product-card">
                                                     <div class="card-media-wrap">
                                                         {{-- Product Image --}}
@@ -350,48 +346,43 @@
 
                                                         @if ($reviewCount > 0)
                                                             <div class="card-rating"
-                                                                style="
-            margin: 15px 0 15px 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            background: #F7941D;
-            padding: 4px 8px;
-            border-radius: 4px;
-        ">
+    style="
+        margin: 15px 0 15px 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 4px 0;
+    ">
 
-                                                                <i class="fa fa-star"
-                                                                    style="color: #fff; font-size: 12px;">
-                                                                </i>
+    <i class="fa fa-star"
+        style="color: #F7941D; font-size: 12px;">
+    </i>
 
-                                                                <span
-                                                                    style="
-            font-size: 12px;
-            color: #fff;
-            margin-left: 2px;
-        ">
-                                                                    {{ number_format($rate, 1) }}
-                                                                </span>
+    <span style="
+        font-size: 12px;
+        color: #000;
+        margin-left: 2px;
+    ">
+        {{ number_format($rate, 1) }}
+    </span>
 
-                                                                <span
-                                                                    style="
-            font-size: 12px;
-            color: #fff;
-            margin-left: 4px;
-        ">
-                                                                    |
-                                                                </span>
+    <span style="
+        font-size: 12px;
+        color: #000;
+        margin-left: 4px;
+    ">
+        |
+    </span>
 
-                                                                <span
-                                                                    style="
-            font-size: 12px;
-            color: #fff;
-            margin-left: 2px;
-        ">
-                                                                    {{ $reviewCount }} Rating
-                                                                </span>
+    <span style="
+        font-size: 12px;
+        color: #000;
+        margin-left: 2px;
+    ">
+        {{ $reviewCount }} Rating
+    </span>
 
-                                                            </div>
+</div>
                                                         @endif
 
                                                         {{-- CTA Button --}}
@@ -707,6 +698,21 @@
 
 @push('styles')
     <style>
+        /* Blinking text cursor (caret) ko page me kahin bhi na dikhaye */
+* {
+    caret-color: transparent;
+}
+
+/* Sirf typing wale fields me caret wapas normal */
+input,
+textarea,
+select,
+[contenteditable="true"],
+.form-control,
+.input-number,
+.select-custom {
+    caret-color: auto !important;
+}
         /* Banner Sliding */
         #Gslider .carousel-inner {
             background: #000000;
@@ -767,8 +773,8 @@
         }
 
         /* ==========================================================
-               MODERN CUSTOM PRODUCT CARD STYLING
-               ========================================================== */
+                           MODERN CUSTOM PRODUCT CARD STYLING
+                           ========================================================== */
         .custom-product-card {
             background: #ffffff;
             border: 1px solid #e8edf2;

@@ -232,9 +232,11 @@ class CartController extends Controller
         }
 
         return response()->json([
-            'status'  => empty($error),
-            'message' => $success ?: implode(', ', $error),
-        ]);
+            'status' => true,
+            'message' => 'Cart updated successfully',
+            'subtotal' => Helper::totalCartPrice(),
+            'gst_total' => Helper::totalGstPrice(),
+            'grand_total' => Helper::totalCartPrice() + Helper::totalGstPrice() - (session()->has('coupon') ? session('coupon')['value'] : 0),        ]);
     }
 
     /**

@@ -48,7 +48,7 @@ function updateCartQty(cartId, qty, qtyInput, row) {
             if (response.status) {
                 qtyInput.val(qty);
                 recalculateRowTotal(row, qty);
-                recalculateCartTotals();
+                updateCartTotalsFromServer(response);
                 updateHeaderCartCount();
             } else {
                 Swal.fire({
@@ -67,6 +67,23 @@ function updateCartQty(cartId, qty, qtyInput, row) {
             });
         }
     });
+}
+// ✅ Naya function - purane recalculateCartTotals() ki jagah
+function updateCartTotalsFromServer(response) {
+    if (response.subtotal !== undefined) {
+        $('#cart-subtotal').text('₹' + parseFloat(response.subtotal).toFixed(2));
+    }
+    if (response.gst_total !== undefined) {
+        if (response.gst_total > 0) {
+            $('#gst_amount span').text('₹' + parseFloat(response.gst_total).toFixed(2));
+            $('#gst_amount').show();
+        } else {
+            $('#gst_amount').hide();
+        }
+    }
+    if (response.grand_total !== undefined) {
+        $('#you-pay').text('₹' + parseFloat(response.grand_total).toFixed(2));
+    }
 }
 
 function recalculateRowTotal(row, qty) {
@@ -179,7 +196,19 @@ $(document).ready(function() {
                 showError(getAjaxErrorMessage(xhr));
             }
         });
+        
     });
+
+     $('#btn-goto-signup').click(function() {
+    hideError();
+    var email = $('#checkout_email').val().trim();
+    isRegistered = false;
+    userEmail = email;
+    $('#checkoutAuthTitle').text('Create Account');
+    $('#step-email').addClass('d-none');
+    $('#step-register').removeClass('d-none');
+    $('#checkout_register_email').val(email);
+});
 
     $('#btn-login-back, #btn-register-back').click(function() {
         hideError();
@@ -251,11 +280,13 @@ $(document).ready(function() {
     });
 
     function showError(msg) {
-        $('#checkout-auth-alert').text(msg).removeClass('d-none');
+        hideError();
+        var activeStep = $('.auth-step:not(.d-none)');
+        activeStep.find('.field-error').text(msg).removeClass('d-none');
     }
 
     function hideError() {
-        $('#checkout-auth-alert').addClass('d-none').text('');
+        $('.auth-step .field-error').addClass('d-none').text('');
     }
 
     function getAjaxErrorMessage(xhr) {

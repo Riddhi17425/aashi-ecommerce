@@ -166,17 +166,22 @@
 					<form id="checkout-auth-form">
 						@csrf
 
-						<div id="checkout-auth-alert" class="alert alert-danger d-none py-2 px-3 mb-3 text-start"></div>
+						{{-- <div id="checkout-auth-alert" class="alert alert-danger d-none py-2 px-3 mb-3 text-start"></div> --}}
 
 						<div id="step-email" class="auth-step">
 							<p>Please enter your email address to continue.</p>
 							<div class="form-group text-start">
 								<label>Email address</label>
 								<input type="email" name="email" id="checkout_email" class="form-control" required>
+								<span id="alert-step-email" class="field-error d-none"></span>
 							</div>
 							<div class="d-flex flex-column align-items-center gap-2 mt-4">
 								<button type="button" id="btn-email-next" class="btn w-100">Continue</button>
 								<button type="button" class="btn-auth-secondary" data-dismiss="modal">Cancel</button>
+								 <p class="mb-0 mt-2" style="font-size:13px; color:#1e293b;">
+										Don't have an account?
+										<a href="javascript:void(0);" id="btn-goto-signup" style="color:#5db845; font-weight:700; text-decoration:underline;">Sign Up</a>
+									</p>
 							</div>
 						</div>
 
@@ -185,6 +190,10 @@
 							<div class="form-group text-start">
 								<label>Password</label>
 								<input type="password" name="password" id="checkout_password" class="form-control">
+								<span id="alert-step-login" class="field-error d-none"></span>
+							</div>
+							<div class="text-end" style="margin-top:-8px; margin-bottom:10px;">
+								<a href="{{ route('password.request') }}" target="_blank" style="font-size:12.5px; color:#5db845; font-weight:700; text-decoration:underline;">Forgot Password?</a>
 							</div>
 							<div class="d-flex flex-column align-items-center gap-2 mt-4">
 								<button type="submit" id="btn-login-submit" class="btn w-100">Login & Checkout</button>
@@ -193,10 +202,11 @@
 						</div>
 
 						<div id="step-register" class="auth-step d-none">
-							<p>It looks like you are new here. Create an account to complete your checkout.</p>
+							<p>New here? Create an account to continue checkout.</p>
 							<div class="form-group text-start">
 								<label>Full Name</label>
 								<input type="text" name="name" id="checkout_name" class="form-control">
+								<span id="alert-step-register" class="field-error d-none"></span>
 							</div>
 							<div class="form-group text-start">
 								<label>Email Address</label>
@@ -317,7 +327,7 @@
 			background: #ffffff;
 			border-radius: 8px;
 			border: none;
-			padding: 30px 25px;
+			padding: 20px 25px;
 			box-shadow: 0 15px 50px rgba(0,0,0,0.25);
 			position: relative;
 		}
@@ -352,7 +362,7 @@
 			padding: 0;
 		}
 		#checkoutAuthModal .form-group {
-			margin-bottom: 18px;
+			margin-bottom: 12px;
 		}
 		#checkoutAuthModal .form-group label {
 			display: block;
@@ -404,13 +414,13 @@
 		#checkoutAuthModal .d-none {
 			display: none !important;
 		}
-		#checkoutAuthModal .alert-danger {
-			background: #fef2f2;
-			border: 1px solid #fecaca;
-			color: #dc2626;
-			padding: 10px 14px;
-			border-radius: 6px;
-			font-size: 13px;
+		#checkoutAuthModal .field-error {
+			display: block;
+    color: #dc2626;
+    font-size: 12.5px;
+    font-weight: 500;
+    margin-top: 6px;
+    text-align: left;
 		}
 	</style>
 @endpush

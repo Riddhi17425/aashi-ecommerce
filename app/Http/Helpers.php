@@ -204,57 +204,60 @@ class Helper{
     
     // Wishlist Count (Unchanged - login required rahega)
     public static function wishlistCount($user_id=''){
-       
-        if(Auth::check()){
-            if($user_id=="") $user_id=auth()->user()->id;
-            return Wishlist::where('user_id',$user_id)->where('cart_id',null)->sum('quantity');
-        }
-        else{
-            return 0;
-        }
+    $query = Wishlist::where('cart_id', null);
+    if (Auth::check()) {
+        $user_id = $user_id ?: auth()->id();
+        $query->where('user_id', $user_id);
+    } else {
+        $query->where('session_id', session()->getId());
     }
+    return $query->sum('quantity');
+}
     public static function getAllProductFromWishlist($user_id=''){
-        if(Auth::check()){
-            if($user_id=="") $user_id=auth()->user()->id;
-            $wishlist = Wishlist::with('product')->where('user_id',$user_id)->where('cart_id',null)->get();
-            if(isset($wishlist) && is_countable($wishlist) && count($wishlist) > 0){
-                foreach($wishlist as $k => $v){
-                    $images = [];
-                    if(isset($v->color_id) && $v->color_id != null){
-                        $color = Color::find($v->color_id);
-                        $images = $color->images->pluck('image')->map(function($image) {
-                            return asset('public/storage/products/'.$image);
-                        });
-                    }
-                    if(isset($images) && is_countable($images) && count($images)){
-                        $v->color_img = $images[0] ?? null;
-                    }
-                    
-                    $sizeData = json_decode($v->product->size, true);
-                    if(isset($v->product->price) && $v->product->price != null)
-                        $v->price = $v->product->price;
-                    else
-                        $v->price = $sizeData['price'][0];
-                    
-                    $afterDiscount = 0;
-                    if(isset($v->product->discount) && $v->product->discount > 0){
-                        $sizes = json_decode($v->product->size);
-                        $priceArr = $sizes->price;
-                        $productPrice = 0;
-                        foreach($priceArr as $key => $val){
-                            $productPrice = $val;
-                        }
-                        $afterDiscount = ($productPrice-($productPrice*$v->product->discount)/100);
-                    }
-                    $v->after_discount = $afterDiscount;
-                }
+    $query = Wishlist::with('product')->where('cart_id', null);
+    if (Auth::check()) {
+        $user_id = $user_id ?: auth()->id();
+        $query->where('user_id', $user_id);
+    } else {
+        $query->where('session_id', session()->getId());
+    }
+    $wishlist = $query->get();
+
+    if(isset($wishlist) && is_countable($wishlist) && count($wishlist) > 0){
+        foreach($wishlist as $k => $v){
+            $images = [];
+            if(isset($v->color_id) && $v->color_id != null){
+                $color = Color::find($v->color_id);
+                $images = $color->images->pluck('image')->map(function($image) {
+                    return asset('public/storage/products/'.$image);
+                });
             }
-            return $wishlist;
-        }
-        else{
-            return 0;
+            if(isset($images) && is_countable($images) && count($images)){
+                $v->color_img = $images[0] ?? null;
+            }
+            
+            $sizeData = json_decode($v->product->size, true);
+            if(isset($v->product->price) && $v->product->price != null)
+                $v->price = $v->product->price;
+            else
+                $v->price = $sizeData['price'][0];
+            
+            $afterDiscount = 0;
+            if(isset($v->product->discount) && $v->product->discount > 0){
+                $sizes = json_decode($v->product->size);
+                $priceArr = $sizes->price;
+                $productPrice = 0;
+                foreach($priceArr as $key => $val){
+                    $productPrice = $val;
+                }
+                $afterDiscount = ($productPrice-($productPrice*$v->product->discount)/100);
+            }
+            $v->after_discount = $afterDiscount;
         }
     }
+    return $wishlist;
+}
+        
     public static function totalWishlistPrice($user_id=''){
         if(Auth::check()){
             if($user_id=="") $user_id=auth()->user()->id;

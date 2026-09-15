@@ -21,7 +21,7 @@ class WishlistController extends Controller
             if ($isAjax) return response()->json(['status'=>false,'message'=>'Invalid Products']);
             request()->session()->flash('error','Invalid Products');
             return back();
-        }        
+        }
         $product = Product::where('slug', $request->slug)->first();
         if (empty($product)) {
             if ($isAjax) return response()->json(['status'=>false,'message'=>'Invalid Products']);
@@ -29,13 +29,22 @@ class WishlistController extends Controller
             return back();
         }
 
-        $already_wishlist = Wishlist::where('user_id', auth()->user()->id)->where('cart_id',null);
-        if(isset($request->color_id) && $request->color_id != null){
+        // GUEST vs LOGGED-IN
+        $user_id    = Auth::check() ? Auth::id() : null;
+        $session_id = Auth::check() ? null : session()->getId();
+
+        $already_wishlist = Wishlist::where('cart_id', null);
+        if ($user_id) {
+            $already_wishlist = $already_wishlist->where('user_id', $user_id);
+        } else {
+            $already_wishlist = $already_wishlist->where('session_id', $session_id);
+        }
+        if (isset($request->color_id) && $request->color_id != null) {
             $already_wishlist = $already_wishlist->where('color_id', $request->color_id);
         }
         $already_wishlist = $already_wishlist->where('product_id', $product->id)->first();
 
-        if($already_wishlist) {
+        if ($already_wishlist) {
             $already_wishlist->delete();
             if ($isAjax) {
                 return response()->json([
@@ -47,19 +56,20 @@ class WishlistController extends Controller
             }
             request()->session()->flash('success','Product Removed to wishlist');
             return back();
-        }else{
+        } else {
             $sizeData = json_decode($product->size, true);
             $price = $product->price;
-            if(!isset($product->price) && $product->price == null){
+            if (!isset($product->price) && $product->price == null) {
                 $price = $sizeData['price'][0];
             }
             $wishlist = new Wishlist;
-            $wishlist->user_id = auth()->user()->id;
-            $wishlist->product_id = $product->id;
-            $wishlist->price = ($price-($price*$product->discount)/100);
-            $wishlist->quantity = 1;
-            $wishlist->amount=$wishlist->price*$wishlist->quantity;
-            $wishlist->color_id=$request->color_id ?? null;
+            $wishlist->user_id     = $user_id;
+            $wishlist->session_id  = $session_id;
+            $wishlist->product_id  = $product->id;
+            $wishlist->price       = ($price-($price*$product->discount)/100);
+            $wishlist->quantity    = 1;
+            $wishlist->amount      = $wishlist->price*$wishlist->quantity;
+            $wishlist->color_id    = $request->color_id ?? null;
 
             if ($wishlist->product->stock < $wishlist->quantity || $wishlist->product->stock <= 0) {
                 if ($isAjax) return response()->json(['status'=>false,'message'=>'Stock not sufficient!']);
@@ -77,29 +87,51 @@ class WishlistController extends Controller
             }
         }
         request()->session()->flash('success','Product successfully added to wishlist');
-        return back();       
+        return back();
     }
-    
+
     public function wishlistDelete(Request $request){
         $wishlist = Wishlist::find($request->id);
-        if ($wishlist) {
-            $wishlist->delete();
-            request()->session()->flash('success','Wishlist successfully removed');
-            return back();  
+
+        if (!$wishlist) {
+            request()->session()->flash('error','Error please try again');
+            return back();
         }
-        request()->session()->flash('error','Error please try again');
-        return back();       
-    }   
-    
+
+        // Ownership check (guest / user dono ke liye)
+        $user_id    = Auth::check() ? Auth::id() : null;
+        $session_id = Auth::check() ? null : session()->getId();
+
+        if ($user_id && $wishlist->user_id != $user_id) {
+            request()->session()->flash('error','Unauthorized action.');
+            return back();
+        }
+        if (!$user_id && $wishlist->session_id != $session_id) {
+            request()->session()->flash('error','Unauthorized action.');
+            return back();
+        }
+
+        $wishlist->delete();
+        request()->session()->flash('success','Wishlist successfully removed');
+        return back();
+    }
+
     public function check(Request $request)
     {
-        $exists = Wishlist::where('user_id', auth()->id())
-            ->where('product_id', $request->product_id)
-            ->where('color_id', $request->color_id)
-            ->exists();
+        $user_id    = Auth::check() ? Auth::id() : null;
+        $session_id = Auth::check() ? null : session()->getId();
+
+        $query = Wishlist::where('product_id', $request->product_id)
+                    ->where('color_id', $request->color_id);
+
+        if ($user_id) {
+            $query->where('user_id', $user_id);
+        } else {
+            $query->where('session_id', $session_id);
+        }
 
         return response()->json([
-            'wishlisted' => $exists
+            'wishlisted' => $query->exists()
         ]);
     }
 }
