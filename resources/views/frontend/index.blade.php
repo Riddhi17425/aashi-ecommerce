@@ -286,12 +286,11 @@
     </div>
     <!-- End Product Area -->
     <!-- Start Midium Banner  -->
-    <section class="midium-banner">
+    {{-- <section class="midium-banner">
         <div class="container">
             <div class="row">
                 @if ($featured)
                     @foreach ($featured as $data)
-                        <!-- Single Banner  -->
                         <div class="col-lg-6 col-md-6 col-12">
                             <div class="single-banner">
                                 @php
@@ -305,12 +304,11 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- /End Single Banner  -->
                     @endforeach
                 @endif
             </div>
         </div>
-    </section>
+    </section> --}}
     <!-- End Midium Banner -->
 
     <!-- Start Most Popular -->
