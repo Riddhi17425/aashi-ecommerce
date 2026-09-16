@@ -273,7 +273,7 @@
 
                                         <div class="card-content-wrap">
                                             <div>
-                                                <div
+                                                {{-- <div
                                                     class="card-meta-line d-flex justify-content-between align-items-center">
                                                     <span class="card-cat-name">
                                                         <a
@@ -296,16 +296,9 @@
                                                             @endif
                                                         </span>
                                                     </div>
-                                                </div>
-
-                                                <h4 class="card-item-title">
-                                                    <a href="{{ route('product-detail', $product->slug) }}"
-                                                        title="{{ $product->title }}">
-                                                        {!! html_entity_decode($product->title) !!}
-                                                    </a>
-                                                </h4>
-
+                                                </div> --}}
                                                 {{-- Dynamic Product Rating --}}
+
                                                 @php
                                                     $reviewCount = $product->getReview->count();
                                                     $rate =
@@ -314,35 +307,60 @@
                                                             : 0;
                                                 @endphp
 
-                                                @if ($reviewCount > 0)
-                                                    <div class="card-rating my-2"
-                                                        style="
+                                                <div
+                                                    class="card-meta-line d-flex justify-content-between align-items-center">
+                                                    <span class="card-cat-name">
+                                                        <a
+                                                            href="{{ route('product-detail', $product->slug) }}">{{ $product->product_code }}</a>
+                                                    </span>
+                                                    @if ($reviewCount > 0)
+                                                        <div class="card-rating-inline"
+                                                            style="
             display: inline-flex;
             align-items: center;
             gap: 3px;
             background: #F7941D;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 3px 7px;
+            border-radius: 6px;
         ">
+                                                            <span
+                                                                style="font-size: 11px; color: #fff;">{{ number_format($rate, 1) }}</span>
+                                                            <i class="fa fa-star"
+                                                                style="color: #fff; font-size: 10px;"></i>
+                                                            <span style="font-size: 11px; color: #fff;">|
+                                                                {{ $reviewCount }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+
+                                                <h4 class="card-item-title">
+                                                    <a href="{{ route('product-detail', $product->slug) }}"
+                                                        title="{{ $product->title }}">
+                                                        {!! html_entity_decode($product->title) !!}
+                                                    </a>
+                                                </h4>
 
 
 
-                                                        <span style="font-size: 12px; color: #fff; margin-left: 2px;">
-                                                            {{ number_format($rate, 1) }}
-                                                        </span>
 
-                                                        <i class="fa fa-star" style="color: #fff; font-size: 12px;"></i>
-
-                                                        <span style="font-size: 12px; color: #fff; margin-left: 4px;">
-                                                            |
-                                                        </span>
-
-                                                        <span style="font-size: 12px; color: #fff; margin-left: 2px;">
-                                                            {{ $reviewCount }}
-                                                        </span>
-
-                                                    </div>
-                                                @endif
+                                                <div class="product-price my-2"
+                                                    data-discount="{{ $product->discount ?? 0 }}">
+                                                    <small
+                                                        class="original-price @if (empty($product->discount)) d-none @endif"
+                                                        style="font-size: 11px;">
+                                                        <del
+                                                            class="text-muted">₹{{ number_format($sizeData['price'][0] ?? $productPrice, 2) }}</del>
+                                                    </small>
+                                                    <span class="final-price font-weight-bold"
+                                                        style="color: #0f172a; font-size: 15px;">
+                                                        @if (!empty($product->discount))
+                                                            ₹{{ number_format($after_discount, 2) }}
+                                                        @else
+                                                            ₹{{ number_format($sizeData['price'][0] ?? $productPrice, 2) }}
+                                                        @endif
+                                                    </span>
+                                                </div>
 
 
                                                 {{-- <div class="card-rating my-2"
@@ -600,20 +618,21 @@
 @push('styles')
     <style>
         /* Blinking text cursor (caret) ko page me kahin bhi na dikhaye */
-* {
-    caret-color: transparent;
-}
+        * {
+            caret-color: transparent;
+        }
 
-/* Sirf typing wale fields me caret wapas normal */
-input,
-textarea,
-select,
-[contenteditable="true"],
-.form-control,
-.input-number,
-.select-custom {
-    caret-color: auto !important;
-}
+        /* Sirf typing wale fields me caret wapas normal */
+        input,
+        textarea,
+        select,
+        [contenteditable="true"],
+        .form-control,
+        .input-number,
+        .select-custom {
+            caret-color: auto !important;
+        }
+
         .btn-card-details {
             display: flex;
             align-items: center;
@@ -864,30 +883,33 @@ select,
         }
 
         .card-meta-line {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            margin-bottom: 4px;
+           display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    height: 26px;
+    overflow: hidden;
         }
 
         .card-cat-name a {
             color: #5db845;
             font-weight: 700;
-            font-size: 12px;
+            font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .card-item-title {
             font-size: 13.5px;
-            font-weight: 700;
-            line-height: 1.35;
-            margin: 4px 0 6px 0;
-            min-height: auto;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 4px 0 6px 0;
+    height: 2.7em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
         }
 
         .card-item-title a {
