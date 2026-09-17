@@ -123,6 +123,36 @@ window.onload = () => {
 				},
 			}
 		});
+
+		/*=======================
+		  Small Banner Slider JS
+		=========================*/ 
+		$('.small-banner-slider').owlCarousel({
+			items:3,
+			autoplay:true,
+			autoplayTimeout:4000,
+			smartSpeed: 400,
+			autoplayHoverPause:true,
+			loop:true,
+			nav:false,
+			margin:30,
+			dots:true,
+			// navText: ['<i class="ti-angle-left"></i>', '<i class="ti-angle-right"></i>'],
+			responsive:{
+				0: {
+					items:1,
+				},
+				480: {
+					items:2,
+				},
+				768: {
+					items:2,
+				},
+				1170: {
+					items:3,
+				},
+			}
+		});
 		
 		/*=======================
 		  Popular Slider JS
