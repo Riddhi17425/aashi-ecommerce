@@ -35,15 +35,15 @@
     <!-- Start Small Banner  -->
     <section class="small-banner section">
         <div class="container-fluid">
-            <div class="row justify-content-center">
-                @php
-                    $category_lists = DB::table('categories')->where('status', 'active')->limit(3)->get();
-                @endphp
-                @if ($category_lists)
-                    @foreach ($category_lists as $cat)
-                        @if ($cat->is_parent == 1)
-                            <!-- Single Banner  -->
-                            <div class="col-lg-4 col-md-6 col-12 mb-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="small-banner-slider owl-carousel">
+                        @php
+                            $category_lists = DB::table('categories')->where('status', 'active')->where('is_parent', 1)->get();
+                        @endphp
+                        @if ($category_lists)
+                            @foreach ($category_lists as $cat)
+                                <!-- Single Banner  -->
                                 <div class="single-banner">
                                     @if ($cat->photo)
                                         <img src="{{ asset('public/' . $cat->photo) }}"
@@ -56,11 +56,11 @@
                                         <a href="{{ route('product-cat', $cat->slug) }}">Discover Now</a>
                                     </div>
                                 </div>
-                            </div>
+                                <!-- /End Single Banner  -->
+                            @endforeach
                         @endif
-                        <!-- /End Single Banner  -->
-                    @endforeach
-                @endif
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -286,12 +286,11 @@
     </div>
     <!-- End Product Area -->
     <!-- Start Midium Banner  -->
-    <section class="midium-banner">
+    {{-- <section class="midium-banner">
         <div class="container">
             <div class="row">
                 @if ($featured)
                     @foreach ($featured as $data)
-                        <!-- Single Banner  -->
                         <div class="col-lg-6 col-md-6 col-12">
                             <div class="single-banner">
                                 @php
@@ -305,12 +304,11 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- /End Single Banner  -->
                     @endforeach
                 @endif
             </div>
         </div>
-    </section>
+    </section> --}}
     <!-- End Midium Banner -->
 
     <!-- Start Most Popular -->
