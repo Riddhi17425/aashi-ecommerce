@@ -187,13 +187,13 @@
                                     <label>Show:</label>
                                     <select class="show select-custom" name="show" onchange="this.form.submit();">
                                         <option value="">Default</option>
-                                        <option value="9" @if (!empty($_GET['show']) && $_GET['show'] == '9') selected @endif>09
+                                        <option value="12" @if (!empty($_GET['show']) && $_GET['show'] == '12') selected @endif>12
                                         </option>
-                                        <option value="15" @if (!empty($_GET['show']) && $_GET['show'] == '15') selected @endif>15
+                                        <option value="20" @if (!empty($_GET['show']) && $_GET['show'] == '20') selected @endif>20
                                         </option>
-                                        <option value="21" @if (!empty($_GET['show']) && $_GET['show'] == '21') selected @endif>21
+                                        <option value="32" @if (!empty($_GET['show']) && $_GET['show'] == '32') selected @endif>32
                                         </option>
-                                        <option value="30" @if (!empty($_GET['show']) && $_GET['show'] == '30') selected @endif>30
+                                        <option value="40" @if (!empty($_GET['show']) && $_GET['show'] == '40') selected @endif>40
                                         </option>
                                     </select>
                                 </div>

@@ -140,6 +140,7 @@ $(document).ready(function() {
                     // Header count turant update - Swal se independent
                     let newCount = response.cart_count || 0;
                     $('.total-count').text(newCount);
+                    refreshMiniCart();
 
                     Swal.fire({
                         icon: 'success',

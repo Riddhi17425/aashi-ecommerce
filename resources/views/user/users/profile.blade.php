@@ -160,7 +160,7 @@
                                     <p class="text-muted small">Update your account password securely.</p>
                                 </div>
                                 <div class="card-body p-4 shop login">
-                                    <form class="form" method="POST" action="{{ route('change.password') }}">
+                                    <form class="form" method="POST" action="{{ route('user.change.password') }}">
                                         @csrf
                                         <div class="row">
                                             @if($errors->any())

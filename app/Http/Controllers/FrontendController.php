@@ -10,12 +10,14 @@ use App\Models\Post;
 use App\Models\Cart;
 use App\Models\Brand;
 use App\Models\ProductReview;
+use App\Models\CheckoutForgotPasswordOtp;
 use App\User;
 use Auth;
 use Session;
 use Newsletter;
 use DB;
 use Hash;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -33,29 +35,9 @@ class FrontendController extends Controller
 
     public function home()
     {
-        // START - THIS CODE WE NEED TO REMOVE AFTER TESTING
-        /*
-        $order = Order::where('id', 18)->first();
-        $data = [
-            'order' => $order,
-        ];
-
-        //echo "<pre>"; print_r($data); die;
-
-        Mail::send('emails.order-success', $data, function ($message) use ($order) {
-            $message->to($order->email)
-                    ->subject('Order Confirmation - ' . $order->order_number);
-        });
-        
-        die;
-        */
-        // END - THIS CODE WE NEED TO REMOVE AFTER TESTING
-
         $featured = Product::with('cat_info', 'getReview')->where('status', 'active')->where('is_featured', 1)->whereNull('deleted_at')->get()->unique('cat_id')->take(2);
         $posts=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
         $banners=Banner::where('status','active')->limit(3)->orderBy('id','ASC')->get();
-        // return $banner;
-        // $products=Product::where('status','active')->orderBy('id','DESC')->where('is_featured', 0)->limit(8)->get();
         $products = Product::with('getReview')->where('status', 'active')
         ->where('is_featured', 1)
         ->whereNull('deleted_at')
@@ -68,7 +50,6 @@ class FrontendController extends Controller
         ->get();
     
         $category=Category::where('status','active')->where('is_parent',1)->orderBy('title','ASC')->get();
-        // return $category;
         return view('frontend.index')
                 ->with('featured',$featured)
                 ->with('posts',$posts)
@@ -110,278 +91,157 @@ class FrontendController extends Controller
         return view('frontend.pages.product_detail', compact('product_detail', 'canReview', 'hasReviewed', 'orderId'));
     }
 
-    // public function productGrids(Request $request){
-    //     // $products=Product::query();
-    //     // $products=$products->where('is_featured',0);
-    //     // if(!empty($_GET['category'])){
-    //     //     $slug=explode(',',$_GET['category']);
-    //     //     // dd($slug);
-    //     //     $cat_ids=Category::select('id')->whereIn('slug',$slug)->pluck('id')->toArray();
-    //     //     // dd($cat_ids);
-    //     //     $products->whereIn('cat_id',$cat_ids);
-    //     //     // return $products;
-    //     // }
-    //     // if(!empty($_GET['brand'])){
-    //     //     $slugs=explode(',',$_GET['brand']);
-    //     //     $brand_ids=Brand::select('id')->whereIn('slug',$slugs)->pluck('id')->toArray();
-    //     //     return $brand_ids;
-    //     //     $products->whereIn('brand_id',$brand_ids);
-    //     // }
-    //     // if(!empty($_GET['sortBy'])){
-    //     //     if($_GET['sortBy']=='title'){
-    //     //         $products=$products->where('status','active')->orderBy('title','ASC');
-    //     //     }
-    //     //     if($_GET['sortBy']=='price'){
-    //     //         $products=$products->orderBy('price','ASC');
-    //     //     }
-    //     // }
+    public function productGrids(Request $request)
+    {
+        $slug = $request->slug ?? null;
+        $category = null;
 
-    //     // if(!empty($_GET['price'])){
-    //     //     $price=explode('-',$_GET['price']);
-    //     //     // return $price;
-    //     //     // if(isset($price[0]) && is_numeric($price[0])) $price[0]=floor(Helper::base_amount($price[0]));
-    //     //     // if(isset($price[1]) && is_numeric($price[1])) $price[1]=ceil(Helper::base_amount($price[1]));
-            
-    //     //     $products->whereBetween('price',$price);
-    //     // }
+        $productsQuery = Product::query();
+        $productsQuery->where('is_featured', 0)->where('status', 'active');
 
-    //     // $recent_products=Product::where('status','active')->orderBy('id','DESC')->limit(3)->get();
-    //     // // Sort by number
-    //     // if(!empty($_GET['show'])){
-    //     //     $products=$products->where('status','active')->paginate($_GET['show']);
-    //     // }
-    //     // else{
-    //     //     $products=$products->where('status','active')->paginate(9);
-    //     // }
-        
-    //     // $category = Category::where('slug', $request->slug)->first();
-    //     // // dd($category);
-    //     // if (!$category) {
-    //     //     abort(404);
-    //     // }
-    //     // $products = $category->products;
-    //         $category = Category::where('slug', $request->slug)->first();
-    //         $products = $category->products;
-    //                     $recent_products = Product::where('status', 'active')
-    //             ->where('is_featured', '0')
-    //             ->orderBy('id', 'DESC')
-    //             ->limit(3)
-    //             ->get();
-              
-                    
-    //                 return view('frontend.pages.product-grids', [
-    //                 'products' => $products,
-    //                 'recent_products' => $recent_products,
-    //                 'category' => $category
-    //             ]);
-    // }
-    
-    
-        public function productGrids(Request $request)
-        {
-            $slug = $request->slug ?? null;
-            $category = null;
-
-            $productsQuery = Product::query();
-            $productsQuery->where('is_featured', 0)->where('status', 'active');
-
-            if ($slug) {
-                $category = Category::where('slug', $slug)->first();
-                if (!$category) {
-                    abort(404);
-                }
-                $productsQuery->where('cat_id', $category->id);
+        if ($slug) {
+            $category = Category::where('slug', $slug)->first();
+            if (!$category) {
+                abort(404);
             }
-
-            // Brand filter (supports comma separated slugs). If 'all' present, ignore brand filter.
-            if ($request->has('brand') && !empty($request->brand)) {
-                $slugs = explode(',', $request->brand);
-                $brand_ids = Brand::select('id')->whereIn('slug', $slugs)->pluck('id')->toArray();
-                if (!empty($brand_ids)) {
-                    $productsQuery->whereIn('brand_id', $brand_ids);
-                }
-            }
-
-            // Sort
-            if ($request->has('sortBy') && !empty($request->sortBy) && $request->sortBy != 'default') {
-                if ($request->sortBy == 'title') {
-                    $productsQuery->orderBy('title', 'ASC');
-                } elseif ($request->sortBy == 'price') {
-                    $productsQuery->orderByRaw(
-                        "CASE WHEN JSON_VALID(`size`) THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(`size`, '$.price[0]')) AS UNSIGNED) ELSE 0 END ASC"
-                    );
-                }
-            } else {
-                $productsQuery->orderBy('id', 'DESC');
-            }
-
-            // Pagination / show
-            if ($request->has('show') && is_numeric($request->show)) {
-                $perPage = (int) $request->show;
-                $products = $productsQuery->paginate($perPage)->appends($request->query());
-            } else {
-                $products = $productsQuery->paginate(9)->appends($request->query());
-            }
-
-            $recent_products = Product::where('status', 'active')
-                ->where('is_featured', '0')
-                ->orderBy('id', 'DESC')
-                ->limit(3)
-                ->get();
-
-            return view('frontend.pages.product-grids', [
-                'products' => $products,
-                'recent_products' => $recent_products,
-                'category' => $category,
-            ]);
+            $productsQuery->where('cat_id', $category->id);
         }
 
-        public function productSubGrids(Request $request)
-        {
-            $sub_slug = $request->sub_slug;
-            // dd($sub_slug);
-            $category = Category::where('slug', $request->slug)->first();
-
-            $recent_products = Product::where('status', 'active')
-                ->orderBy('id', 'DESC')
-                ->limit(3)
-                ->get();
-        
-            $products = Category::getProductBySubCat($sub_slug)->sub_products;
-        
-            return view('frontend.pages.product-grids', [
-                'products' => $products,
-                'recent_products' => $recent_products,
-                'sub_slug' => $sub_slug,
-                'category' => $category,
-
-            ]);
+        if ($request->has('brand') && !empty($request->brand)) {
+            $slugs = explode(',', $request->brand);
+            $brand_ids = Brand::select('id')->whereIn('slug', $slugs)->pluck('id')->toArray();
+            if (!empty($brand_ids)) {
+                $productsQuery->whereIn('brand_id', $brand_ids);
+            }
         }
 
+        if ($request->has('sortBy') && !empty($request->sortBy) && $request->sortBy != 'default') {
+            if ($request->sortBy == 'title') {
+                $productsQuery->orderBy('title', 'ASC');
+            } elseif ($request->sortBy == 'price') {
+                $productsQuery->orderByRaw(
+                    "CASE WHEN JSON_VALID(`size`) THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(`size`, '$.price[0]')) AS UNSIGNED) ELSE 0 END ASC"
+                );
+            }
+        } else {
+            $productsQuery->orderBy('id', 'DESC');
+        }
 
-   
+        if ($request->has('show') && is_numeric($request->show)) {
+            $perPage = (int) $request->show;
+            $products = $productsQuery->paginate($perPage)->appends($request->query());
+        } else {
+            $products = $productsQuery->paginate(9)->appends($request->query());
+        }
+
+        $recent_products = Product::where('status', 'active')
+            ->where('is_featured', '0')
+            ->orderBy('id', 'DESC')
+            ->limit(3)
+            ->get();
+
+        return view('frontend.pages.product-grids', [
+            'products' => $products,
+            'recent_products' => $recent_products,
+            'category' => $category,
+        ]);
+    }
+
+    public function productSubGrids(Request $request)
+    {
+        $sub_slug = $request->sub_slug;
+        $category = Category::where('slug', $request->slug)->first();
+
+        $recent_products = Product::where('status', 'active')
+            ->orderBy('id', 'DESC')
+            ->limit(3)
+            ->get();
+    
+        $products = Category::getProductBySubCat($sub_slug)->sub_products;
+    
+        return view('frontend.pages.product-grids', [
+            'products' => $products,
+            'recent_products' => $recent_products,
+            'sub_slug' => $sub_slug,
+            'category' => $category,
+        ]);
+    }
+
+    public function showProductList(Request $request, $slug, $sub_slug = null)
+    {
+        $category = Category::where('slug', $slug)->first();
+
+        if (!$category) {
+            abort(404, 'Category not found');
+        }
+
+        $productsQuery = Product::query();
+        $productsQuery->where('status', 'active');
         
-        
-            public function showProductList(Request $request, $slug, $sub_slug = null)
-            {
-                $category = Category::where('slug', $slug)->first();
+        if ($sub_slug) {
+            $subcategory = Category::where('slug', $sub_slug)
+                            ->where('parent_id', $category->id)
+                            ->where('is_parent', 0)
+                            ->first();
+            if (!$subcategory) {
+                abort(404, 'Subcategory not found');
+            }
+            $productsQuery->where('child_cat_id', $subcategory->id);
+        } else {
+            $productsQuery->where('cat_id', $category->id);
+        }
 
-                if (!$category) {
-                    abort(404, 'Category not found');
-                }
+        if ($request->has('brand') && !empty($request->brand)) {
+            $slugs = explode(',', $request->brand);
+            $brand_ids = Brand::select('id')->whereIn('slug', $slugs)->pluck('id')->toArray();
+            if (!empty($brand_ids)) {
+                $productsQuery->whereIn('brand_id', $brand_ids);
+            }
+        }
 
-                // Base product query
-                $productsQuery = Product::query();
-                // $productsQuery->where('is_featured', 0)->where('status', 'active');
-                $productsQuery->where('status', 'active');
-                
-                // Limit to category or subcategory
-                if ($sub_slug) {
-                    $subcategory = Category::where('slug', $sub_slug)
-                                    ->where('parent_id', $category->id)
-                                    ->where('is_parent', 0)
-                                    ->first();
-                    if (!$subcategory) {
-                        abort(404, 'Subcategory not found');
-                    }
-                    $productsQuery->where('child_cat_id', $subcategory->id);
-                } else {
-                    $productsQuery->where('cat_id', $category->id);
-                }
+        if ($request->has('sortBy') && !empty($request->sortBy) && $request->sortBy != 'default') {
+            if ($request->sortBy == 'title') {
+                $productsQuery->orderBy('title', 'ASC');
+            } elseif ($request->sortBy == 'price') {
+                $productsQuery->orderByRaw(
+                    "CASE WHEN JSON_VALID(`size`) THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(`size`, '$.price[0]')) AS UNSIGNED) ELSE 0 END ASC"
+                );
+            }
+        } else {
+            $productsQuery->orderBy('id', 'DESC');
+        }
 
-                // Filters: brand (comma slugs), sortBy, price range
-                if ($request->has('brand') && !empty($request->brand)) {
-                    $slugs = explode(',', $request->brand);
-                    $brand_ids = Brand::select('id')->whereIn('slug', $slugs)->pluck('id')->toArray();
-                    if (!empty($brand_ids)) {
-                        $productsQuery->whereIn('brand_id', $brand_ids);
-                    }
-                }
+        if ($request->has('price') && !empty($request->price)) {
+            $priceRange = explode('-', $request->price);
+            $minPrice = (int) ($priceRange[0] ?? 0);
+            $maxPrice = (int) ($priceRange[1] ?? 0);
 
-                if ($request->has('sortBy') && !empty($request->sortBy) && $request->sortBy != 'default') {
-                    if ($request->sortBy == 'title') {
-                        $productsQuery->orderBy('title', 'ASC');
-                    } elseif ($request->sortBy == 'price') {
-                        $productsQuery->orderByRaw(
-                            "CASE WHEN JSON_VALID(`size`) THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(`size`, '$.price[0]')) AS UNSIGNED) ELSE 0 END ASC"
+            if ($minPrice || $maxPrice) {
+                $productsQuery->where(function ($q) use ($minPrice, $maxPrice) {
+                    $q->whereRaw('JSON_VALID(`size`) = 1')
+                        ->whereRaw(
+                            'COALESCE(JSON_UNQUOTE(JSON_EXTRACT(`size`, "$.price[0]")), 0) BETWEEN ? AND ?',
+                            [$minPrice, $maxPrice]
                         );
-                    }
-                } else {
-                    $productsQuery->orderBy('id', 'DESC');
-                }
-
-                if ($request->has('price') && !empty($request->price)) {
-                    $priceRange = explode('-', $request->price);
-                    $minPrice = (int) ($priceRange[0] ?? 0);
-                    $maxPrice = (int) ($priceRange[1] ?? 0);
-
-                    if ($minPrice || $maxPrice) {
-                        $productsQuery->where(function ($q) use ($minPrice, $maxPrice) {
-                            $q->whereRaw('JSON_VALID(`size`) = 1')
-                                ->whereRaw(
-                                    'COALESCE(JSON_UNQUOTE(JSON_EXTRACT(`size`, "$.price[0]")), 0) BETWEEN ? AND ?',
-                                    [$minPrice, $maxPrice]
-                                );
-                        });
-                    }
-                }
-
-                // Recent products
-                $recent_products = Product::where('status', 'active')->orderBy('id', 'DESC')->limit(3)->get();
-
-                // Pagination / show
-                    if ($request->has('show') && is_numeric($request->show)) {
-                        $perPage = (int) $request->show;
-                        $products = $productsQuery->paginate($perPage)->appends($request->query());
-                    } else {
-                        $products = $productsQuery->paginate(9)->appends($request->query());
-                    }
-
-                return view('frontend.pages.product-lists', compact('products', 'category', 'sub_slug', 'recent_products'));
+                });
             }
+        }
 
+        $recent_products = Product::where('status', 'active')->orderBy('id', 'DESC')->limit(3)->get();
 
+        if ($request->has('show') && is_numeric($request->show)) {
+            $perPage = (int) $request->show;
+            $products = $productsQuery->paginate($perPage)->appends($request->query());
+        } else {
+            $products = $productsQuery->paginate(12)->appends($request->query());
+        }
+
+        return view('frontend.pages.product-lists', compact('products', 'category', 'sub_slug', 'recent_products'));
+    }
 
     public function productLists(){
-      
-        // $products=Product::query();
-        // $products=$products->where('is_featured',0);
-        // if(!empty($_GET['category'])){
-        //     $slug=explode(',',$_GET['category']);
-        //     $cat_ids=Category::select('id')->whereIn('slug',$slug)->pluck('id')->toArray();
-        //     $products->whereIn('cat_id',$cat_ids)->paginate;
-        // }
-        // if(!empty($_GET['brand'])){
-        //     $slugs=explode(',',$_GET['brand']);
-        //     $brand_ids=Brand::select('id')->whereIn('slug',$slugs)->pluck('id')->toArray();
-        //     return $brand_ids;
-        //     $products->whereIn('brand_id',$brand_ids);
-        // }
-        // if(!empty($_GET['sortBy'])){
-        //     if($_GET['sortBy']=='title'){
-        //         $products=$products->where('status','active')->orderBy('title','ASC');
-        //     }
-        //     if($_GET['sortBy']=='price'){
-        //         $products=$products->orderBy('price','ASC');
-        //     }
-        // }
-        // if(!empty($_GET['price'])){
-        //     $priceRange=explode('-',$_GET['price']);
-        //     $minPrice = (int)$priceRange[0];
-        //     $maxPrice = (int)$priceRange[1];
-        //     $products->whereJsonContains('size->price', $minPrice)
-        //      ->orWhereJsonContains('size->price', $maxPrice);
-        // }
-        // $recent_products=Product::where('status','active')->orderBy('id','DESC')->limit(3)->get();
-        //  if(!empty($_GET['show'])){
-        //     $products=$products->where('status','active')->paginate($_GET['show']);
-        // }
-        // else{
-        //     $products=$products->where('status','active')->toSql();
-        //  }
         \DB::enableQueryLog();
         $products = Product::query();
-        // $products = $products->where('is_featured', 0);
         $products = $products->where('status', 'active');
 
         if (!empty($_GET['category'])) {
@@ -422,9 +282,6 @@ class FrontendController extends Controller
             });
         }
 
-            
-        
-
         $recent_products = Product::where('status', 'active')->orderBy('id', 'DESC')->limit(3)->get();
 
         $show = request()->get('show');
@@ -434,14 +291,12 @@ class FrontendController extends Controller
         } else {
             $products = $products->where('status', 'active')->paginate(9)->appends(request()->query());
         }
-        // dd(\DB::getQueryLog());
-//   dd($products);
 
         return view('frontend.pages.product-lists')->with('products',$products)->with('recent_products',$recent_products);
     }
+
     public function productFilter(Request $request){
             $data= $request->all();
-            // return $data;
             $showURL="";
             if(!empty($data['show'])){
                 $showURL .='&show='.$data['show'];
@@ -475,7 +330,6 @@ class FrontendController extends Controller
                     }
                 }
             }
-            // return $brandURL;
 
             $priceRangeURL="";
             if(!empty($data['price_range'])){
@@ -492,7 +346,6 @@ class FrontendController extends Controller
     public function productSearch(Request $request)
     {
         $search = $request->search;
-        // dd($search);
         $recent_products = Product::where('status', 'active')
             ->orderBy('id', 'DESC')
             ->limit(3)
@@ -522,51 +375,49 @@ class FrontendController extends Controller
 
 
     public function searchSuggestions(Request $request)
-{
-    $search = trim($request->get('search'));
-    $categorySlug = $request->get('category');
+    {
+        $search = trim($request->get('search'));
+        $categorySlug = $request->get('category');
 
-    if (empty($search)) {
-        return response()->json([]);
-    }
+        if (empty($search)) {
+            return response()->json([]);
+        }
 
-    $query = Product::with('cat_info')
-        ->where('status', 'active')
-        ->whereNull('deleted_at')
-        ->where(function ($q) use ($search) {
-            $q->where('title', 'like', "%{$search}%")
-              ->orWhere('product_code', 'like', "%{$search}%")
-              ->orWhereHas('cat_info', function ($q2) use ($search) {
-                  $q2->where('title', 'like', "%{$search}%");
-              });
+        $query = Product::with('cat_info')
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('product_code', 'like', "%{$search}%")
+                  ->orWhereHas('cat_info', function ($q2) use ($search) {
+                      $q2->where('title', 'like', "%{$search}%");
+                  });
+            });
+
+        if (!empty($categorySlug) && strtolower($categorySlug) !== 'all') {
+            $query->whereHas('cat_info', function ($q) use ($categorySlug) {
+                $q->where('slug', $categorySlug);
+            });
+        }
+
+        $products = $query->limit(8)->get();
+
+        $results = $products->map(function ($product) {
+            $photo = explode(',', $product->photo);
+            return [
+                'title'    => $product->title,
+                'code'     => $product->product_code,
+                'category' => $product->cat_info->title ?? '',
+                'photo'    => asset('public/' . trim($photo[0])),
+                'url'      => route('product-detail', $product->slug),
+            ];
         });
 
-    if (!empty($categorySlug) && strtolower($categorySlug) !== 'all') {
-        $query->whereHas('cat_info', function ($q) use ($categorySlug) {
-            $q->where('slug', $categorySlug);
-        });
+        return response()->json($results);
     }
-
-    $products = $query->limit(8)->get();
-
-    $results = $products->map(function ($product) {
-        $photo = explode(',', $product->photo);
-        return [
-            'title'    => $product->title,
-            'code'     => $product->product_code,
-            'category' => $product->cat_info->title ?? '',
-            'photo'    => asset('public/' . trim($photo[0])),
-            'url'      => route('product-detail', $product->slug),
-        ];
-    });
-
-    return response()->json($results);
-}
 
     public function productBrand(Request $request){
-        // Redirect to the unified product list route with the brand slug in the query string
         $params = request()->query();
-        // set/replace brand param (support multiple comma-separated brands if needed)
         $params['brand'] = isset($params['brand']) && $params['brand'] ? $params['brand'] . ',' . $request->slug : $request->slug;
 
         $url = route('product-lists') . (count($params) ? '?' . http_build_query($params) : '');
@@ -574,88 +425,31 @@ class FrontendController extends Controller
     }
     
     public function productCat(Request $request) {
-        // Redirect to the unified product list route so GET filters are handled centrally
         $query = request()->getQueryString();
         $url = route('productlist', $request->slug) . ($query ? '?' . $query : '');
         return redirect($url);
     }
-        //  public function productCat(Request $request) {
-        //     $category = Category::where('slug', $request->slug)->first();
-        //     $products = $category->products;
-        //                 $recent_products = Product::where('status', 'active')
-        //         ->where('is_featured', '0')
-        //         ->orderBy('id', 'DESC')
-        //         ->limit(3)
-        //         ->get();
-        
-        //     if (request()->is('e-shop.loc/product-grids')) {
-        //         return view('frontend.pages.product-grids', [
-        //             'products' => $products,
-        //             'recent_products' => $recent_products,
-        //             'category' => $category
-        //         ]);
-        //     } else {
-        //         return view('frontend.pages.product-lists', [
-        //             'products' => $products,
-        //             'recent_products' => $recent_products,
-        //             'category' => $category
-        //         ]);
-        //     }
-        // }
 
-        // public function productSubCat(Request $request)
-        // {
-        //     $sub_slug = $request->sub_slug;
-        
-        //     $products = Category::getProductBySubCat($sub_slug); 
-        
-        //     $recent_products = Product::where('status', 'active')->orderBy('id', 'DESC')->limit(3)->get();
-        
-        //     // Check the current route and return appropriate view
-        //     if (request()->is('e-shop.loc/product-grids')) {
-        //         return view('frontend.pages.product-grids', [
-        //             'products' => $products->sub_products,  // Assuming sub_products is available
-        //             'recent_products' => $recent_products,
-        //             'sub_slug' => $sub_slug  // Pass sub_slug to the view
-        //         ]);
-        //     } else {
-        //         return view('frontend.pages.product-lists', [
-        //             'products' => $products->sub_products,  // Assuming sub_products is available
-        //             'recent_products' => $recent_products,
-        //             'sub_slug' => $sub_slug  // Pass sub_slug to the view
-        //         ]);
-        //     }
-        // }
-        
-        public function productSubCat(Request $request)
-        {
-            // Redirect to unified product list route for subcategory to preserve GET filters
-            $query = request()->getQueryString();
-            $url = route('productlist-with-sub', ['slug' => $request->slug, 'sub_slug' => $request->sub_slug]) . ($query ? '?' . $query : '');
-            return redirect($url);
-        }
-        
-
-
+    public function productSubCat(Request $request)
+    {
+        $query = request()->getQueryString();
+        $url = route('productlist-with-sub', ['slug' => $request->slug, 'sub_slug' => $request->sub_slug]) . ($query ? '?' . $query : '');
+        return redirect($url);
+    }
 
     public function blog(){
         $post=Post::query();
         
         if(!empty($_GET['category'])){
             $slug=explode(',',$_GET['category']);
-            // dd($slug);
             $cat_ids=PostCategory::select('id')->whereIn('slug',$slug)->pluck('id')->toArray();
             return $cat_ids;
             $post->whereIn('post_cat_id',$cat_ids);
-            // return $post;
         }
         if(!empty($_GET['tag'])){
             $slug=explode(',',$_GET['tag']);
-            // dd($slug);
             $tag_ids=PostTag::select('id')->whereIn('slug',$slug)->pluck('id')->toArray();
-            // return $tag_ids;
             $post->where('post_tag_id',$tag_ids);
-            // return $post;
         }
 
         if(!empty($_GET['show'])){
@@ -664,7 +458,6 @@ class FrontendController extends Controller
         else{
             $post=$post->where('status','active')->orderBy('id','DESC')->paginate(9);
         }
-        // $post=Post::where('status','active')->paginate(8);
         $rcnt_post=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
         return view('frontend.pages.blog')->with('posts',$post)->with('recent_posts',$rcnt_post);
     }
@@ -672,12 +465,10 @@ class FrontendController extends Controller
     public function blogDetail($slug){
         $post=Post::getPostBySlug($slug);
         $rcnt_post=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
-        // return $post;
         return view('frontend.pages.blog-detail')->with('post',$post)->with('recent_posts',$rcnt_post);
     }
 
     public function blogSearch(Request $request){
-        // return $request->all();
         $rcnt_post=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
         $posts=Post::orwhere('title','like','%'.$request->search.'%')
             ->orwhere('quote','like','%'.$request->search.'%')
@@ -691,7 +482,6 @@ class FrontendController extends Controller
 
     public function blogFilter(Request $request){
         $data=$request->all();
-        // return $data;
         $catURL="";
         if(!empty($data['category'])){
             foreach($data['category'] as $category){
@@ -715,8 +505,6 @@ class FrontendController extends Controller
                 }
             }
         }
-        // return $tagURL;
-            // return $catURL;
         return redirect()->route('blog',$catURL.$tagURL);
     }
 
@@ -727,9 +515,7 @@ class FrontendController extends Controller
     }
 
     public function blogByTag(Request $request){
-        // dd($request->slug);
         $post=Post::getBlogByTag($request->slug);
-        // return $post;
         $rcnt_post=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
         return view('frontend.pages.blog')->with('posts',$post)->with('recent_posts',$rcnt_post);
     }
@@ -740,26 +526,13 @@ class FrontendController extends Controller
     }
     public function loginSubmit(Request $request)
     {
-        // $data= $request->all();
-        // if(Auth::attempt(['email' => $data['email'], 'password' => $data['password'],'status'=>'active', 'role' => 'user'])){
-        //     Session::put('user',$data['email']);
-        //     request()->session()->flash('success','Successfully login');
-        //     return redirect()->route('home');
-        // }
-        // else{ 
-        //     request()->session()->flash('error','Invalid email and password pleas try again!');
-        //     return redirect()->route('login.form');
-        // }
-
-        // Check if credentials exist with 'user' role
         $credentials = $request->only('email','password');
         $credentials['role'] = 'user';
         $credentials['status'] = 'active';
     
         if (Auth::check()) {
-            // Already logged in
             if (Auth::user()->role !== 'user') {
-                Auth::logout(); // logout previous role
+                Auth::logout();
             }
         }
     
@@ -779,23 +552,13 @@ class FrontendController extends Controller
     }
     public function adminLoginSubmit(Request $request)
     {
-        // $data= $request->all();
-        // if(Auth::attempt(['email' => $data['email'], 'password' => $data['password'], 'status'=>'active', 'role' => 'admin'])){
-        //     Session::put('user',$data['email']);
-        //     request()->session()->flash('success','Successfully login');
-        //     return redirect()->route('admin');
-        // }
-        // else{
-        //     return redirect()->route('admin.login')->with('error','Invalid email and password pleas try again!');
-        // }
-        
         $credentials = $request->only('email','password');
         $credentials['role'] = 'admin';
         $credentials['status'] = 'active';
     
         if (Auth::check()) {
             if (Auth::user()->role !== 'admin') {
-                Auth::logout(); // logout previous role
+                Auth::logout();
             }
         }
     
@@ -827,7 +590,6 @@ class FrontendController extends Controller
         return view('frontend.pages.register');
     }
     public function registerSubmit(Request $request){
-        // return $request->all();
         $registeredMessage = 'This email is already registered. Please login or use another email.';
         if (User::where('email', $request->email)->exists()) {
             return redirect()->route('register.form')
@@ -851,7 +613,6 @@ class FrontendController extends Controller
         }
 
         $data=$request->all();
-        //$check=$this->create($data);
         $check = User::create([
             'name'=>$data['name'],
             'email'=>$data['email'],
@@ -894,7 +655,7 @@ class FrontendController extends Controller
     }
 
     /**
-     * STEP 1: Check if email is already registered (Checkout Auth Flow - )
+     * STEP 1: Check if email is already registered (Checkout Auth Flow)
      */
     public function checkoutCheckEmail(Request $request)
     {
@@ -918,7 +679,7 @@ class FrontendController extends Controller
     }
 
     /**
-     * STEP 2a: Login existing user during checkout + merge guest cart 
+     * STEP 2a: Login existing user during checkout + merge guest cart
      */
     public function checkoutLogin(Request $request)
     {
@@ -947,7 +708,6 @@ class FrontendController extends Controller
             Session::regenerate();
             Session::put('user', $request->email);
 
-            // MERGE GUEST CART INTO USER 
             $guestCarts = Cart::where('session_id', $oldSessionId)->whereNull('order_id')->get();
 
             foreach ($guestCarts as $guestCart) {
@@ -990,7 +750,7 @@ class FrontendController extends Controller
     }
 
     /**
-     * STEP 2b: Register new user during checkout + merge guest cart 
+     * STEP 2b: Register new user during checkout + merge guest cart
      */
     public function checkoutRegister(Request $request)
     {
@@ -1026,7 +786,6 @@ class FrontendController extends Controller
             Auth::login($user);
             Session::put('user', $request->email);
 
-            // MERGE GUEST CART INTO USER 
             $guestCarts = Cart::where('session_id', $oldSessionId)->whereNull('order_id')->get();
 
             foreach ($guestCarts as $guestCart) {
@@ -1047,5 +806,141 @@ class FrontendController extends Controller
         ]);
     }
 
-}    
+    /**
+     * CHECKOUT FORGOT PASSWORD - STEP 1: Send OTP (DB based, HNOWW pattern)
+     */
+    public function checkoutSendForgotPasswordOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        // Purane us email ke saare OTP records hata do (fresh OTP ke liye)
+        CheckoutForgotPasswordOtp::where('email', $request->email)->delete();
+
+        $otp = rand(100000, 999999);
+
+        CheckoutForgotPasswordOtp::create([
+            'email'       => $request->email,
+            'otp'         => $otp,
+            'is_verified' => false,
+            'expires_at'  => Carbon::now()->addMinutes(10),
+        ]);
+
+        Mail::send('emails.password-reset-otp', ['otp' => $otp], function ($message) use ($request) {
+            $message->to($request->email)->subject('Your Password Reset OTP');
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP sent successfully to your registered email address.',
+        ]);
+    }
+
+    /**
+     * CHECKOUT FORGOT PASSWORD - STEP 2: Verify OTP
+     */
+    public function checkoutVerifyForgotPasswordOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp'   => 'required|digits:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $record = CheckoutForgotPasswordOtp::where('email', $request->email)
+            ->where('otp', $request->otp)
+            ->where('expires_at', '>=', Carbon::now())
+            ->latest('id')
+            ->first();
+
+        if (!$record) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired OTP. Please try again.',
+            ]);
+        }
+
+        $record->is_verified = true;
+        $record->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP verified successfully.',
+        ]);
+    }
+
+    /**
+     * CHECKOUT FORGOT PASSWORD - STEP 3: Reset password + remove OTP record from DB
+     */
+    public function checkoutResetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email'                 => 'required|email|exists:users,email',
+            'password'              => 'required|min:6',
+            'password_confirmation' => 'required|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $verifiedRecord = CheckoutForgotPasswordOtp::where('email', $request->email)
+            ->where('is_verified', true)
+            ->where('expires_at', '>=', Carbon::now())
+            ->latest('id')
+            ->first();
+
+        if (!$verifiedRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP verification expired. Please try again.',
+            ]);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Password use ho gaya, ab OTP record ko database se hata do
+        CheckoutForgotPasswordOtp::where('email', $request->email)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully. Please login with your new password.',
+        ]);
+    }
+
+    /**
+     * HEADER MINI CART - live refresh partial
+     */
+    public function miniCart()
+    {
+        return response(view('frontend.partials.mini-cart')->render());
+    }
+
+    /**
+     * HEADER MINI WISHLIST - live refresh partial
+     */
+    public function miniWishlist()
+    {
+        return response(view('frontend.partials.mini-wishlist')->render());
+    }
+
+}

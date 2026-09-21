@@ -2,6 +2,23 @@
 // CART PAGE AJAX LOGIC (HNOWW Pattern)
 // ==========================================
 
+// HEADER MINI CART / WISHLIST - LIVE REFRESH HELPERS
+function refreshMiniCart() {
+    if (window.appRoutes && window.appRoutes.miniCart) {
+        $.get(window.appRoutes.miniCart, function(html) {
+            $('#mini-cart-box').html(html);
+        });
+    }
+}
+
+function refreshMiniWishlist() {
+    if (window.appRoutes && window.appRoutes.miniWishlist) {
+        $.get(window.appRoutes.miniWishlist, function(html) {
+            $('#mini-wishlist-box').html(html);
+        });
+    }
+}
+
 // QTY INCREMENT / DECREMENT (AJAX)
 $(document).on('click', '.inc_btn', function () {
     let row = $(this).closest('.increment_decrement');
@@ -50,6 +67,7 @@ function updateCartQty(cartId, qty, qtyInput, row) {
                 recalculateRowTotal(row, qty);
                 updateCartTotalsFromServer(response);
                 updateHeaderCartCount();
+                refreshMiniCart();
             } else {
                 Swal.fire({
                     icon: 'warning',
@@ -68,7 +86,7 @@ function updateCartQty(cartId, qty, qtyInput, row) {
         }
     });
 }
-// ✅ Naya function - purane recalculateCartTotals() ki jagah
+
 function updateCartTotalsFromServer(response) {
     if (response.subtotal !== undefined) {
         $('#cart-subtotal').text('₹' + parseFloat(response.subtotal).toFixed(2));
@@ -126,6 +144,7 @@ $(document).on('click', '.delete-cart-item', function () {
                         $('#cart-row-' + cartId).remove();
                         recalculateCartTotals();
                         updateHeaderCartCount();
+                        refreshMiniCart();
 
                         if ($('#cart_item_list .cart-item-row').length === 0) {
                             let emptyRow = `<tr class="empty-cart-row"><td class="text-center" colspan="7">
@@ -154,14 +173,65 @@ $(document).ready(function() {
     var isRegistered = false;
     var userEmail = '';
 
+    var forgotOtpTimer = null;
+    var forgotOtpSeconds = 60;
+
+    // ---- FIELD-LEVEL VALIDATION HELPERS ----
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function showFieldError(fieldId, message) {
+        if (!message) return;
+        $('#error_' + fieldId).text(message).removeClass('d-none');
+    }
+
+    function clearFieldError(fieldId) {
+        $('#error_' + fieldId).addClass('d-none').text('');
+    }
+
+    function clearAllFieldErrors() {
+        $('.field-error').addClass('d-none').text('');
+    }
+
+    function getAjaxErrorMessage(xhr) {
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+            return xhr.responseJSON.message;
+        }
+        return 'Something went wrong. Please try again.';
+    }
+
+    function startForgotOtpTimer() {
+        clearInterval(forgotOtpTimer);
+        forgotOtpSeconds = 60;
+        $('#btn-resend-forgot-otp').prop('disabled', true);
+        $('#forgot-otp-timer').text('(60s)');
+        forgotOtpTimer = setInterval(function() {
+            forgotOtpSeconds--;
+            $('#forgot-otp-timer').text('(' + forgotOtpSeconds + 's)');
+            if (forgotOtpSeconds <= 0) {
+                clearInterval(forgotOtpTimer);
+                forgotOtpTimer = null;
+                $('#forgot-otp-timer').text('');
+                $('#btn-resend-forgot-otp').prop('disabled', false);
+            }
+        }, 1000);
+    }
+
+    // ---- STEP 1: EMAIL ----
     $('#btn-email-next').click(function() {
+        clearAllFieldErrors();
         var email = $('#checkout_email').val().trim();
+
         if (!email) {
-            showError('Please enter your email address.');
+            showFieldError('checkout_email', 'Please enter your email address.');
+            return;
+        }
+        if (!isValidEmail(email)) {
+            showFieldError('checkout_email', 'Please enter a valid email address.');
             return;
         }
 
-        hideError();
         $('#btn-email-next').prop('disabled', true).text('Checking...');
 
         $.ajax({
@@ -188,30 +258,30 @@ $(document).ready(function() {
                         $('#checkout_register_email').val(email);
                     }
                 } else {
-                    showError(response.message);
+                    showFieldError('checkout_email', response.message);
                 }
             },
             error: function(xhr) {
                 $('#btn-email-next').prop('disabled', false).text('Continue');
-                showError(getAjaxErrorMessage(xhr));
+                showFieldError('checkout_email', getAjaxErrorMessage(xhr));
             }
         });
-        
+
     });
 
      $('#btn-goto-signup').click(function() {
-    hideError();
-    var email = $('#checkout_email').val().trim();
-    isRegistered = false;
-    userEmail = email;
-    $('#checkoutAuthTitle').text('Create Account');
-    $('#step-email').addClass('d-none');
-    $('#step-register').removeClass('d-none');
-    $('#checkout_register_email').val(email);
-});
+        clearAllFieldErrors();
+        var email = $('#checkout_email').val().trim();
+        isRegistered = false;
+        userEmail = email;
+        $('#checkoutAuthTitle').text('Create Account');
+        $('#step-email').addClass('d-none');
+        $('#step-register').removeClass('d-none');
+        $('#checkout_register_email').val(email);
+    });
 
     $('#btn-login-back, #btn-register-back').click(function() {
-        hideError();
+        clearAllFieldErrors();
         $('#checkoutAuthTitle').text('Login to Checkout');
         $('.auth-step').addClass('d-none');
         $('#step-email').removeClass('d-none');
@@ -222,9 +292,54 @@ $(document).ready(function() {
         $('#checkout_reg_password_confirmation').val('');
     });
 
+    // ---- STEP 2: LOGIN / REGISTER SUBMIT ----
     $('#checkout-auth-form').submit(function(e) {
         e.preventDefault();
-        hideError();
+        clearAllFieldErrors();
+        var hasError = false;
+
+        if (isRegistered) {
+            var password = $('#checkout_password').val();
+            if (!password) {
+                showFieldError('checkout_password', 'Please enter your password.');
+                hasError = true;
+            }
+        } else {
+            var name = $('#checkout_name').val().trim();
+            var regEmail = $('#checkout_register_email').val().trim();
+            var regPassword = $('#checkout_reg_password').val();
+            var regConfirm = $('#checkout_reg_password_confirmation').val();
+
+            if (!name) {
+                showFieldError('checkout_name', 'Please enter your name.');
+                hasError = true;
+            }
+            if (!regEmail) {
+                showFieldError('checkout_register_email', 'Please enter your email address.');
+                hasError = true;
+            } else if (!isValidEmail(regEmail)) {
+                showFieldError('checkout_register_email', 'Please enter a valid email address.');
+                hasError = true;
+            }
+            if (!regPassword) {
+                showFieldError('checkout_reg_password', 'Please enter a password.');
+                hasError = true;
+            } else if (regPassword.length < 6) {
+                showFieldError('checkout_reg_password', 'Password must be at least 6 characters.');
+                hasError = true;
+            }
+            if (!regConfirm) {
+                showFieldError('checkout_reg_password_confirmation', 'Please confirm your password.');
+                hasError = true;
+            } else if (regPassword && regConfirm !== regPassword) {
+                showFieldError('checkout_reg_password_confirmation', 'Passwords do not match.');
+                hasError = true;
+            }
+        }
+
+        if (hasError) {
+            return;
+        }
 
         var submitBtn = isRegistered ? $('#btn-login-submit') : $('#btn-register-submit');
         var originalBtnText = submitBtn.text();
@@ -254,18 +369,221 @@ $(document).ready(function() {
                     window.location.href = response.redirect_url;
                 } else {
                     submitBtn.prop('disabled', false).text(originalBtnText);
-                    showError(response.message);
+                    showFieldError(isRegistered ? 'checkout_password' : 'checkout_register_email', response.message);
                 }
             },
             error: function(xhr) {
                 submitBtn.prop('disabled', false).text(originalBtnText);
-                showError(getAjaxErrorMessage(xhr));
+                showFieldError(isRegistered ? 'checkout_password' : 'checkout_register_email', getAjaxErrorMessage(xhr));
             }
         });
     });
 
+    // ==========================================
+    // CHECKOUT FORGOT PASSWORD - OTP FLOW (DB based)
+    // ==========================================
+    $('#btn-forgot-password').click(function() {
+        clearAllFieldErrors();
+        if (!userEmail) {
+            showFieldError('checkout_password', 'Email address is missing. Please go back and try again.');
+            return;
+        }
+        var btn = $(this);
+        var originalText = btn.text();
+        btn.prop('disabled', true).text('Sending...');
+
+        $.ajax({
+            url: window.appRoutes.checkoutForgotSendOtp,
+            type: "POST",
+            data: {
+                _token: window.appCsrfToken,
+                email: userEmail
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#checkoutAuthTitle').text('Verify OTP');
+                    $('#forgot-password-email').text(userEmail);
+                    $('.auth-step').addClass('d-none');
+                    $('#step-forgot-password').removeClass('d-none');
+                    $('#checkout_forgot_otp').val('');
+                    startForgotOtpTimer();
+                } else {
+                    showFieldError('checkout_password', response.message);
+                }
+            },
+            error: function(xhr) {
+                showFieldError('checkout_password', getAjaxErrorMessage(xhr));
+            },
+            complete: function() {
+                btn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+
+    $('#btn-verify-forgot-otp').click(function() {
+        clearFieldError('checkout_forgot_otp');
+        var otp = $('#checkout_forgot_otp').val().trim();
+
+        if (!otp) {
+            showFieldError('checkout_forgot_otp', 'Please enter the OTP.');
+            return;
+        }
+        if (!/^\d{6}$/.test(otp)) {
+            showFieldError('checkout_forgot_otp', 'Please enter a valid 6-digit OTP.');
+            return;
+        }
+
+        var btn = $(this);
+        var originalText = btn.text();
+        btn.prop('disabled', true).text('Verifying...');
+
+        $.ajax({
+            url: window.appRoutes.checkoutForgotVerifyOtp,
+            type: "POST",
+            data: {
+                _token: window.appCsrfToken,
+                email: userEmail,
+                otp: otp
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#checkoutAuthTitle').text('Reset Password');
+                    $('.auth-step').addClass('d-none');
+                    $('#step-reset-password').removeClass('d-none');
+                    $('#checkout_forgot_password').val('');
+                    $('#checkout_forgot_password_confirmation').val('');
+                } else {
+                    showFieldError('checkout_forgot_otp', response.message);
+                }
+            },
+            error: function(xhr) {
+                showFieldError('checkout_forgot_otp', getAjaxErrorMessage(xhr));
+            },
+            complete: function() {
+                btn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+
+    $('#btn-resend-forgot-otp').click(function() {
+        clearFieldError('checkout_forgot_otp');
+        if (!userEmail) {
+            showFieldError('checkout_forgot_otp', 'Email address is missing. Please go back and try again.');
+            return;
+        }
+        var btn = $(this);
+        btn.prop('disabled', true).text('Sending...');
+
+        $.ajax({
+            url: window.appRoutes.checkoutForgotSendOtp,
+            type: "POST",
+            data: {
+                _token: window.appCsrfToken,
+                email: userEmail
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#checkout_forgot_otp').val('');
+                    btn.html('Resend OTP <span id="forgot-otp-timer">(60s)</span>');
+                    startForgotOtpTimer();
+                } else {
+                    btn.prop('disabled', false).html('Resend OTP');
+                    showFieldError('checkout_forgot_otp', response.message);
+                }
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false).html('Resend OTP');
+                showFieldError('checkout_forgot_otp', getAjaxErrorMessage(xhr));
+            }
+        });
+    });
+
+    $('#btn-reset-forgot-password').click(function() {
+        clearFieldError('checkout_forgot_password');
+        clearFieldError('checkout_forgot_password_confirmation');
+        var password = $('#checkout_forgot_password').val();
+        var confirmation = $('#checkout_forgot_password_confirmation').val();
+        var hasError = false;
+
+        if (!password) {
+            showFieldError('checkout_forgot_password', 'Please enter a new password.');
+            hasError = true;
+        } else if (password.length < 6) {
+            showFieldError('checkout_forgot_password', 'Password must be at least 6 characters.');
+            hasError = true;
+        }
+
+        if (!confirmation) {
+            showFieldError('checkout_forgot_password_confirmation', 'Please confirm your new password.');
+            hasError = true;
+        } else if (password && confirmation !== password) {
+            showFieldError('checkout_forgot_password_confirmation', 'Passwords do not match.');
+            hasError = true;
+        }
+
+        if (hasError) {
+            return;
+        }
+
+        var btn = $(this);
+        var originalText = btn.text();
+        btn.prop('disabled', true).text('Updating...');
+
+        $.ajax({
+            url: window.appRoutes.checkoutForgotReset,
+            type: "POST",
+            data: {
+                _token: window.appCsrfToken,
+                email: userEmail,
+                password: password,
+                password_confirmation: confirmation
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Password reset ho gaya - wapas login step par le jao (continue checkout)
+                    $('#checkoutAuthTitle').text('Welcome Back');
+                    $('.auth-step').addClass('d-none');
+                    $('#step-login').removeClass('d-none');
+                    $('#checkout_password').val('');
+                    clearAllFieldErrors();
+                } else {
+                    showFieldError('checkout_forgot_password_confirmation', response.message);
+                }
+            },
+            error: function(xhr) {
+                showFieldError('checkout_forgot_password_confirmation', getAjaxErrorMessage(xhr));
+            },
+            complete: function() {
+                btn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+
+    $('#btn-forgot-back').click(function() {
+        clearAllFieldErrors();
+        clearInterval(forgotOtpTimer);
+        $('#checkoutAuthTitle').text('Welcome Back');
+        $('.auth-step').addClass('d-none');
+        $('#step-login').removeClass('d-none');
+        $('#checkout_forgot_otp').val('');
+    });
+
+    $('#btn-reset-password-back').click(function() {
+        clearAllFieldErrors();
+        $('#checkoutAuthTitle').text('Verify OTP');
+        $('.auth-step').addClass('d-none');
+        $('#step-forgot-password').removeClass('d-none');
+        $('#checkout_forgot_password').val('');
+        $('#checkout_forgot_password_confirmation').val('');
+    });
+
     $('#checkoutAuthModal').on('hidden.bs.modal', function () {
-        hideError();
+        clearAllFieldErrors();
+        clearInterval(forgotOtpTimer);
+        forgotOtpTimer = null;
+        forgotOtpSeconds = 60;
+        $('#btn-resend-forgot-otp').prop('disabled', true).html('Resend OTP <span id="forgot-otp-timer">(60s)</span>');
+
         $('#checkoutAuthTitle').text('Login to Checkout');
         $('.auth-step').addClass('d-none');
         $('#step-email').removeClass('d-none');
@@ -275,26 +593,12 @@ $(document).ready(function() {
         $('#checkout_register_email').val('');
         $('#checkout_reg_password').val('');
         $('#checkout_reg_password_confirmation').val('');
+        $('#checkout_forgot_otp').val('');
+        $('#checkout_forgot_password').val('');
+        $('#checkout_forgot_password_confirmation').val('');
         isRegistered = false;
         userEmail = '';
     });
-
-    function showError(msg) {
-        hideError();
-        var activeStep = $('.auth-step:not(.d-none)');
-        activeStep.find('.field-error').text(msg).removeClass('d-none');
-    }
-
-    function hideError() {
-        $('.auth-step .field-error').addClass('d-none').text('');
-    }
-
-    function getAjaxErrorMessage(xhr) {
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-            return xhr.responseJSON.message;
-        }
-        return 'Something went wrong. Please try again.';
-    }
 });
 
 // Global scope me — updateCartQty() aur delete handler dono use kar sakein
@@ -305,6 +609,7 @@ function updateHeaderCartCount() {
     });
     $('.total-count').text(totalQty);
 }
+
 // FALLBACK: Manual modal open/close (agar Bootstrap JS ka data-toggle kaam na kare)
 $(document).on('click', '[data-target="#checkoutAuthModal"]', function (e) {
     if ($(this).attr('href') === 'javascript:void(0);' || $(this).attr('data-toggle') === 'modal') {

@@ -42,10 +42,8 @@
                             @endif
                         </li>
                         @endauth
-                            {{-- <li><i class="ti-alarm-clock"></i> <a href="#">Daily deal</a></li> --}}
                             @auth 
                                 @if(Auth::user()->role=='admin')
-                                    {{-- <li><i class="ti-user"></i> <a href="{{route('admin')}}"  target="_blank">Dashboard</a></li> --}}
                                     <li><i class="ti-power-off"></i><a href="{{route('login.form')}}">Login /</a> <a href="{{route('register.form')}}">Register</a></li>
                                 @else 
                                     <li><i class="ti-user"></i> <a href="{{route('user-profile')}}">My Profile</a></li>
@@ -100,7 +98,6 @@
                                 @endforeach
                             </select>
                             <form method="Get" action="{{route('product.search')}}">
-                                <!--@csrf-->
                                 <input id="header-search-input" name="search" placeholder="Search Products Here....." type="search" autocomplete="off">
                                 <button class="btnn" type="submit"><i class="ti-search"></i></button>
                             </form>
@@ -248,13 +245,12 @@
                             <a href="{{route('wishlist')}}" class="single-icon"><i class="fa fa-heart-o"></i> <span class="wishlist-total-count">{{Helper::wishlistCount()}}</span></a>
                             <!-- Shopping Item -->
                             @auth
-                                <div class="shopping-item">
+                                <div class="shopping-item" id="mini-wishlist-box">
                                     <div class="dropdown-cart-header">
                                         <span>{{count(Helper::getAllProductFromWishlist())}} Items</span>
                                         <a href="{{route('wishlist')}}">View Wishlist</a>
                                     </div>
                                     <ul class="shopping-list">
-                                        {{-- {{Helper::getAllProductFromCart()}} --}}
                                             @foreach(Helper::getAllProductFromWishlist() as $data)
                                                     @php
                                                         $photo=explode(',',$data->product['photo']);
@@ -280,13 +276,12 @@
                             <a href="{{route('cart')}}" class="single-icon"><i class="ti-bag"></i> <span class="total-count">{{Helper::cartCount()}}</span></a>
                             <!-- Shopping Item -->
                             @auth
-                                <div class="shopping-item">
+                                <div class="shopping-item" id="mini-cart-box">
                                     <div class="dropdown-cart-header">
                                         <span>{{count(Helper::getAllProductFromCart())}} Items</span>
                                         <a href="{{route('cart')}}">View Cart</a>
                                     </div>
                                     <ul class="shopping-list">
-                                        {{-- {{Helper::getAllProductFromCart()}} --}}
                                             @foreach(Helper::getAllProductFromCart() as $data)
                                                     @php
                                                         $photo=explode(',',$data->product['photo']);
@@ -300,7 +295,12 @@
                                                                 <img src="{{asset('public/'.$photo[0])}}" alt="{{asset('public/'.$photo[0])}}">
                                                             @endif
                                                         </a>
-                                                        <h4><a href="{{route('product-detail',$data->product['slug'])}}" target="_blank">{{$data->product['product_code']}}</a></h4>
+                                                        <h4>
+                                                            <a href="{{route('product-detail',$data->product['slug'])}}" target="_blank">{{$data->product['product_code']}}</a>
+                                                            @if($data->quantity > 1)
+                                                                <span class="mini-cart-qty">&times; {{ $data->quantity }}</span>
+                                                            @endif
+                                                        </h4>
                                                     </li>
                                             @endforeach
                                     </ul>
@@ -385,24 +385,27 @@
     </div>
     <!--/ End Header Inner -->
 
-    {{-- <script>
-    // Remove any pre-existing click handler on the search icon/button so only
-    // typing in the input triggers suggestions (form submit still works normally).
-    window.addEventListener('load', function() {
-        var searchBtn = document.querySelector('.search-bar .btnn');
-        if (searchBtn) {
-            var freshBtn = searchBtn.cloneNode(true);
-            searchBtn.parentNode.replaceChild(freshBtn, searchBtn);
-            // freshBtn keeps type="submit" inside the <form>, so clicking it
-            // still submits the form normally to product.search route.
+    <style>
+        .mini-cart-qty {
+            display: inline-block;
+            margin-left: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #ffffff;
+            background: #5db845;
+            padding: 1px 7px;
+            border-radius: 10px;
+            vertical-align: middle;
+            line-height: 1.6;
         }
-    });
-    </script> --}}
+    </style>
+
     <script>
+window.appRoutes = window.appRoutes || {};
+window.appRoutes.miniCart = "{{ route('header.mini-cart') }}";
+window.appRoutes.miniWishlist = "{{ route('header.mini-wishlist') }}";
+
 window.addEventListener('load', function() {
-    // Search icon/button ka click event completely disable kar diya hai
-    // kyunki typing karte hi AJAX suggestions already mil jaate hain,
-    // isliye icon click se form submit hone ki koi zarurat nahi.
     var searchBtn = document.querySelector('.search-bar .btnn');
     if (searchBtn) {
         searchBtn.addEventListener('click', function(e) {
@@ -410,31 +413,15 @@ window.addEventListener('load', function() {
             e.stopPropagation();
         });
     }
-
-    /*
-    // Purana behavior (agar future me wapas chahiye ho to uncomment kar dena):
-    var searchForm = document.querySelector('.search-bar form');
-    var searchInputField = document.getElementById('header-search-input');
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            // form submit hota tha yahan se
-        });
-    }
-    */
 });
 
-// Mobile layout adjustments for search bar and wishlist/cart icons
-// Running this synchronously prevents FOUC (layout shift) on page load!
 if (window.innerWidth <= 767) {
-    // Move right-bar to mobile-nav's parent so it sits in the top header
     var rightBar = document.querySelector('.right-bar');
     var mobileNav = document.querySelector('.mobile-nav');
     if (rightBar && mobileNav) {
         mobileNav.parentNode.insertBefore(rightBar, mobileNav);
     }
 
-    // Move search bar inside slicknav menu
-    // We use an interval to wait for slicknav to be fully generated
     var checkSlickNav = setInterval(function() {
         var slickNav = document.querySelector('.slicknav_nav');
         var searchBar = document.querySelector('.search-bar-top');
@@ -450,7 +437,6 @@ if (window.innerWidth <= 767) {
         }
     }, 100);
     
-    // Stop checking after 5 seconds just in case
     setTimeout(function() {
         clearInterval(checkSlickNav);
     }, 5000);

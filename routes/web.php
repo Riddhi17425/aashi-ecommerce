@@ -25,11 +25,6 @@ use App\Http\Controllers\ShiprocketWebhookController;
     |--------------------------------------------------------------------------
     | Web Routes
     |--------------------------------------------------------------------------
-    |
-    | Here is where you can register web routes for your application. These
-    | routes are loaded by the RouteServiceProvider within a group which
-    | contains the "web" middleware group. Now create something great!
-    |
     */
 
     // Email template preview
@@ -75,11 +70,6 @@ use App\Http\Controllers\ShiprocketWebhookController;
 
     Route::get('user/register', [FrontendController::class, 'register'])->name('register.form');
     Route::post('user/register', [FrontendController::class, 'registerSubmit'])->name('register.submit');
-// Reset password
-//  Route::get('password-reset', [FrontendController::class, 'showResetForm'])->name('password.reset');
-// Socialite
-    // Route::get('login/{provider}/', [LoginController::class, 'redirect'])->name('login.redirect');
-    // Route::get('login/{provider}/callback/', [LoginController::class, 'Callback'])->name('login.callback');
 
     Route::get('/', [FrontendController::class, 'home'])->name('home');
     Route::get('/privacy-policy', function () {
@@ -112,15 +102,24 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::get('/filter-products', [FrontendController::class, 'filterProducts'])->name('filter-products');
 
 
-// Cart section (UPDATED -guest-friendly, no forced login)
+// Cart section (guest-friendly, no forced login)
     Route::post('/add-to-cart', [CartController::class, 'singleAddToCart'])->name('single-add-to-cart');
     Route::get('cart-delete/{id}', [CartController::class, 'cartDelete'])->name('cart-delete');
     Route::post('cart-update', [CartController::class, 'cartUpdate'])->name('cart.update');
 
-    // CHECKOUT AUTHENTICATION FLOW (Naye Routes )
+    // CHECKOUT AUTHENTICATION FLOW
     Route::post('/checkout/check-email', [FrontendController::class, 'checkoutCheckEmail'])->name('checkout.check-email');
     Route::post('/checkout/login', [FrontendController::class, 'checkoutLogin'])->name('checkout.login');
     Route::post('/checkout/register', [FrontendController::class, 'checkoutRegister'])->name('checkout.register');
+
+    // CHECKOUT FORGOT PASSWORD - OTP FLOW (DB based)
+    Route::post('/checkout/forgot-password/send-otp', [FrontendController::class, 'checkoutSendForgotPasswordOtp'])->name('checkout.forgot-password.send-otp');
+    Route::post('/checkout/forgot-password/verify-otp', [FrontendController::class, 'checkoutVerifyForgotPasswordOtp'])->name('checkout.forgot-password.verify-otp');
+    Route::post('/checkout/forgot-password/reset', [FrontendController::class, 'checkoutResetPassword'])->name('checkout.forgot-password.reset');
+
+    // HEADER MINI CART / WISHLIST - LIVE REFRESH
+    Route::get('/header/mini-cart', [FrontendController::class, 'miniCart'])->name('header.mini-cart');
+    Route::get('/header/mini-wishlist', [FrontendController::class, 'miniWishlist'])->name('header.mini-wishlist');
 
     Route::get('/get-color-images/{colorId}', function($colorId) {
         $color = Color::find($colorId);
@@ -156,7 +155,6 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::post('cart/order', [OrderController::class, 'store'])->name('cart.order');
     Route::get('order/pdf/{id}', [OrderController::class, 'pdf'])->name('order.pdf');
     Route::get('/income', [OrderController::class, 'incomeChart'])->name('product.order.income');
-// Route::get('/user/chart',[AdminController::class, 'userPieChart'])->name('user.piechart');
     Route::get('/product-grids/{slug?}', [FrontendController::class, 'productGrids'])->name('product-grids');
     Route::get('/product-subgrids/{slug}/{sub_slug}', [FrontendController::class, 'productSubGrids'])->name('product-subgrids');
     Route::get('/product-lists', [FrontendController::class, 'productLists'])->name('product-lists');
@@ -180,8 +178,10 @@ Route::get('/product-list/{slug}/{sub_slug}', [FrontendController::class, 'showP
 
 // Product Review
     Route::resource('/review', 'ProductReviewController');
-    Route::post('product/{slug}/review', [ProductReviewController::class, 'store'])->name('review.store');
-    Route::post('/review/update/{id}', [ProductReviewController::class, 'updateReview'])->name('review.update');
+    // Route::post('product/{slug}/review', [ProductReviewController::class, 'store'])->name('review.store');
+    Route::post('product/{slug}/review', [ProductReviewController::class, 'store'])->name('product.review.store');
+    // Route::post('/review/update/{id}', [ProductReviewController::class, 'updateReview'])->name('review.update');
+    Route::post('/review/update/{id}', [ProductReviewController::class, 'updateReview'])->name('review.update.custom');
     Route::post('/admin/review/update/{id}', [ProductReviewController::class, 'updateAdminReview'])->name('admin.review.update');
 // Post Comment
     Route::post('post/{slug}/comment', [PostCommentController::class, 'store'])->name('post-comment.store');
@@ -279,8 +279,8 @@ Route::get('/product-list/{slug}/{sub_slug}', [FrontendController::class, 'showP
 
         // Password Change
         Route::get('change-password', [HomeController::class, 'changePassword'])->name('user.change.password.form');
-        Route::post('change-password', [HomeController::class, 'changPasswordStore'])->name('change.password');
-
+        // Route::post('change-password', [HomeController::class, 'changPasswordStore'])->name('change.password');
+         Route::post('change-password', [HomeController::class, 'changPasswordStore'])->name('user.change.password');
     });
 
     Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {

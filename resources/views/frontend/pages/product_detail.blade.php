@@ -82,7 +82,6 @@
                                     <ul class="slides">
                                         @php
                                             $photo = explode(',', $product_detail->photo);
-                                            // dd($photo);
                                         @endphp
                                         @foreach ($photo as $data)
                                             <li data-thumb="{{ asset('public/' . $data) }}" rel="adjustX:10, adjustY:">
@@ -173,24 +172,14 @@
 
                                                 </div>
                                             @endif @php
-                                                //$after_discount=($product_detail->price-(($product_detail->price*$product_detail->discount)/100));
                                                 $sizes = json_decode($product_detail->size);
                                                 $priceArr = $sizes->price;
                                                 $productPrice = 0;
-                                                //foreach($priceArr as $k => $v){
                                                 $productPrice = $priceArr[0];
-                                                //}
                                                 $after_discount =
                                                     $productPrice - ($productPrice * $product_detail->discount) / 100;
                                                 $sizeData = json_decode($product_detail->size, true);
                                             @endphp
-                                            {{-- @if ($product_detail->discount > 0)
-                        @if (isset($sizeData['price'][0]) && is_numeric($sizeData['price'][0]))
-                        <p class="price" > <small><del class="text-muted">₹{{number_format($sizeData['price'][0], 2)}}</del></small> <span class ="discount" id="targetDivId" >₹{{ number_format($after_discount, 2) }}</span></p>
-                        @endif
-                        @else
-                        <p class="price" ><span  class ="discount" id="targetDivId" >₹{{ number_format($sizeData['price'][0], 2) }}</span></p>
-                        @endif --}}
                                             <p class="price" data-discount="{{ $product_detail->discount }}">
                                                 @if ($product_detail->discount > 0)
                                                     <small class="original-price">
@@ -213,17 +202,6 @@
                                     @if ($product_detail->color->first())
                                         <div class="color mt-4">
                                             <h4>Available Options <span>Color</span></h4>
-                                            <!--<ul id="color-options">-->
-                                            <!--	@foreach ($product_detail->color as $key => $color)
-    -->
-                                            <!--		<li>-->
-                                            <!--			<a style="background-color: {{ $color->color_code }};" href="javascript:void(0);" class="one color-selector {{ $key == 0 ? 'set_active' : '' }}" data-color-id="{{ $color->id }}" data-color-name="{{ $color->color_name }}" onclick="setPriceId(this)">-->
-                                            <!--				<i class="ti-check {{ $loop->first ? 'selected' : '' }}"></i>-->
-                                            <!--			</a>-->
-                                            <!--		</li>-->
-                                            <!--
-    @endforeach-->
-                                            <!--</ul>-->
                                             <ul id="color-options">
                                                 @foreach ($product_detail->color as $key => $color)
                                                     @php
@@ -361,11 +339,13 @@
                                                 </a>
                                             </div>
                                         </div>
-                                        <p class="cat">Category :<a
+                                        <p class="cat">Category :
+                                            <a
                                                 href="{{ route('product-cat', $product_detail->cat_info['slug']) }}">{{ $product_detail->cat_info['title'] }}</a>
                                         </p>
                                         @if ($product_detail->sub_cat_info)
-                                            <p class="cat mt-1">Sub Category :<a
+                                            <p class="cat mt-1">Sub Category :
+                                                <a
                                                     href="{{ route('product-sub-cat', [$product_detail->cat_info['slug'], $product_detail->sub_cat_info['slug']]) }}">{{ $product_detail->sub_cat_info['title'] }}</a>
                                             </p>
                                         @endif
@@ -375,85 +355,11 @@
                                                     <b>View Size Chart</b>
                                                 </a></p>
                                         @endif
-                                        <!-- <p class="availability">Stock : @if ($product_detail->stock > 0)
-    <span class="badge badge-success">{{ $product_detail->stock }}</span>
-@else
-    <span class="badge badge-danger">{{ $product_detail->stock }}</span>
-    @endif
-                                        </p> -->
                                         @if ($product_detail->product_features)
                                             <p class="cat mb-2"> <b style="font-size:20px;">Features :</b>
                                                 {!! $product_detail->product_features !!}</p>
                                         @endif
                                     </div>
-                                    {{-- 
-                     <div class="row">
-                        <div class="col-12">
-                           <div class="product-info">
-                              <div class="nav-main">
-                                 <ul class="nav nav-tabs" id="myTab" role="tablist">
-                                    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#description" role="tab">Description</a></li>
-                                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#reviews" role="tab">Reviews</a></li>
-                                 </ul>
-                              </div>
-                              <div class="tab-content" id="myTabContent">
-                                 <div class="tab-pane fade show active" id="description" role="tabpanel">
-                                    <div class="tab-single">
-                                       <div class="row">
-                                          <div class="col-12">
-                                             <div class="single-des">
-                                                <p>{!! ($product_detail->description) !!}</p>
-                                             </div>
-                                          </div>
-                                       </div>
-                                    </div>
-                                 </div>
-                                 <div class="tab-pane fade" id="reviews" role="tabpanel">
-                                    <div class="tab-single review-panel">
-                                       <div class="row">
-                                          <div class="col-12">
-                                             <div class="ratting-main">
-                                                <div class="avg-ratting">
-                                                   <h4>{{ceil($product_detail->getReview->avg('rate'))}} <span>(Overall)</span></h4>
-                                                   <span>Based on {{$product_detail->getReview->count()}} Comments</span>
-                                                </div>
-                                                @foreach ($product_detail['getReview'] as $data)
-                                                <div class="single-rating">
-                                                   <div class="rating-author">
-                                                      @if ($data->user_info['photo'])
-                                                      <img src="{{asset('public/'.$data->user_info['photo'])}}" alt="{{$data->user_info['photo']}}">
-                                                      @else 
-                                                      <img src="{{asset('public/backend/img/avatar.png')}}" alt="Profile.jpg">
-                                                      @endif
-                                                   </div>
-                                                   <div class="rating-des">
-                                                      <h6>{{$data->user_info['name']}}</h6>
-                                                      <div class="ratings">
-                                                         <ul class="rating">
-                                                            @for ($i = 1; $i <= 5; $i++)
-                                                            @if ($data->rate >= $i)
-                                                            <li><i class="fa fa-star"></i></li>
-                                                            @else 
-                                                            <li><i class="fa fa-star-o"></i></li>
-                                                            @endif
-                                                            @endfor
-                                                         </ul>
-                                                         <div class="rate-count">(<span>{{$data->rate}}</span>)</div>
-                                                      </div>
-                                                      <p>{{$data->review}}</p>
-                                                   </div>
-                                                </div>
-                                                @endforeach
-                                             </div>
-                                          </div>
-                                       </div>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                     --}}
                                 </div>
                             </div>
                         </div>
@@ -461,7 +367,8 @@
                 </div>
             </div>
     </section>
-    <section class="shop single pt-0 pb-5">
+
+    {{-- <section class="shop single pt-0 pb-5">
         <div class="container">
             <div class="row">
                 <div class="col-12">
@@ -476,12 +383,11 @@
                         </div>
                         <div class="tab-content" id="myTabContent">
                             <div class="tab-pane fade show active" id="description" role="tabpanel">
-                                <div class="tab-single">
+                                < class="tab-single">
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="single-des">
                                                 <p>{!! $product_detail->description !!}</p>
-                                                {{-- @if ($product_detail->cat_info->slug == 'rainwear') --}}
                                                 <div id="accordion" class="custom-accordion mt-4">
                                                     @php $productName = strtolower($product_detail->product_code); @endphp
                                                     @if (!in_array($productName, ['apt poncho', 'apn poncho', 'jlpc-101', 'rlpc-104']))
@@ -684,12 +590,12 @@
                                                                 </ul>
                                                             </div>
                                                         </div>
-                                                        {{-- @endif --}}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
                                     <div class="tab-pane fade" id="reviews" role="tabpanel">
                                         <div class="tab-single review-panel">
                                             <div class="row">
@@ -743,71 +649,293 @@
                         </div>
                     </div>
                 </div>
+    </section> --}}
+
+    <section class="shop single pt-0 pb-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="product-info mt-0">
+                        <div class="nav-main">
+                            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#description"
+                                        role="tab">Description</a></li>
+                                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#reviews"
+                                        role="tab">Reviews</a></li>
+                            </ul>
+                        </div>
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="description" role="tabpanel">
+                                <div class="tab-single">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="single-des">
+                                                <p>{!! $product_detail->description !!}</p>
+                                                <div id="accordion" class="custom-accordion mt-4">
+                                                    @php $productName = strtolower($product_detail->product_code); @endphp
+                                                    @if (!in_array($productName, ['apt poncho', 'apn poncho', 'jlpc-101', 'rlpc-104']))
+                                                        @if ($product_detail->cat_info->slug == 'rainwear')
+                                                            <div class="card">
+                                                                <div class="card-header">
+                                                                    <button class="btn btn-link" data-toggle="collapse"
+                                                                        data-target="#collapseOne">
+                                                                        <i
+                                                                            class="fa fa-arrows-alt accordion-left-icon"></i>
+                                                                        Size Guide
+                                                                        <span class="plus-minus">
+                                                                            <span class="fa fa-plus"></span>
+                                                                            <span class="fa fa-minus"></span>
+                                                                        </span>
+                                                                    </button>
+                                                                </div>
+                                                                <div id="collapseOne" class="collapse show"
+                                                                    data-parent="#accordion">
+                                                                    <div class="card-body">
+                                                                        <ul>
+                                                                            <li>Choose a raincoat that is one size larger
+                                                                                than your regular shirt size for a
+                                                                                comfortable fit.</li>
+                                                                            <li>If you plan to wear a backpack inside the
+                                                                                raincoat, we recommend choosing two sizes
+                                                                                larger. (Do not Put this on APT, APN, JLPC,
+                                                                                RLPC code)</li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    @endif
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseTwo">
+                                                                <i class="fa fa-truck accordion-left-icon"></i>
+                                                                Shipping Instructions
+                                                                <span class="plus-minus">
+                                                                    <i class=" fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseTwo" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Orders are usually processed within 24–48 hours
+                                                                        after confirmation.</li>
+                                                                    <li>Delivery timelines may vary depending on your
+                                                                        location and courier availability</li>
+                                                                    <li>Please provide a complete and accurate shipping
+                                                                        address with a valid contact number.</li>
+                                                                    <li>Delivery timelines may be affected due to bad
+                                                                        weather conditions or unforeseen courier delays.
+                                                                    </li>
+                                                                    <li>Once your order is shipped, tracking details
+                                                                        will be shared via SMS or email.</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseThree">
+                                                                <i class="fa fa-exchange accordion-left-icon"></i>
+                                                                7-Day Easy Exchange
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseThree" class="collapse"
+                                                            data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Free Exchange Available.</li>
+                                                                    <li>Request an exchange within 7 days of delivery.
+                                                                    </li>
+                                                                    <li>Exchange is not applicable on free products or
+                                                                        promotional items.</li>
+                                                                    <li>Only one-time exchange is allowed per order.
+                                                                    </li>
+                                                                    <li>If you receive a wrong product, please share an
+                                                                        images of the Product for verification.</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseFour">
+                                                                <i class="fa fa-refresh accordion-left-icon"></i>
+                                                                7-Day Easy Return & Refund
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseFour" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>We offer a 7-day return policy for eligible
+                                                                        products.</li>
+                                                                    <li>To be eligible for a return, the product must be
+                                                                        unused and in its original condition and
+                                                                        packaging.</li>
+                                                                    <li>Returns cannot be initiated before the product
+                                                                        is delivered.</li>
+                                                                    <li>Refunds will be processed to the original
+                                                                        payment method after the returned item is
+                                                                        received and verified.</li>
+                                                                    <li>For Cash on Delivery (COD) orders, customers
+                                                                        will be required to provide bank account details
+                                                                        for refund processing.</li>
+                                                                    <li>Refunds are usually initiated within 2–4 working
+                                                                        days after receiving the returned product.</li>
+                                                                    <li>If you receive a wrong product, please share an
+                                                                        images of the Product for verification purposes.
+                                                                    </li>
+                                                                    <li>In case your pin code is not serviceable for
+                                                                        reverse pickup, you may be required to self-ship
+                                                                        the product.</li>
+                                                                    <li>Please do not accept the package if it appears
+                                                                        tampered with or damaged.</li>
+                                                                    <li>Do not share the OTP (One-Time Password) with
+                                                                        the delivery partner unless you have received
+                                                                        the package</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseFive">
+                                                                <i class="fa fa-tint accordion-left-icon"></i>
+                                                                Wash & Care Instructions
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseFive" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Clean the product using running water.</li>
+                                                                    <li>Do not iron the garment.</li>
+                                                                    <li>Do not tumble dry.</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseSix">
+                                                                <i class="fa fa-globe accordion-left-icon"></i>
+                                                                Country Origin
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseSix" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>India</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseSeven">
+                                                                <i class="fa fa-industry accordion-left-icon"></i>
+                                                                Manufactured and Marketed By
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseSeven" class="collapse"
+                                                            data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>NEW AASHI RAINWEAR, 843/2, NIDHI IND ESTATE,
+                                                                        RAKANPUR, Gandhinagar, Gujarat, 382721</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="reviews" role="tabpanel">
+                                <div class="tab-single review-panel">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="ratting-main">
+                                                <div class="avg-ratting">
+                                                    <h4>{{ ceil($product_detail->getReview->avg('rate')) }}
+                                                        <span>(Overall)</span>
+                                                    </h4>
+                                                    <span>Based on {{ $product_detail->getReview->count() }}
+                                                        Comments</span>
+                                                </div>
+                                                @foreach ($product_detail['getReview'] as $data)
+                                                    <div class="single-rating">
+                                                        <div class="rating-author">
+                                                            @if ($data->user_info['photo'])
+                                                                <img src="{{ asset('public/' . $data->user_info['photo']) }}"
+                                                                    alt="{{ $data->user_info['photo'] }}">
+                                                            @else
+                                                                <img src="{{ asset('public/backend/img/avatar.png') }}"
+                                                                    alt="Profile.jpg">
+                                                            @endif
+                                                        </div>
+                                                        <div class="rating-des">
+                                                            <h6>{{ $data->user_info['name'] ?? '' }}</h6>
+                                                            <div class="ratings">
+                                                                <ul class="rating">
+                                                                    @for ($i = 1; $i <= 5; $i++)
+                                                                        @if ($data->rate >= $i)
+                                                                            <li><i class="fa fa-star"></i></li>
+                                                                        @else
+                                                                            <li><i class="fa fa-star-o"></i></li>
+                                                                        @endif
+                                                                    @endfor
+                                                                </ul>
+                                                                <div class="rate-count">
+                                                                    (<span>{{ $data->rate }}</span>)
+                                                                </div>
+                                                            </div>
+                                                            <p>{{ $data->review }}</p>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
     {{-- REVIEW SECTION --}}
     @auth
         @if ($canReview == true && $hasReviewed == false)
-            {{-- 
-<div class="container">
-   <div class="row">
-      <div class="col-12">
-         <div class="comment-review">
-            <div class="add-review">
-               <h5>Add A Review</h5>
-               <p>Your email address will not be published. Required fields are marked</p>
-            </div>
-            <h6>Your Rating <span class="text-danger">*</span></h6>
-            <div class="review-inner">
-               @auth
-               <form class="form" method="post" action="{{route('review.store',$product_detail->slug)}}">
-                  @csrf
-                  <div class="row">
-                     <div class="col-lg-12 col-12">
-                        <input type="hidden" name="order_id" value="{{ $orderId }}">
-                        <div class="rating_box">
-                           <div class="star-rating">
-                              <div class="star-rating__wrap">
-                                 <input class="star-rating__input" id="star-rating-5" type="radio" name="rate" value="5">
-                                 <label class="star-rating__ico fa fa-star-o" for="star-rating-5" title="5 out of 5 stars"></label>
-                                 <input class="star-rating__input" id="star-rating-4" type="radio" name="rate" value="4">
-                                 <label class="star-rating__ico fa fa-star-o" for="star-rating-4" title="4 out of 5 stars"></label>
-                                 <input class="star-rating__input" id="star-rating-3" type="radio" name="rate" value="3">
-                                 <label class="star-rating__ico fa fa-star-o" for="star-rating-3" title="3 out of 5 stars"></label>
-                                 <input class="star-rating__input" id="star-rating-2" type="radio" name="rate" value="2">
-                                 <label class="star-rating__ico fa fa-star-o" for="star-rating-2" title="2 out of 5 stars"></label>
-                                 <input class="star-rating__input" id="star-rating-1" type="radio" name="rate" value="1">
-                                 <label class="star-rating__ico fa fa-star-o" for="star-rating-1" title="1 out of 5 stars"></label>
-                                 @error('rate')
-                                 <span class="text-danger">{{$message}}</span>
-                                 @enderror
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                     <div class="col-lg-12 col-12">
-                        <div class="form-group">
-                           <label>Write a review</label>
-                           <textarea name="review" rows="6" placeholder="" ></textarea>
-                        </div>
-                     </div>
-                     <div class="col-lg-12 col-12">
-                        <div class="form-group button5">	
-                           <button type="submit" class="btn">Submit</button>
-                        </div>
-                     </div>
-                  </div>
-               </form>
-               @else 
-               <p class="text-center p-5">
-                  You need to <a href="{{route('login.form')}}" style="color:rgb(54, 54, 204)">Login</a> OR <a style="color:blue" href="{{route('register.form')}}">Register</a>
-               </p>
-               @endauth
-            </div>
-         </div>
-      </div>
-   </div>
-</div>
---}}
         @endif
     @endauth
     @if (!empty($product_detail->rel_prods) && $product_detail->rel_prods->count() > 1)
@@ -821,7 +949,6 @@
                     </div>
                 </div>
                 <div class="row">
-                    {{-- {{$product_detail->rel_prods}} --}}
                     <div class="col-12">
                         <div class="owl-carousel popular-slider">
                             @foreach ($product_detail->rel_prods as $data)
@@ -838,7 +965,6 @@
                                                 <img class="hover-img" src="{{ asset('public/' . $photo[0]) }}"
                                                     alt="{{ asset('public/' . $photo[0]) }}">
                                                 <span class="price-dec">{{ $data->discount }} % Off</span>
-                                                {{-- <span class="out-of-stock">Hot</span> --}}
                                             </a>
                                             <div class="button-head">
                                                 <div class="product-action">
@@ -855,12 +981,12 @@
                                             </div>
                                         </div>
                                         <div class="product-content">
-                                            <h3><a
+                                            <h3>
+                                                <a
                                                     href="{{ route('product-detail', $data->slug) }}">{{ $data->product_code }}</a>
                                             </h3>
                                             <div class="product-price">
                                                 @php
-                                                    //$after_discount=($data->price-(($data->discount*$data->price)/100));
                                                     $sizes = json_decode($data->size);
                                                     $priceArr = $sizes->price;
                                                     $productPrice = 0;
@@ -1038,7 +1164,7 @@
                             <div class="form-group text-start">
                                 <label>Email address</label>
                                 <input type="email" name="email" id="checkout_email" class="form-control" required>
-                                <span id="alert-step-email" class="field-error d-none"></span>
+                                <span id="error_checkout_email" class="field-error d-none"></span>
                             </div>
                             <div class="d-flex flex-column align-items-center gap-2 mt-4">
                                 <button type="button" id="btn-email-next" class="btn w-100">Continue</button>
@@ -1056,16 +1182,58 @@
                             <div class="form-group text-start">
                                 <label>Password</label>
                                 <input type="password" name="password" id="checkout_password" class="form-control">
-                                <span id="alert-step-login" class="field-error d-none"></span>
-                            </div>
-                            <div class="text-end" style="margin-top:-4px; margin-bottom:10px;">
-                                <a href="{{ route('password.request') }}" target="_blank"
-                                    style="font-size:12.5px; color:#5db845; font-weight:700; text-decoration:underline;">Forgot
-                                    Password?</a>
+                                <span id="error_checkout_password" class="field-error d-none"></span>
                             </div>
                             <div class="d-flex flex-column align-items-center gap-2 mt-4">
                                 <button type="submit" id="btn-login-submit" class="btn w-100">Login & Checkout</button>
-                                <button type="button" id="btn-login-back" class="btn btn-link">&larr; Back</button>
+                                <div class="d-flex justify-content-center align-items-center w-100 mt-3">
+                                    <button type="button" id="btn-login-back" class="btn btn-link"
+                                        style="padding:0;">&larr; Back</button>
+                                    <button type="button" id="btn-forgot-password"
+                                        style="background:none;border:none;font-size:12.5px; color:#5db845; font-weight:700; text-decoration:underline;  padding:0; cursor:pointer; margin-left:20px;">Forgot
+                                        Password?</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="step-forgot-password" class="auth-step d-none">
+                            <p>We have sent a verification OTP to your <strong id="forgot-password-email"></strong> email
+                                address.</p>
+                            <div class="form-group text-start">
+                                <label>Enter OTP</label>
+                                <input type="text" name="forgot_otp" id="checkout_forgot_otp" class="form-control"
+                                    maxlength="6" inputmode="numeric">
+                                <span id="error_checkout_forgot_otp" class="field-error d-none"></span>
+                            </div>
+                            <p class="small text-muted mt-2 mb-0" style="text-align:left;">OTP is valid for 10 minutes.
+                            </p>
+                            <div class="d-flex flex-column align-items-center gap-2 mt-4">
+                                <button type="button" id="btn-verify-forgot-otp" class="btn w-100">Verify OTP</button>
+                                <button type="button" id="btn-resend-forgot-otp" class="btn-auth-secondary"
+                                    disabled>Resend OTP <span id="forgot-otp-timer">(60s)</span></button>
+                                <button type="button" id="btn-forgot-back" class="btn btn-link">&larr; Back</button>
+                            </div>
+                        </div>
+
+                        <div id="step-reset-password" class="auth-step d-none">
+                            <p>OTP verified successfully. Please create your new password.</p>
+                            <div class="form-group text-start">
+                                <label>New Password</label>
+                                <input type="password" name="forgot_password" id="checkout_forgot_password"
+                                    class="form-control">
+                                <span id="error_checkout_forgot_password" class="field-error d-none"></span>
+                            </div>
+                            <div class="form-group text-start">
+                                <label>Confirm New Password</label>
+                                <input type="password" name="forgot_password_confirmation"
+                                    id="checkout_forgot_password_confirmation" class="form-control">
+                                <span id="error_checkout_forgot_password_confirmation" class="field-error d-none"></span>
+                            </div>
+                            <div class="d-flex flex-column align-items-center gap-2 mt-4">
+                                <button type="button" id="btn-reset-forgot-password" class="btn w-100">Update
+                                    Password</button>
+                                <button type="button" id="btn-reset-password-back" class="btn btn-link">&larr;
+                                    Back</button>
                             </div>
                         </div>
 
@@ -1074,22 +1242,25 @@
                             <div class="form-group text-start">
                                 <label>Full Name</label>
                                 <input type="text" name="name" id="checkout_name" class="form-control">
+                                <span id="error_checkout_name" class="field-error d-none"></span>
                             </div>
                             <div class="form-group text-start">
                                 <label>Email Address</label>
                                 <input type="email" name="register_email" id="checkout_register_email"
                                     class="form-control" readonly>
+                                <span id="error_checkout_register_email" class="field-error d-none"></span>
                             </div>
                             <div class="form-group text-start">
                                 <label>Password (min 6 characters)</label>
                                 <input type="password" name="reg_password" id="checkout_reg_password"
                                     class="form-control">
+                                <span id="error_checkout_reg_password" class="field-error d-none"></span>
                             </div>
                             <div class="form-group text-start">
                                 <label>Confirm Password</label>
                                 <input type="password" name="reg_password_confirmation"
                                     id="checkout_reg_password_confirmation" class="form-control">
-                                <span id="alert-step-register" class="field-error d-none"></span>
+                                <span id="error_checkout_reg_password_confirmation" class="field-error d-none"></span>
                             </div>
                             <div class="d-flex flex-column align-items-center gap-2 mt-4">
                                 <button type="submit" id="btn-register-submit" class="btn w-100">Register &
@@ -1113,19 +1284,13 @@
                 <div class="modal-content">
 
                     <div class="modal-header">
-                        <!--<h5 class="modal-title" id="sizeChartModalLabel">-->
-                        <!--    Size Chart-->
-                        <!--</h5>-->
-
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span>&times;</span>
                         </button>
                     </div>
 
                     <div class="modal-body">
-                        <!--<div class="table-responsive">-->
                         {!! $product_detail->size_chart !!}
-                        <!--</div>-->
                     </div>
 
                 </div>
@@ -1136,31 +1301,29 @@
 @endsection
 @push('styles')
     <style>
-
         /* Blinking text cursor (caret) ko page me kahin bhi na dikhaye */
-* {
-    caret-color: transparent;
-}
+        * {
+            caret-color: transparent;
+        }
 
-/* Sirf typing wale fields me caret wapas normal */
-input,
-textarea,
-select,
-[contenteditable="true"],
-.form-control,
-.input-number,
-.select-custom {
-    caret-color: auto !important;
-}
+        /* Sirf typing wale fields me caret wapas normal */
+        input,
+        textarea,
+        select,
+        [contenteditable="true"],
+        .form-control,
+        .input-number,
+        .select-custom {
+            caret-color: auto !important;
+        }
+
         /*modal css start*/
-        /* Modal Width */
         #sizeChartModal .modal-dialog {
             max-width: 900px;
             width: 95%;
             margin: 1.75rem auto;
         }
 
-        /* Modal Box */
         #sizeChartModal .modal-content {
             position: relative;
             border: 0;
@@ -1169,14 +1332,11 @@ select,
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
         }
 
-        /* Header */
         #sizeChartModal .modal-header {
             padding: 0px 10px;
-            /*border-bottom: 1px solid #ececec;*/
             justify-content: flex-end;
         }
 
-        /* Close Button */
         #sizeChartModal .close {
             margin: 0;
             padding: 0;
@@ -1198,14 +1358,12 @@ select,
             background: #e9e9e9;
         }
 
-        /* Body */
         #sizeChartModal .modal-body {
             padding: 25px;
             max-height: 85vh;
             overflow-y: auto;
         }
 
-        /* Headings */
         #sizeChartModal h4,
         #sizeChartModal h5 {
             margin: 0 0 20px;
@@ -1222,7 +1380,6 @@ select,
             font-size: 24px;
         }
 
-        /* Table */
         #sizeChartModal table {
             width: 100%;
             margin-bottom: 30px;
@@ -1242,7 +1399,6 @@ select,
             font-weight: 600;
         }
 
-        /* List */
         #sizeChartModal ul {
             list-style: none;
             padding: 0;
@@ -1272,9 +1428,7 @@ select,
             border-radius: 50%;
         }
 
-        /* Mobile */
         @media (max-width: 767px) {
-
             #sizeChartModal .modal-header {
                 padding: 0px;
             }
@@ -1384,7 +1538,6 @@ select,
             background: #5db845 !important;
         }
 
-        /* for share button css */
         .product-share {
             display: flex;
             align-items: center;
@@ -1566,12 +1719,12 @@ select,
         }
 
         #checkoutAuthModal .field-error {
-             display: block;
-                color: #dc2626;
-                font-size: 12.5px;
-                font-weight: 500;
-                margin-top: 6px;
-                text-align: left;
+            display: block;
+            color: #dc2626;
+            font-size: 12.5px;
+            font-weight: 500;
+            margin-top: 6px;
+            text-align: left;
         }
     </style>
 @endpush
@@ -1712,6 +1865,9 @@ select,
                         if (response.status) {
                             btn.toggleClass('active', response.wishlisted);
                             $('.wishlist-total-count').text(response.wishlist_count);
+                            if (typeof refreshMiniWishlist === 'function') {
+                                refreshMiniWishlist();
+                            }
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Success',
@@ -1770,6 +1926,9 @@ select,
                                 if (result.isConfirmed) {
                                     let newCount = response.cart_count || 0;
                                     $('.total-count').text(newCount);
+                                    if (typeof refreshMiniCart === 'function') {
+                                        refreshMiniCart();
+                                    }
                                 }
                             });
                         } else {
@@ -1813,6 +1972,9 @@ select,
                             },
                             success: function(response) {
                                 if (response.status) {
+                                    if (typeof refreshMiniCart === 'function') {
+                                        refreshMiniCart();
+                                    }
                                     @auth
                                     window.location.href = "{{ route('checkout') }}";
                                 @else
@@ -1884,7 +2046,7 @@ select,
         });
     </script>
 @endpush
-{{-- Checkout Auth Modal wiring (email check / login / register AJAX from cart-ajax.js, reused here) --}}
+{{-- Checkout Auth Modal wiring (email check / login / register / forgot-password AJAX from cart-ajax.js, reused here) --}}
 @push('scripts')
     <script>
         window.appCsrfToken = window.appCsrfToken || "{{ csrf_token() }}";
@@ -1892,6 +2054,11 @@ select,
         window.appRoutes.checkoutCheckEmail = "{{ route('checkout.check-email') }}";
         window.appRoutes.checkoutLogin = "{{ route('checkout.login') }}";
         window.appRoutes.checkoutRegister = "{{ route('checkout.register') }}";
+        window.appRoutes.checkoutForgotSendOtp = "{{ route('checkout.forgot-password.send-otp') }}";
+        window.appRoutes.checkoutForgotVerifyOtp = "{{ route('checkout.forgot-password.verify-otp') }}";
+        window.appRoutes.checkoutForgotReset = "{{ route('checkout.forgot-password.reset') }}";
+        window.appRoutes.miniCart = window.appRoutes.miniCart || "{{ route('header.mini-cart') }}";
+        window.appRoutes.miniWishlist = window.appRoutes.miniWishlist || "{{ route('header.mini-wishlist') }}";
     </script>
     <script src="{{ asset('public/frontend/js/cart-ajax.js') }}"></script>
 @endpush

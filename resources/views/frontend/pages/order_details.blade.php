@@ -198,8 +198,7 @@
                                         @auth
                                         <form class="form"
                                             method="POST"
-                                            action="{{ route('review.store', $item->product->slug) }}">
-                                            @csrf
+                                              action="{{ route('product.review.store', $item->product->slug) }}">                                            @csrf
                                             <input type="hidden" name="order_id" value="{{ $item->order_id }}">
                                             <input type="hidden" name="product_id" value="{{ $item->product_id }}">
                                             <div class="rating_box mb-2">
@@ -271,8 +270,7 @@
                                             <!--{{-- EDIT FORM --}}-->
                                             <div class="collapse mt-2" id="editReview{{$review->id}}">
                                                 <form method="POST"
-                                                    action="{{ route('review.update', $review->id) }}">
-                                                    @csrf
+                                                   action="{{ route('review.update.custom', $review->id) }}">                                                    @csrf
  
                                                     <div class="rating_box mb-2">
                                                         <div class="star-rating">
