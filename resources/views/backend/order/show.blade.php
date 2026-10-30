@@ -8,7 +8,7 @@
   {{-- <a href="{{route('order.pdf',$order->id)}}" class=" btn btn-sm btn-primary shadow-sm float-right"><i class="fas fa-download fa-sm text-white-50"></i> Generate PDF</a> --}}
   @if($shipmentDetails)
     <a href="{{ $shipmentDetails->label_pdf }}" class="btn btn-sm btn-primary">Download LABEL PDF</a>
-    <a href="{{ $shipmentDetails->manifest_url }}" class="btn btn-sm btn-primary">Download Menifeast PDF</a>
+    <a href="{{ $shipmentDetails->manifest_url }}" class="btn btn-sm btn-primary">Download Manifest PDF</a>
   @endif
   </h5>
   <div class="card-body">
