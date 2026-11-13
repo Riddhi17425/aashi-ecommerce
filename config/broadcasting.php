@@ -38,10 +38,10 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'useTLS' => true,
-                'curl_options' => [
+                'curl_options' => defined('CURLOPT_SSL_VERIFYHOST') ? [
                     CURLOPT_SSL_VERIFYHOST => 0,
                     CURLOPT_SSL_VERIFYPEER => 0,
-                ],
+                ] : [],
             ],
         ],
 
