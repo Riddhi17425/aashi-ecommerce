@@ -5,13 +5,6 @@
     <meta name='copyright' content=''>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="keywords" content="online shop, purchase, cart, ecommerce site, best online shopping">
-    <meta name="description" content="{{ $product_detail->summary }}">
-    <meta property="og:url" content="{{ route('product-detail', $product_detail->slug) }}">
-    <meta property="og:type" content="article">
-    <meta property="og:title" content="{{ $product_detail->title }}">
-    <meta property="og:image" content="{{ $product_detail->photo }}">
-    <meta property="og:description" content="{{ $product_detail->description }}">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel/slick/slick.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel/slick/slick-theme.css" />
 @endsection
@@ -25,7 +18,13 @@
                     <div class="bread-inner">
                         <ul class="bread-list">
                             <li><a href="{{ route('home') }}">Home<i class="ti-arrow-right"></i></a></li>
-                            <li class="active"><a href="">Shop Details</a></li>
+                            @if ($product_detail->cat_info)
+                                <li><a href="{{ route('productlist', $product_detail->cat_info->slug) }}">{{ $product_detail->cat_info->title }}<i class="ti-arrow-right"></i></a></li>
+                                @if ($product_detail->sub_cat_info)
+                                    <li><a href="{{ route('productlist-with-sub', [$product_detail->cat_info->slug, $product_detail->sub_cat_info->slug]) }}">{{ $product_detail->sub_cat_info->title }}<i class="ti-arrow-right"></i></a></li>
+                                @endif
+                            @endif
+                            <li class="active"><a href="">{{ $product_detail->title }}</a></li>
                         </ul>
                     </div>
                 </div>
@@ -84,9 +83,9 @@
                                             $photo = explode(',', $product_detail->photo);
                                         @endphp
                                         @foreach ($photo as $data)
-                                            <li data-thumb="{{ asset('public/' . $data) }}" rel="adjustX:10, adjustY:">
-                                                <img src="{{ asset('public/' . $data) }}"
-                                                    alt="{{ asset('public/' . $data) }}">
+                                            <li data-thumb="{{ asset('public' . $data) }}" rel="adjustX:10, adjustY:">
+                                                <img src="{{ asset('public' . $data) }}"
+                                                    alt="{{ $product_detail->title }}">
                                             </li>
                                         @endforeach
                                     </ul>
@@ -98,7 +97,7 @@
                             <div class="product-des">
                                 <!-- Description -->
                                 <div class="short">
-                                    <h4>{{ $product_detail->title }}</h4>
+                                    <h1>{{ $product_detail->title }}</h1>
                                     <h5 class="description">{{ $product_detail->product_code }}</h5>
                                     <div class="rating-main">
                                         <ul class="rating">
@@ -300,9 +299,9 @@
                                                 <input type="hidden" name="selected_price" id="selected_price"
                                                     value="{{ $sizeData['price'][0], 2 ?? '' }}">
                                                 <input type="hidden" name="selected_color" id="selected_color"
-                                                    value="{{ $product_detail->color[0]->id }}">
+                                                    value="{{ $product_detail->color->first()->id ?? '' }}">
                                                 <input type="hidden" name="selected_color_name" id="selected_color_name"
-                                                    value="{{ $product_detail->color[0]->color_name }}">
+                                                    value="{{ $product_detail->color->first()->color_name ?? '' }}">
                                                 @if ($product_detail->stock > 0)
                                                     <button type="button" class="btn add_to_cart_btn"
                                                         data-product-id="{{ $product_detail->id }}">Add to cart</button>
@@ -315,6 +314,15 @@
                                                     </button>
                                                 @else
                                                     <button type="button" class="btn" disabled>Out of Stock</button>
+                                                    {{-- Out of stock: visitor can leave an email to be notified --}}
+                                                    <form action="{{ route('product.notify-me', $product_detail->slug) }}" method="POST" class="mt-3">
+                                                        @csrf
+                                                        <label for="notify-email"><small>Get an email when this product is back in stock</small></label>
+                                                        <div class="d-flex">
+                                                            <input type="email" id="notify-email" name="email" class="form-control mr-2" placeholder="Your email" required maxlength="191">
+                                                            <button type="submit" class="btn">Notify Me</button>
+                                                        </div>
+                                                    </form>
                                                 @endif
                                             </div>
                                             <div class="product-share mt-3">
@@ -341,12 +349,12 @@
                                         </div>
                                         <p class="cat">Category :
                                             <a
-                                                href="{{ route('product-cat', $product_detail->cat_info['slug']) }}">{{ $product_detail->cat_info['title'] }}</a>
+                                                href="{{ route('productlist', $product_detail->cat_info['slug']) }}">{{ $product_detail->cat_info['title'] }}</a>
                                         </p>
                                         @if ($product_detail->sub_cat_info)
                                             <p class="cat mt-1">Sub Category :
                                                 <a
-                                                    href="{{ route('product-sub-cat', [$product_detail->cat_info['slug'], $product_detail->sub_cat_info['slug']]) }}">{{ $product_detail->sub_cat_info['title'] }}</a>
+                                                    href="{{ route('productlist-with-sub', [$product_detail->cat_info['slug'], $product_detail->sub_cat_info['slug']]) }}">{{ $product_detail->sub_cat_info['title'] }}</a>
                                             </p>
                                         @endif
                                         @if ($product_detail->size_chart)
@@ -960,16 +968,16 @@
                                                 @php
                                                     $photo = explode(',', $data->photo);
                                                 @endphp
-                                                <img class="default-img" src="{{ asset('public/' . $photo[0]) }}"
-                                                    alt="{{ asset('public/' . $photo[0]) }}">
-                                                <img class="hover-img" src="{{ asset('public/' . $photo[0]) }}"
-                                                    alt="{{ asset('public/' . $photo[0]) }}">
-                                                <span class="price-dec">{{ $data->discount }} % Off</span>
+                                                <img class="default-img" src="{{ asset('public' . $photo[0]) }}"
+                                                    alt="{{ $data->title }}">
+                                                <img class="hover-img" src="{{ asset('public' . $photo[0]) }}"
+                                                    alt="{{ $data->title }}">
+                                                @if ($data->discount > 0)
+                                                    <span class="price-dec">{{ $data->discount }} % Off</span>
+                                                @endif
                                             </a>
                                             <div class="button-head">
                                                 <div class="product-action">
-                                                    <a data-toggle="modal" data-target="#modelExample" title="Quick View"
-                                                        href="#"><i class=" ti-eye"></i><span>Quick Shop</span></a>
                                                     <a title="Wishlist" href="#"><i
                                                             class=" ti-heart "></i><span>Add to Wishlist</span></a>
                                                     <a title="Compare" href="#"><i
@@ -1027,123 +1035,6 @@
             </div>
         </div>
     @endif
-    <div class="modal fade" id="modelExample" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            class="ti-close" aria-hidden="true"></span></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row no-gutters">
-                        <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
-                            <!-- Product Slider -->
-                            <div class="product-gallery">
-                                <div class="quickview-slider-active">
-                                    <div class="single-slider">
-                                        <img src="images/modal1.png" alt="#">
-                                    </div>
-                                    <div class="single-slider">
-                                        <img src="images/modal2.png" alt="#">
-                                    </div>
-                                    <div class="single-slider">
-                                        <img src="images/modal3.png" alt="#">
-                                    </div>
-                                    <div class="single-slider">
-                                        <img src="images/modal4.png" alt="#">
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- End Product slider -->
-                        </div>
-                        <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
-                            <div class="quickview-content">
-                                <h2>Flared Shift Dress</h2>
-                                <div class="quickview-ratting-review">
-                                    <div class="quickview-ratting-wrap">
-                                        <div class="quickview-ratting">
-                                            <i class="yellow fa fa-star"></i>
-                                            <i class="yellow fa fa-star"></i>
-                                            <i class="yellow fa fa-star"></i>
-                                            <i class="yellow fa fa-star"></i>
-                                            <i class="fa fa-star"></i>
-                                        </div>
-                                        <a href="#"> (1 customer review)</a>
-                                    </div>
-                                    <div class="quickview-stock">
-                                        <span><i class="fa fa-check-circle-o"></i> in stock</span>
-                                    </div>
-                                </div>
-                                <h3>$29.00</h3>
-                                <div class="quickview-peragraph">
-                                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Mollitia iste laborum ad
-                                        impedit pariatur esse optio tempora sint ullam autem deleniti nam in quos qui nemo
-                                        ipsum numquam.</p>
-                                </div>
-                                <div class="size">
-                                    <div class="row">
-                                        <div class="col-lg-6 col-12">
-                                            <h5 class="title">Size</h5>
-                                            <select>
-                                                <option selected="selected">s</option>
-                                                <option>m</option>
-                                                <option>l</option>
-                                                <option>xl</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-lg-6 col-12">
-                                            <h5 class="title">Color</h5>
-                                            <select>
-                                                <option selected="selected">orange</option>
-                                                <option>purple</option>
-                                                <option>black</option>
-                                                <option>pink</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="quantity">
-                                    <!-- Input Order -->
-                                    <div class="input-group">
-                                        <div class="button minus">
-                                            <button type="button" class="btn btn-primary btn-number" disabled="disabled"
-                                                data-type="minus" data-field="quant[1]">
-                                                <i class="ti-minus"></i>
-                                            </button>
-                                        </div>
-                                        <input type="text" name="qty" class="input-number" data-min="1"
-                                            data-max="1000" value="1">
-                                        <div class="button plus">
-                                            <button type="button" class="btn btn-primary btn-number" data-type="plus"
-                                                data-field="quant[1]">
-                                                <i class="ti-plus"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <!--/ End Input Order -->
-                                </div>
-                                <div class="add-to-cart">
-                                    <a href="#" class="btn">Add to cart</a>
-                                    <a href="#" class="btn min"><i class="ti-heart"></i></a>
-                                    <a href="#" class="btn min"><i class="fa fa-compress"></i></a>
-                                </div>
-                                <div class="default-social">
-                                    <h4 class="share-now">Share:</h4>
-                                    <ul>
-                                        <li><a class="facebook" href="#"><i class="fa fa-facebook"></i></a></li>
-                                        <li><a class="twitter" href="#"><i class="fa fa-twitter"></i></a></li>
-                                        <li><a class="youtube" href="#"><i class="fa fa-pinterest-p"></i></a></li>
-                                        <li><a class="dribbble" href="#"><i class="fa fa-google-plus"></i></a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Modal end -->
 
     <!-- Checkout Authentication Modal (guest Buy Now flow: email -> login/register -> checkout) -->
     <div class="modal fade" id="checkoutAuthModal" tabindex="-1" aria-hidden="true" data-backdrop="static"
@@ -1301,6 +1192,23 @@
 @endsection
 @push('styles')
     <style>
+        /* Product title is an H1 (SEO) - same look as the old H4 */
+        .shop.single .product-des .short h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: -5px;
+            line-height: 28px;
+        }
+
+        @media only screen and (max-width: 767px) {
+            .shop.single .product-des .short h1 {
+                font-size: 20px;
+                font-weight: 500;
+                margin-top: 0;
+                line-height: 24px;
+            }
+        }
+
         /* Blinking text cursor (caret) ko page me kahin bhi na dikhaye */
         * {
             caret-color: transparent;

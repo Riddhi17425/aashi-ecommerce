@@ -1,4 +1,6 @@
 @extends('frontend.layouts.master')
+@section('meta_title', 'Terms & Conditions | Aashi Retail')
+@section('meta_description', 'Read the terms and conditions for shopping at Aashi Retail, including ordering, payments and use of this website.')
 
 @section('title','Aashi-Ecommerce || Terms & Conditions')
 

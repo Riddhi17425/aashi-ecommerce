@@ -11,6 +11,20 @@ use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
+    // SEO: turns the FAQ question/answer inputs into a JSON list. Rows with an empty question or answer are skipped.
+    private function faqJson(Request $request)
+    {
+        $faqs = [];
+        foreach ((array) $request->faq_question as $index => $question) {
+            $answer = $request->faq_answer[$index] ?? '';
+            if (trim($question) !== '' && trim($answer) !== '') {
+                $faqs[] = ['question' => trim($question), 'answer' => trim($answer)];
+            }
+        }
+
+        return $faqs ? json_encode($faqs, JSON_UNESCAPED_UNICODE) : null;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -69,8 +83,9 @@ class CategoryController extends Controller
         }
         
         $data= $request->all();
+        $data['faq'] = $this->faqJson($request);
         if($request->hasFile('photo') && $request->file('photo')->isValid()){
-            $imageName = mt_rand(10000000000,99999999999).'.'.$request->photo->extension();  
+            $imageName = mt_rand(10000000000,99999999999).'.'.$request->photo->extension();
             $request->photo->move(public_path('storage/photos/1/Category'), $imageName);
             $data['photo'] = '/storage/photos/1/Category/'.$imageName;
         }
@@ -155,8 +170,9 @@ class CategoryController extends Controller
         }
         
         $data= $request->all();
+        $data['faq'] = $this->faqJson($request);
         if($request->hasFile('photo') && $request->file('photo')->isValid()){
-            $imageName = mt_rand(10000000000,99999999999).'.'.$request->photo->extension();  
+            $imageName = mt_rand(10000000000,99999999999).'.'.$request->photo->extension();
             $request->photo->move(public_path('storage/photos/1/Category'), $imageName);
             $data['photo'] = '/storage/photos/1/Category/'.$imageName;
         }

@@ -9,9 +9,9 @@
             <a href="{{ route('cart-delete', $data->id) }}" class="remove" title="Remove this item"><i class="fa fa-remove"></i></a>
             <a class="cart-img" href="#">
                 @if(isset($data->color_img) && $data->color_img != null)
-                    <img src="{{ $data->color_img }}" alt="{{ $data->color_img }}">
+                    <img src="{{ $data->color_img }}" alt="{{ $data->product['title'] }}">
                 @else
-                    <img src="{{ asset('public/' . $photo[0]) }}" alt="{{ asset('public/' . $photo[0]) }}">
+                    <img src="{{ asset('public' . $photo[0]) }}" alt="{{ $data->product['title'] }}">
                 @endif
             </a>
             <h4>

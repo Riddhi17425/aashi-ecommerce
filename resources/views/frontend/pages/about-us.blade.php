@@ -1,4 +1,6 @@
 @extends('frontend.layouts.master')
+@section('meta_title', 'About Us | Aashi Retail')
+@section('meta_description', 'Learn about Aashi Retail, our products and what we stand for. Browse our rainwear, windcheaters, winter wear and bags.')
 
 @section('title','Aashi-Ecommerce || About Us')
 

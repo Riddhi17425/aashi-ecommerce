@@ -1,8 +1,11 @@
 @extends('frontend.layouts.master')
+@section('meta_title', 'Blog | Aashi Retail')
+@section('meta_description', 'Read the Aashi Retail blog for tips, guides and stories about rainwear, windcheaters, winter wear and bags.')
 
 @section('title','Aashi-Ecommerce || Blog Page')
 
 @section('main-content')
+    <h1 class="sr-only">Blog</h1>
     <!-- Breadcrumbs -->
     <div class="breadcrumbs">
         <div class="container">
@@ -11,7 +14,7 @@
                     <div class="bread-inner">
                         <ul class="bread-list">
                             <li><a href="{{route('home')}}">Home<i class="ti-arrow-right"></i></a></li>
-                            <li class="active"><a href="javascript:void(0);">Blog Grid Sidebar</a></li>
+                            <li class="active"><a href="javascript:void(0);">Blog</a></li>
                         </ul>
                     </div>
                 </div>
@@ -31,7 +34,7 @@
                             <div class="col-lg-4 col-md-4 col-12">
                                 <!-- Start Single Blog  -->
                                 <div class="shop-single-blog">
-                                <img src="{{asset('public/'.$post->photo)}}" alt="{{asset('public/'.$post->photo)}}">
+                                <img src="{{asset('public' . $post->photo)}}" alt="{{ $post->title }}">
                                     <div class="content">
                                         <p class="date"><i class="fa fa-calendar" aria-hidden="true"></i> {{$post->created_at->format('d M, Y. D')}}
                                             <span class="float-right">

@@ -149,6 +149,8 @@ class ProductController extends Controller
                 'size' => $jsonData, 
                 'slug' => $slug, 
                 'is_featured' => $request->input('is_featured',0), 
+                'meta_title' => $request->meta_title,
+                'meta_description' => $request->meta_description,
                 'photo' => implode(',', $upload_files), 
             ];
         } else {
@@ -170,6 +172,8 @@ class ProductController extends Controller
                 'size' => $jsonData, 
                 'slug' => $slug, 
                 'is_featured' => $request->input('is_featured',0), 
+                'meta_title' => $request->meta_title,
+                'meta_description' => $request->meta_description,
             ];
         }
         
@@ -365,6 +369,8 @@ class ProductController extends Controller
             $product->status = $request->status;
             $product->size = $jsonData;
             $product->is_featured = $request->input('is_featured',0);
+            $product->meta_title = $request->meta_title;
+            $product->meta_description = $request->meta_description;
             $product->photo = implode(',', $upload_files);
             $product->save();
         } else {
@@ -386,6 +392,8 @@ class ProductController extends Controller
             $product->status = $request->status;
             $product->size = $jsonData;
             $product->is_featured = $request->input('is_featured',0);
+            $product->meta_title = $request->meta_title;
+            $product->meta_description = $request->meta_description;
             $product->save();
         }
         if(isset($request->color_name)){

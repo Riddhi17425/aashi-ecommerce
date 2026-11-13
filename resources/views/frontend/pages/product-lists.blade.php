@@ -9,6 +9,9 @@
     }
 </style>
 @section('main-content')
+    @isset($page_heading)
+        <h1 class="sr-only">{{ $page_heading }}</h1>
+    @endisset
 
     <!-- Breadcrumbs -->
     <div class="breadcrumbs">
@@ -18,7 +21,16 @@
                     <div class="bread-inner">
                         <ul class="bread-list">
                             <li><a href="{{ route('home') }}">Home<i class="ti-arrow-right"></i></a></li>
-                            <li class="active"><a href="javascript:void(0);">Shop List</a></li>
+                            @if (isset($category))
+                                @if (isset($subcategory))
+                                    <li><a href="{{ route('productlist', $category->slug) }}">{{ $category->title }}<i class="ti-arrow-right"></i></a></li>
+                                    <li class="active"><a href="javascript:void(0);">{{ $subcategory->title }}</a></li>
+                                @else
+                                    <li class="active"><a href="javascript:void(0);">{{ $category->title }}</a></li>
+                                @endif
+                            @else
+                                <li class="active"><a href="javascript:void(0);">Shop List</a></li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -47,18 +59,18 @@
                             @foreach ($menu as $cat_info)
                                 @if ($cat_info->child_cat->count() > 0)
                                     <li><a
-                                            href="{{ route('product-cat', $cat_info->slug) }}"><b>{{ $cat_info->title }}</b></a>
+                                            href="{{ route('productlist', $cat_info->slug) }}"><b>{{ $cat_info->title }}</b></a>
                                         <ul class="child-category">
                                             @foreach ($cat_info->child_cat as $sub_menu)
                                                 <li><a
-                                                        href="{{ route('product-sub-cat', [$cat_info->slug, $sub_menu->slug]) }}">{{ $sub_menu->title }}</a>
+                                                        href="{{ route('productlist-with-sub', [$cat_info->slug, $sub_menu->slug]) }}">{{ $sub_menu->title }}</a>
                                                 </li>
                                             @endforeach
                                         </ul>
                                     </li>
                                 @else
                                     <li><a
-                                            href="{{ route('product-cat', $cat_info->slug) }}"><b>{{ $cat_info->title }}</b></a>
+                                            href="{{ route('productlist', $cat_info->slug) }}"><b>{{ $cat_info->title }}</b></a>
                                     </li>
                                 @endif
                             @endforeach
@@ -155,6 +167,10 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
+                    {{-- Intro text (editable in the admin category form, page 1 only) --}}
+                    @if (!empty($intro_content))
+                        <div class="category-intro mb-3">{!! $intro_content !!}</div>
+                    @endif
                     <!-- Shop Top Bar -->
                     <div class="shop-top-bar-custom">
                         <div class="shop-top-left">
@@ -256,11 +272,11 @@
                                                 class="card-img-link">
                                                 @php $photo=explode(',',$product->photo); @endphp
                                                 <img class="default-img card-default-img"
-                                                    src="{{ asset('public/' . $photo[0]) }}"
+                                                    src="{{ asset('public' . $photo[0]) }}"
                                                     alt="{{ $product->title }}">
                                                 @if (isset($photo[1]))
                                                     <img class="hover-img card-hover-img"
-                                                        src="{{ asset('public/' . $photo[1]) }}"
+                                                        src="{{ asset('public' . $photo[1]) }}"
                                                         alt="{{ $product->title }}">
                                                 @endif
                                             </a>
@@ -462,6 +478,36 @@
                 </div>
             </div>
         </div>
+        {{-- FAQ (editable in the admin category form, page 1 only) --}}
+        @if (!empty($faqs))
+            <div class="container mt-4 mb-4">
+                <h2 class="faq-title mb-3">Frequently Asked Questions</h2>
+                {{-- Uses the site's existing accordion look (custom-accordion) and Bootstrap collapse --}}
+                <div id="faq-accordion" class="custom-accordion">
+                    @foreach ($faqs as $faq)
+                        <div class="card">
+                            <div class="card-header" id="faq-heading-{{ $loop->index }}">
+                                <button class="btn btn-link {{ $loop->first ? '' : 'collapsed' }}" type="button"
+                                    data-toggle="collapse" data-target="#faq-answer-{{ $loop->index }}"
+                                    aria-expanded="{{ $loop->first ? 'true' : 'false' }}"
+                                    aria-controls="faq-answer-{{ $loop->index }}">
+                                    <i class="fa fa-question-circle accordion-left-icon"></i>
+                                    {{ $faq['question'] }}
+                                    <span class="plus-minus">
+                                        <span class="fa fa-plus"></span>
+                                        <span class="fa fa-minus"></span>
+                                    </span>
+                                </button>
+                            </div>
+                            <div id="faq-answer-{{ $loop->index }}" class="collapse {{ $loop->first ? 'show' : '' }}"
+                                aria-labelledby="faq-heading-{{ $loop->index }}" data-parent="#faq-accordion">
+                                <div class="card-body">{!! nl2br(e($faq['answer'])) !!}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </section>
     <!--/ End Product Style 1  -->
     {{-- </form> --}}
@@ -487,8 +533,8 @@
                                             @endphp
                                             @foreach ($photo as $data)
                                                 <div class="single-slider">
-                                                    <img src="{{ asset('public/' . $data) }}"
-                                                        alt="{{ asset('public/' . $data) }}">
+                                                    <img src="{{ asset('public' . $data) }}"
+                                                        alt="{{ $product->title }}">
                                                 </div>
                                             @endforeach
                                         </div>
@@ -531,7 +577,6 @@
                                             </div>
                                         </div>
 
-                                        //$after_discount=($product->price-($product->price*$product->discount)/100);
                                         @php
 
                                             $productPrice = 0;
@@ -596,7 +641,7 @@
                                             </div>
                                             <div class="add-to-cart">
                                                 <button type="submit" class="btn">Add to cart</button>
-                                                <a href="{{ route('add-to-wishlist', $product->slug) }}"
+                                                <a href="{{ route('add-to-wishlist', $product->slug) }}" rel="nofollow"
                                                     class="btn min"><i class="ti-heart"></i></a>
                                             </div>
                                         </form>
@@ -617,6 +662,32 @@
 @endsection
 @push('styles')
     <style>
+        /* FAQ section: slightly smaller text */
+        .faq-title {
+            font-size: 22px;
+        }
+
+        #faq-accordion .btn-link {
+            font-size: 15px;
+            padding: 14px 18px;
+        }
+
+        #faq-accordion .card-body {
+            font-size: 13px;
+            line-height: 24px;
+            padding: 16px 18px;
+        }
+
+        @media only screen and (max-width: 767px) {
+            .faq-title {
+                font-size: 19px;
+            }
+
+            #faq-accordion .btn-link {
+                font-size: 14px;
+            }
+        }
+
         /* Blinking text cursor (caret) ko page me kahin bhi na dikhaye */
         * {
             caret-color: transparent;

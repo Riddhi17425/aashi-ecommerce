@@ -1,6 +1,7 @@
 @extends('frontend.layouts.master')
 @section('title', 'Aashi-Ecommerce || HOME PAGE')
 @section('main-content')
+    <h1 class="sr-only">{{ $page_heading }}</h1>
     <!-- Slider Area -->
     @if (!empty($banners) && count($banners) > 0)
         <section id="Gslider" class="carousel slide" data-ride="carousel">
@@ -14,7 +15,7 @@
             <div class="carousel-inner" role="listbox">
                 @foreach ($banners as $key => $banner)
                     <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
-                        <img class="first-slide" src="{{ asset('public/' . $banner->photo) }}" alt="First slide">
+                        <img class="first-slide" src="{{ asset('public' . $banner->photo) }}" alt="First slide">
 
                     </div>
                 @endforeach
@@ -46,14 +47,14 @@
                                 <!-- Single Banner  -->
                                 <div class="single-banner">
                                     @if ($cat->photo)
-                                        <img src="{{ asset('public/' . $cat->photo) }}"
-                                            alt="{{ asset('public/' . $cat->photo) }}">
+                                        <img src="{{ asset('public' . $cat->photo) }}"
+                                            alt="{{ $cat->title }}">
                                     @else
                                         <img src="https://via.placeholder.com/600x370" alt="#">
                                     @endif
                                     <div class="content">
                                         <h3>{{ $cat->title }}</h3>
-                                        <a href="{{ route('product-cat', $cat->slug) }}">Discover Now</a>
+                                        <a href="{{ route('productlist', $cat->slug) }}">Discover Now</a>
                                     </div>
                                 </div>
                                 <!-- /End Single Banner  -->
@@ -119,7 +120,7 @@
                                                     <a href="{{ route('product-detail', $product->slug) }}"
                                                         class="card-img-link">
                                                         @php $photo = explode(',', $product->photo); @endphp
-                                                        <img class="default-img" src="{{ asset('public/' . $photo[0]) }}"
+                                                        <img class="default-img" src="{{ asset('public' . $photo[0]) }}"
                                                             alt="{{ $product->title }}">
                                                     </a>
                                                 </div>
@@ -212,7 +213,7 @@
                                                             class="card-img-link">
                                                             @php $photo = explode(',', $product->photo); @endphp
                                                             <img class="default-img"
-                                                                src="{{ asset('public/' . $photo[0]) }}"
+                                                                src="{{ asset('public' . $photo[0]) }}"
                                                                 alt="{{ $product->title }}">
                                                         </a>
                                                     </div>
@@ -296,11 +297,11 @@
                                 @php
                                     $photo = explode(',', $data->photo);
                                 @endphp
-                                <img src="{{ asset('public/' . $photo[0]) }}" alt="{{ asset('public/' . $photo[0]) }}">
+                                <img src="{{ asset('public' . $photo[0]) }}" alt="{{ asset('public' . $photo[0]) }}">
                                 <div class="content">
                                     <p>{{ $data->cat_info['title'] }}</p>
                                     <h3>{{ $data->title }}</h3>
-                                    <a href="{{ route('product-cat', $data->cat_info['slug']) }}">Shop Now</a>
+                                    <a href="{{ route('productlist', $data->cat_info['slug']) }}">Shop Now</a>
                                 </div>
                             </div>
                         </div>
@@ -356,7 +357,7 @@
     <!--                    <div class="col-lg-4 col-md-6 col-12">-->
     <!-- Start Single Blog  -->
     <!--                        <div class="shop-single-blog">-->
-    <!--                            <img src="{{ asset('public/' . $post->photo) }}" alt="{{ asset('public/' . $post->photo) }}">-->
+    <!--                            <img src="{{ asset('public' . $post->photo) }}" alt="{{ asset('public' . $post->photo) }}">-->
     <!--                            <div class="content">-->
     <!--                                <p class="date">{{ $post->created_at->format('d M , Y. D') }}</p>-->
     <!--                                <a href="{{ route('blog.detail', $post->slug) }}" class="title">{{ $post->title }}</a>-->
@@ -442,8 +443,8 @@
                                             @endphp
                                             @foreach ($photo as $data)
                                                 <div class="single-slider">
-                                                    <img src="{{ asset('public/' . $data) }}"
-                                                        alt="{{ asset('public/' . $data) }}">
+                                                    <img src="{{ asset('public' . $data) }}"
+                                                        alt="{{ $product->title }}">
                                                 </div>
                                             @endforeach
                                         </div>
@@ -490,12 +491,16 @@
                                             </div>
                                         </div>
                                         @php
-                                            $after_discount =
-                                                $product->price - ($product->price * $product->discount) / 100;
+                                            // Real price is in the size list (the "price" column is empty for most products)
+                                            $sizeData = json_decode($product->size, true);
+                                            $basePrice = $sizeData['price'][0] ?? $product->price ?? 0;
+                                            $after_discount = $basePrice - ($basePrice * $product->discount) / 100;
                                         @endphp
-                                        <h3><small><del
-                                                    class="text-muted">${{ number_format($product->price, 2) }}</del></small>
-                                            ${{ number_format($after_discount, 2) }} </h3>
+                                        <h3>
+                                            @if ($product->discount > 0)
+                                                <small><del class="text-muted">₹{{ number_format($basePrice, 2) }}</del></small>
+                                            @endif
+                                            ₹{{ number_format($after_discount, 2) }} </h3>
                                         <div class="quickview-peragraph">
                                             <p>{!! html_entity_decode($product->summary) !!}</p>
                                         </div>
@@ -551,7 +556,7 @@
                                             </div>
                                             <div class="add-to-cart">
                                                 <button type="submit" class="btn">Add to cart</button>
-                                                <a href="{{ route('add-to-wishlist', $product->slug) }}"
+                                                <a href="{{ route('add-to-wishlist', $product->slug) }}" rel="nofollow"
                                                     class="btn min"><i class="ti-heart"></i></a>
                                             </div>
                                         </form>

@@ -28,5 +28,10 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
         //URL::forceScheme('https');
 
+        // Email people who asked to be notified when a product is back in stock
+        \App\Models\Product::updated(function ($product) {
+            \App\Services\StockNotifier::sendIfBackInStock($product);
+        });
+
     }
 }

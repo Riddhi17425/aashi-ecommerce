@@ -27,6 +27,8 @@
           @enderror
         </div>
 
+        @include('backend.category._seo_fields')
+
         <div class="form-group">
           <label for="is_parent">Is Parent</label><br>
           <input type="checkbox" name='is_parent' id='is_parent' value='{{$category->is_parent}}' {{(($category->is_parent==1)? 'checked' : '')}}> Yes                        
@@ -96,6 +98,11 @@
     $(document).ready(function() {
     $('#summary').summernote({
       placeholder: "Write short description.....",
+        tabsize: 2,
+        height: 150
+    });
+    $('#intro_content').summernote({
+      placeholder: "Write intro text for this category.....",
         tabsize: 2,
         height: 150
     });

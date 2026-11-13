@@ -85,6 +85,8 @@
             @enderror
         </div>
         
+        @include('backend.partials._meta_fields', ['item' => $post])
+
         <div class="form-group">
           <label for="status" class="col-form-label">Status <span class="text-danger">*</span></label>
           <select name="status" class="form-control">

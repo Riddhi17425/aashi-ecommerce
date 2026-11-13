@@ -1,4 +1,5 @@
 @extends('frontend.layouts.master')
+@section('robots', 'noindex, follow')
 @section('title', 'Aashi-Ecommerce || Wishlist Page')
 @section('main-content')
     <!-- Breadcrumbs -->
@@ -45,10 +46,10 @@
                                     <tr id="wishlist-row-{{ $wishlist->id }}">
                                         <td class="image" data-title="No">
                                             @if (isset($wishlist->color_img) && $wishlist->color_img != null)
-                                                <img src="{{ $wishlist->color_img }}" alt="{{ $wishlist->color_img }}">
+                                                <img src="{{ $wishlist->color_img }}" alt="{{ $wishlist->product['title'] }}">
                                             @else
-                                                <img src="{{ asset('public/' . $photo[0]) }}"
-                                                    alt="{{ asset('public/' . $photo[0]) }}">
+                                                <img src="{{ asset('public' . $photo[0]) }}"
+                                                    alt="{{ $wishlist->product['title'] }}">
                                             @endif
                                         </td>
                                         <td class="product-des" data-title="Description">
@@ -76,7 +77,7 @@
                                             @endif
                                         </td>
                                         <td class="action" data-title="Remove"><a
-                                                href="{{ route('wishlist-delete', $wishlist->id) }}"><i
+                                                href="{{ route('wishlist-delete', $wishlist->id) }}" rel="nofollow"><i
                                                     class="ti-trash remove-icon"></i></a></td>
                                     </tr>
                                 @endforeach
@@ -140,7 +141,12 @@ $(document).ready(function() {
                     // Header count turant update - Swal se independent
                     let newCount = response.cart_count || 0;
                     $('.total-count').text(newCount);
-                    refreshMiniCart();
+                    // Refresh the header mini cart (cart-ajax.js, which has refreshMiniCart(), is not loaded on this page)
+                    if (window.appRoutes && window.appRoutes.miniCart) {
+                        $.get(window.appRoutes.miniCart, function(html) {
+                            $('#mini-cart-box').html(html);
+                        });
+                    }
 
                     Swal.fire({
                         icon: 'success',

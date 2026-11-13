@@ -88,7 +88,14 @@ use App\Http\Controllers\ShiprocketWebhookController;
     
     
 // Frontend Routes
-    Route::get('/home', [FrontendController::class, 'index']); 
+    // Out-of-stock "notify me" form
+    Route::post('/product-detail/{slug}/notify-me', [\App\Http\Controllers\StockNotificationController::class, 'store'])->middleware('throttle:10,1')->name('product.notify-me');
+
+    // SEO files
+    Route::get('/robots.txt', [\App\Http\Controllers\SeoController::class, 'robots'])->name('seo.robots');
+    Route::get('/sitemap.xml', [\App\Http\Controllers\SeoController::class, 'sitemap'])->name('seo.sitemap');
+
+    Route::get('/home', [FrontendController::class, 'index']);
     Route::get('/about-us', [FrontendController::class, 'aboutUs'])->name('about-us');
     Route::get('/contact', [FrontendController::class, 'contact'])->name('contact');
     Route::post('/contact/message', [MessageController::class, 'store'])->name('contact.store');
@@ -200,6 +207,7 @@ Route::get('/product-list/{slug}/{sub_slug}', [FrontendController::class, 'showP
     Route::post('admin/login', [FrontendController::class, 'adminLoginSubmit'])->name('admin.login.submit');
     Route::group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], function () {
         Route::get('/', [AdminController::class, 'index'])->name('admin');
+        Route::get('/stock-notifications', [\App\Http\Controllers\StockNotificationController::class, 'index'])->name('stock-notifications.index');
         Route::get('/file-manager', function () {
             return view('backend.layouts.file-manager');
         })->name('file-manager');

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Category extends Model
 {
     use SoftDeletes;
-    protected $fillable=['title','slug','summary','photo','status','is_parent','parent_id','added_by', 'gst'];
+    protected $fillable=['title','slug','summary','intro_content','faq','meta_title','meta_description','photo','status','is_parent','parent_id','added_by', 'gst'];
 
     public function parent_info(){
         return $this->hasOne('App\Models\Category','id','parent_id');

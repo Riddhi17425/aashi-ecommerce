@@ -38,15 +38,15 @@
                         @if($menu)
                             @foreach($menu as $cat_info)
                                 @if($cat_info->child_cat->count()>0)
-                                    <li><a href="{{route('product-cat',$cat_info->slug)}}">{{$cat_info->title}}</a>
+                                    <li><a href="{{route('productlist',$cat_info->slug)}}">{{$cat_info->title}}</a>
                                         <ul>
                                             @foreach($cat_info->child_cat as $sub_menu)
-                                                <li><a href="{{route('product-sub-cat',[$cat_info->slug,$sub_menu->slug])}}">{{$sub_menu->title}}</a></li>
+                                                <li><a href="{{route('productlist-with-sub',[$cat_info->slug,$sub_menu->slug])}}">{{$sub_menu->title}}</a></li>
                                             @endforeach
                                         </ul>
                                     </li>
                                 @else
-                                    <li><a href="{{route('product-cat',$cat_info->slug)}}">{{$cat_info->title}}</a></li>
+                                    <li><a href="{{route('productlist',$cat_info->slug)}}">{{$cat_info->title}}</a></li>
                                 @endif
                             @endforeach
                         @endif
@@ -139,9 +139,9 @@
                                                     @php
                                                         $photo=explode(',',$product->photo);
                                                     @endphp
-                                                    <img class="default-img" src="{{asset('public/'.$photo[0])}}" alt="{{asset('public/'.$photo[0])}}">
+                                                    <img class="default-img" src="{{asset('public' . $photo[0])}}" alt="{{asset('public' . $photo[0])}}">
                                                     @if(isset($photo[1]))
-                                                        <img class="hover-img" src="{{asset('public/'.$photo[1])}}" alt="{{asset('public/'.$photo[0])}}">
+                                                        <img class="hover-img" src="{{asset('public' . $photo[1])}}" alt="{{asset('public' . $photo[0])}}">
                                                     @endif
                                                     @if($product->discount)
                                                                 <span class="price-dec">{{$product->discount}} % Off</span>
@@ -150,7 +150,7 @@
                                                 <div class="button-head">
     <div class="product-action">
         <a data-toggle="modal" data-target="#{{$product->id}}" title="Quick View" href="#"><i class=" ti-eye"></i><span>Quick Shop</span></a>
-        <a title="Wishlist" href="{{route('add-to-wishlist',$product->slug)}}" class="wishlist" data-id="{{$product->id}}"><i class=" ti-heart "></i><span>Add to Wishlist</span></a>
+        <a title="Wishlist" rel="nofollow" href="{{route('add-to-wishlist',$product->slug)}}" class="wishlist" data-id="{{$product->id}}"><i class=" ti-heart "></i><span>Add to Wishlist</span></a>
     </div>
     <div class="product-action-2">
         <a title="Add to cart" href="javascript:void(0);" class="quick-add-to-cart-btn" data-slug="{{ $product->slug }}">Add to cart</a>
@@ -226,7 +226,7 @@
                                                     @endphp
                                                     @foreach($photo as $data)
                                                         <div class="single-slider">
-                                                            <img src="{{asset('public/'.$data)}}" alt="{{asset('public/'.$data)}}">
+                                                            <img src="{{asset('public' . $data)}}" alt="{{asset('public' . $data)}}">
                                                         </div>
                                                     @endforeach
                                                 </div>
@@ -267,9 +267,12 @@
                                                 </div>
                                             </div>
                                             @php
-                                                $after_discount=($product->price-($product->price*$product->discount)/100);
+                                                // Real price is in the size list (the "price" column is empty for most products)
+                                                $sizeData = json_decode($product->size, true);
+                                                $basePrice = $sizeData['price'][0] ?? $product->price ?? 0;
+                                                $after_discount = $basePrice - ($basePrice * $product->discount) / 100;
                                             @endphp
-                                            <h3><small><del class="text-muted">${{number_format($product->price,2)}}</del></small>    ${{number_format($after_discount,2)}}  </h3>
+                                            <h3>@if ($product->discount > 0)<small><del class="text-muted">₹{{ number_format($basePrice, 2) }}</del></small> @endif ₹{{ number_format($after_discount, 2) }}  </h3>
                                             <div class="quickview-peragraph">
                                                 <p>{!! html_entity_decode($product->summary) !!}</p>
                                             </div>
@@ -335,7 +338,7 @@
                                                 </div>
                                                 <div class="add-to-cart">
                                                     <button type="submit" class="btn">Add to cart</button>
-                                                    <a href="{{route('add-to-wishlist',$product->slug)}}" class="btn min"><i class="ti-heart"></i></a>
+                                                    <a href="{{route('add-to-wishlist',$product->slug)}}" rel="nofollow" class="btn min"><i class="ti-heart"></i></a>
                                                 </div>
                                             </form>
                                             <div class="default-social">

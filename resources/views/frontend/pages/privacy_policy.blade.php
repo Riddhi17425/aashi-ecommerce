@@ -1,4 +1,6 @@
 @extends('frontend.layouts.master')
+@section('meta_title', 'Privacy Policy | Aashi Retail')
+@section('meta_description', 'Read the Aashi Retail privacy policy to see what information we collect, how we use it and how we protect it.')
 
 @section('title','Aashi-Ecommerce || Privacy Policy')
 

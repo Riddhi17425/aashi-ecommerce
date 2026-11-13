@@ -256,12 +256,12 @@
                                                         $photo=explode(',',$data->product['photo']);
                                                     @endphp
                                                     <li>
-                                                        <a href="{{route('wishlist-delete',$data->id)}}" class="remove" title="Remove this item"><i class="fa fa-remove"></i></a>
+                                                        <a href="{{route('wishlist-delete',$data->id)}}" rel="nofollow" class="remove" title="Remove this item"><i class="fa fa-remove"></i></a>
                                                         <a class="cart-img" href="#">
                                                             @if(isset($data->color_img) && $data->color_img != null) 
-                                                                <img src="{{$data->color_img}}" alt="{{ $data->color_img }}">
+                                                                <img src="{{$data->color_img}}" alt="{{ $data->product['title'] }}">
                                                             @else
-                                                                <img src="{{asset('public/'.$photo[0])}}" alt="{{asset('public/'.$photo[0])}}">
+                                                                <img src="{{asset('public' . $photo[0])}}" alt="{{ $data->product['title'] }}">
                                                             @endif
                                                         </a>
                                                         <h4><a href="{{route('product-detail',$data->product['slug'])}}" target="_blank">{{$data->product['product_code']}}</a></h4>
@@ -290,9 +290,9 @@
                                                         <a href="{{route('cart-delete',$data->id)}}" class="remove" title="Remove this item"><i class="fa fa-remove"></i></a>
                                                         <a class="cart-img" href="#">
                                                             @if(isset($data->color_img) && $data->color_img != null) 
-                                                                <img src="{{$data->color_img}}" alt="{{ $data->color_img }}">
+                                                                <img src="{{$data->color_img}}" alt="{{ $data->product['title'] }}">
                                                             @else
-                                                                <img src="{{asset('public/'.$photo[0])}}" alt="{{asset('public/'.$photo[0])}}">
+                                                                <img src="{{asset('public' . $photo[0])}}" alt="{{ $data->product['title'] }}">
                                                             @endif
                                                         </a>
                                                         <h4>
@@ -355,12 +355,12 @@
                                         
                                             @if($menuCategory)
                                                 @foreach($menuCategory as $cat)
-                                                    <li class="{{Request::path()=='product-cat' ? 'active' : ''}}"><a href="{{route('product-cat',$cat->slug)}}">{{ $cat->title }}</a>
+                                                    <li class="{{Request::path()=='product-cat' ? 'active' : ''}}"><a href="{{route('productlist',$cat->slug)}}">{{ $cat->title }}</a>
                                                         @if($cat->child_cat->count()>0)
                                                         <ul class="dropdown border-0 shadow">
                                                             
                                                                 @foreach($cat->child_cat as $cat_sub_menu)
-                                                                    <li><a href="{{route('product-sub-cat',[$cat->slug,$cat_sub_menu->slug]); }}">{{$cat_sub_menu->title; }}</a></li>
+                                                                    <li><a href="{{route('productlist-with-sub',[$cat->slug,$cat_sub_menu->slug]); }}">{{$cat_sub_menu->title; }}</a></li>
                                                                 @endforeach
                                                             
                                                         </ul>

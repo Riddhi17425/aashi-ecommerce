@@ -1,7 +1,15 @@
+{{-- SEO values: a page can set them with @section('meta_title') / @section('meta_description'),
+     or the controller can pass $meta_title, $meta_description, $meta_image, $canonical_url, $og_type. --}}
+@php
+    $seoTitle = html_entity_decode(trim($__env->yieldContent('meta_title')), ENT_QUOTES) ?: ($meta_title ?? 'Aashi - Ecommerce');
+    $seoDescription = html_entity_decode(trim($__env->yieldContent('meta_description')), ENT_QUOTES) ?: ($meta_description ?? 'Aashi Retail');
+    $seoImage = $meta_image ?? asset('public/frontend/img/logo.png');
+    $seoUrl = $canonical_url ?? url()->current();
+@endphp
 <!-- Meta Tag -->
 @yield('meta')
 <!-- Title Tag  -->
-<title>{{$meta_title ?? 'Aashi - Ecommerce'}}</title>
+<title>{{ $seoTitle }}</title>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,25 +17,24 @@
 <!--<link rel="icon" type="image/x-icon" href="">-->
 <link rel="icon" href="{{ asset('public/frontend/img/aashi_retail_favicon.ico') }}" sizes="any">
 
-<meta name="description" content="{{ $meta_description ?? 'Aashi Retail'}}"> 
-<!--<meta name="robots" content="follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large"/>-->
-<meta name="robots" content="nofollow, noindex"/>
-<link rel="canonical" href="{{ url()->current() }}" />
+<meta name="description" content="{{ $seoDescription }}">
+{{-- Default is index, follow. Private pages set the robots section to noindex, follow. --}}
+<meta name="robots" content="@yield('robots', 'index, follow')">
+<link rel="canonical" href="{{ $seoUrl }}" />
 
 <!--OG Tags-->
 <meta property="og:site_name" content="Aashi Retail">
-<meta property="og:title" content="{{$meta_title ?? 'Aashi - Ecommerce'}}" />
-<meta property="og:description" content="{{ $meta_description ?? 'Aashi Retail'}}" />
-<meta property="og:image" content="{{ asset('public/frontend/img/logo.svg') }}">
-<meta property="og:url" content="{{ url()->current() }}">
-<meta property="og:type" content="website">
+<meta property="og:title" content="{{ $seoTitle }}" />
+<meta property="og:description" content="{{ $seoDescription }}" />
+<meta property="og:image" content="{{ $seoImage }}">
+<meta property="og:url" content="{{ $seoUrl }}">
+<meta property="og:type" content="{{ $og_type ?? 'website' }}">
 
 <!--Twitter X Card Tags-->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{$meta_title ?? 'Aashi - Ecommerce'}}">
-<meta name="twitter:description" content="{{ $meta_description ?? 'Aashi Retail'}}">
-<meta name="twitter:image" content="{{ asset('public/frontend/img/logo.svg') }}">
-    
+<meta name="twitter:title" content="{{ $seoTitle }}">
+<meta name="twitter:description" content="{{ $seoDescription }}">
+<meta name="twitter:image" content="{{ $seoImage }}">
 
 <!-- Web Font -->
 <link href="https://fonts.googleapis.com/css?family=Poppins:200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap" rel="stylesheet">
@@ -103,3 +110,8 @@
     }
 </style>
 @stack('styles')
+
+{{-- Structured data (JSON-LD): pages pass a $schemas array from the controller --}}
+@foreach ($schemas ?? [] as $schema)
+<script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+@endforeach

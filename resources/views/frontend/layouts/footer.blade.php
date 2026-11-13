@@ -1,11 +1,37 @@
 
 	<!-- Start Footer Area -->
+<!-- Footer layout styles -->
+<style>
+	/* Less empty space in the footer */
+	.footer .footer-top { padding: 30px 0 15px; }
+	.footer .single-footer h4 { margin-bottom: 18px; }
+	.footer .about .logo { margin-bottom: 0; }
+	.footer .about .call { margin-top: 12px; }
+	.footer .copyright .inner { padding: 14px 0; }
+	.footer .footer-contact { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.15); }
+	.footer .footer-contact h4 { margin-bottom: 12px; }
+	.footer .footer-contact .contact ul { display: flex; flex-wrap: wrap; gap: 8px 40px; margin-top: 0; }
+	.footer .footer-contact .contact ul li { margin-bottom: 0; }
+	.footer .footer-contact .contact ul li:first-child { flex: 1 1 100%; }
+	.footer .footer-contact .contact ul li, .footer .footer-contact .contact ul li a { font-size: 14px; }
+	.footer .footer-contact .social-media { margin-top: 18px; }
+	.footer .footer-contact .contact ul li i { color: #5db845; width: 18px; margin-right: 8px; text-align: center; font-size: 15px; }
+	.footer .footer-contact .contact ul li a { display: inline; }
+	@media only screen and (max-width: 991px) {
+		.footer .single-footer { padding: 0; }
+		.footer .about { padding-right: 0; margin-bottom: 20px; }
+	}
+	@media only screen and (max-width: 767px) {
+		.footer .single-footer.links { margin-bottom: 18px; }
+		.footer .single-footer h4 { margin-bottom: 14px; }
+	}
+</style>
 	<footer class="footer">
 		<!-- Footer Top -->
 		<div class="footer-top section">
 			<div class="container">
 				<div class="row">
-					<div class="col-lg-5 col-md-6 col-12">
+					<div class="col-lg-4 col-md-12 col-12">
 						<!-- Single Widget -->
 						@php
 							$settings=DB::table('settings')->get();
@@ -20,83 +46,109 @@
 						</div>
 						<!-- End Single Widget -->
 					</div>
-					<div class="col-lg-2 col-md-6 col-12">
-						<!-- Single Widget -->
-						<div class="single-footer links">
-							<h4>Links</h4>
-							<ul>
-							    <!--<li><a href="{{route('about-us')}}">Terms & Conditions</a></li>-->
-							    @php
-                                    $menuCategory=App\Models\Category::where('status','active')->where('is_parent', 1)->get();
-                                @endphp
-								@if($menuCategory)
-                                    @foreach($menuCategory as $cat)
-                                        <li><a href="{{route('product-cat',$cat->slug)}}">{{ $cat->title }}</a>
-                                        </li>									
-                                    @endforeach
-                                @endif
-								<li><a href="{{route('blog')}}">Blogs</a></li>
-								{{-- <li><a href="#">Faq</a></li> --}}
-								<li><a href="{{route('contact')}}">Contact Us</a></li>
-								<li><a href="{{route('privacy-policy')}}">Privacy Policy</a></li>
-								<li><a href="{{route('terms-conditions')}}">Terms & Conditions</a></li>
-								<!--<li><a href="{{route('return-refund-policy')}}">Return & Refund Policy</a></li>-->
-								<!--<li><a href="{{route('exchange-policy')}}">Exchange Policy</a></li>-->
-								{{-- <li><a href="#">Help</a></li> --}}
-							</ul>
-						</div>
-						<!-- End Single Widget -->
-					</div>
-					<div class="col-lg-2 col-md-6 col-12">
-						<!-- Single Widget -->
-						<div class="single-footer links">
-							<h4>Customer Service</h4>
-							<ul>
-								{{-- <li><a href="#">Payment Methods</a></li>
-								<li><a href="#">Money-back</a></li>
-								<li><a href="#">Returns</a></li>
-								<li><a href="#">Shipping</a></li>
-								<li><a href="#">Privacy Policy</a></li> --}}
-								@if(auth()->check())
-									<li><a href="{{ route('order.track') }}">Track Orders</a></li>
-									<li><a href="{{route('myorders')}}">My Orders</a></li>
-									<li><a href="{{ route('wishlist') }}">My Wishlist</a></li>
-									<li><a href="{{ route('cart') }}">My Cart Products</a></li>
-								@else
-									<li><a href="{{ route('login.form') }}">Track Orders</a></li>
-									<li><a href="{{ route('login.form') }}">My Orders</a></li>
-									<li><a href="{{ route('login.form') }}">My Wishlist</a></li>
-									<li><a href="{{ route('login.form') }}">My Cart Products</a></li>
-								@endif
-							</ul>
-						</div>
-						<!-- End Single Widget -->
-					</div>
-					<div class="col-lg-3 col-md-6 col-12">
-						<!-- Single Widget -->
-						<div class="single-footer social">
-							<h4>Get In Touch</h4>
-							<!-- Single Widget -->
-							<div class="contact">
+					<div class="col-lg-8 col-md-12 col-12">
+						<div class="row">
+						<div class="col-lg-3 col-md-3 col-6">
+							<!-- Single Widget: Categories -->
+							<div class="single-footer links">
+								<h4>Categories</h4>
 								<ul>
-									<li>@foreach($settings as $data) {{$data->address}} @endforeach</li>
-									<li>@foreach($settings as $data) <a href="mailto:{{ $data->email }}">
-                                        {{ $data->email }}
-                                    </a> @endforeach</li>
-									<li>@foreach($settings as $data) <a href="tel:{{ preg_replace('/\s+/', '', $data->phone) }}">
-                                        {{ $data->phone }}
-                                    </a>  @endforeach</li>
+									@php
+	                                    $menuCategory=App\Models\Category::where('status','active')->where('is_parent', 1)->get();
+	                                @endphp
+									@if($menuCategory)
+	                                    @foreach($menuCategory as $cat)
+	                                        <li><a href="{{route('productlist',$cat->slug)}}">{{ $cat->title }}</a>
+	                                        </li>									
+	                                    @endforeach
+	                                @endif
 								</ul>
 							</div>
 							<!-- End Single Widget -->
-							<div class="social-media">
-								<a target="_blank" href="https://www.facebook.com/aashigroupofcompanies"><i class="ti-facebook"> </i></a>
-								<a target="_blank" href="https://www.instagram.com/aashi_rainwear_official/"><i class="ti-instagram"> </i></a>
-								<a target="_blank" href="https://www.youtube.com/@newaashirainwear2779"><i class="ti-youtube"> </i></a>
-								<a target="_blank" href="https://in.linkedin.com/company/aashigroup/"><i class="ti-linkedin"> </i></a>
-							</div>
 						</div>
-						<!-- End Single Widget -->
+						<div class="col-lg-3 col-md-3 col-6">
+							<!-- Single Widget: Brands -->
+							<div class="single-footer links">
+								<h4>Brands</h4>
+								<ul>
+									@foreach(App\Models\Brand::where('status','active')->orderBy('title')->get() as $brand)
+										<li><a href="{{ route('product-brand', $brand->slug) }}">{{ $brand->title }}</a></li>
+									@endforeach
+								</ul>
+							</div>
+							<!-- End Single Widget -->
+						</div>
+						<div class="col-lg-3 col-md-3 col-6">
+							<!-- Single Widget -->
+							<div class="single-footer links">
+								<h4>Links</h4>
+								<ul>
+								    <!--<li><a href="{{route('about-us')}}">Terms & Conditions</a></li>-->
+									<li><a href="{{route('blog')}}">Blogs</a></li>
+									{{-- <li><a href="#">Faq</a></li> --}}
+									<li><a href="{{route('contact')}}">Contact Us</a></li>
+									<li><a href="{{route('privacy-policy')}}">Privacy Policy</a></li>
+									<li><a href="{{route('terms-conditions')}}">Terms & Conditions</a></li>
+									<!--<li><a href="{{route('return-refund-policy')}}">Return & Refund Policy</a></li>-->
+									<!--<li><a href="{{route('exchange-policy')}}">Exchange Policy</a></li>-->
+									{{-- <li><a href="#">Help</a></li> --}}
+								</ul>
+							</div>
+							<!-- End Single Widget -->
+						</div>
+						<div class="col-lg-3 col-md-3 col-6">
+							<!-- Single Widget -->
+							<div class="single-footer links">
+								<h4>Customer Service</h4>
+								<ul>
+									{{-- <li><a href="#">Payment Methods</a></li>
+									<li><a href="#">Money-back</a></li>
+									<li><a href="#">Returns</a></li>
+									<li><a href="#">Shipping</a></li>
+									<li><a href="#">Privacy Policy</a></li> --}}
+									@if(auth()->check())
+										<li><a href="{{ route('order.track') }}">Track Orders</a></li>
+										<li><a href="{{route('myorders')}}">My Orders</a></li>
+										<li><a href="{{ route('wishlist') }}">My Wishlist</a></li>
+										<li><a href="{{ route('cart') }}">My Cart Products</a></li>
+									@else
+										<li><a href="{{ route('order.track') }}">Track Orders</a></li>
+										<li><a href="{{ route('login.form') }}">My Orders</a></li>
+										<li><a href="{{ route('wishlist') }}">My Wishlist</a></li>
+										<li><a href="{{ route('cart') }}">My Cart Products</a></li>
+									@endif
+								</ul>
+							</div>
+							<!-- End Single Widget -->
+						</div>
+						</div>
+						<!-- Contact details -->
+						<div class="footer-contact">
+							<!-- Single Widget -->
+							<div class="single-footer social">
+								<h4>Get In Touch</h4>
+								<!-- Single Widget -->
+								<div class="contact">
+									<ul>
+										<li><i class="fa fa-map-marker"></i>@foreach($settings as $data) {{$data->address}} @endforeach</li>
+										<li><i class="fa fa-envelope"></i>@foreach($settings as $data) <a href="mailto:{{ $data->email }}">
+	                                        {{ $data->email }}
+	                                    </a> @endforeach</li>
+										<li><i class="fa fa-phone"></i>@foreach($settings as $data) <a href="tel:{{ preg_replace('/\s+/', '', $data->phone) }}">
+	                                        {{ $data->phone }}
+	                                    </a>  @endforeach</li>
+									</ul>
+								</div>
+								<!-- End Single Widget -->
+								<div class="social-media">
+									<a target="_blank" href="https://www.facebook.com/aashigroupofcompanies"><i class="ti-facebook"> </i></a>
+									<a target="_blank" href="https://www.instagram.com/aashi_rainwear_official/"><i class="ti-instagram"> </i></a>
+									<a target="_blank" href="https://www.youtube.com/@newaashirainwear2779"><i class="ti-youtube"> </i></a>
+									<a target="_blank" href="https://in.linkedin.com/company/aashigroup/"><i class="ti-linkedin"> </i></a>
+								</div>
+							</div>
+							<!-- End Single Widget -->
+						</div>
 					</div>
 				</div>
 			</div>
@@ -106,7 +158,7 @@
 			<div class="container">
 				<div class="inner">
 					<div class="row">
-						<div class="col-lg-6 col-12">
+						<div class="col-12 text-center">
 							<div class="center">
 								<p>Copyright © {{date('Y')}} Aashi Group  -  All Rights Reserved.</p>
 							</div>

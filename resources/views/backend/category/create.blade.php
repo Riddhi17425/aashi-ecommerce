@@ -26,6 +26,8 @@
           @enderror
         </div>
 
+        @include('backend.category._seo_fields')
+
         <div class="form-group">
           <label for="is_parent">Is Parent</label><br>
           <input type="checkbox" name='is_parent' id='is_parent' value='1' {{ old('is_parent') ? 'checked' : '' }}> Yes                   
@@ -145,6 +147,11 @@ $(document).ready(function() {
         placeholder: "Write short description.....",
         tabsize: 2,
         height: 120
+    });
+    $('#intro_content').summernote({
+        placeholder: "Write intro text for this category.....",
+        tabsize: 2,
+        height: 150
     });
 
     // Laravel filemanager init

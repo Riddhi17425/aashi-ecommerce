@@ -1,4 +1,5 @@
 @extends('frontend.layouts.master')
+@section('robots', 'noindex, follow')
 
 @section('title','Aashi-Ecommerce || Reset Password')
 

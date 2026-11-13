@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Validator;
 
 use Illuminate\Support\Facades\Mail;
 use App\Models\Order;
+use App\Models\Settings;
+use App\Services\SeoMeta;
 
 use GuzzleHttp\Client;
 
@@ -50,7 +52,20 @@ class FrontendController extends Controller
         ->get();
     
         $category=Category::where('status','active')->where('is_parent',1)->orderBy('title','ASC')->get();
+        // SEO: title and description built from the active category names
+        $categoryNames = $category->pluck('title')->implode(', ');
+        $meta_title = Str::limit('Aashi Retail | ' . $categoryNames, 60, '...');
+        $meta_description = SeoMeta::description('', 'Shop ' . $categoryNames . ' online at Aashi Retail.');
+
         return view('frontend.index')
+                ->with('page_heading', 'Aashi Retail - ' . $categoryNames)
+                ->with('meta_title', $meta_title)
+                ->with('meta_description', $meta_description)
+                ->with('canonical_url', route('home'))
+                ->with('schemas', [
+                    SeoMeta::organizationSchema(Settings::first()),
+                    SeoMeta::websiteSchema(),
+                ])
                 ->with('featured',$featured)
                 ->with('posts',$posts)
                 ->with('banners',$banners)
@@ -88,7 +103,31 @@ class FrontendController extends Controller
             $hasReviewed = ProductReview::where(['product_id' => $product_detail->id, 'order_id' => $orderId, 'user_id' => auth()->id()])->exists();
         }
        
-        return view('frontend.pages.product_detail', compact('product_detail', 'canReview', 'hasReviewed', 'orderId'));
+        // SEO values for the page head
+        $category_title = $product_detail->cat_info ? $product_detail->cat_info->title : null;
+        $meta_title = $product_detail->meta_title ?: SeoMeta::title($product_detail->title, $category_title);
+        $meta_description = $product_detail->meta_description ?: SeoMeta::description(
+            $product_detail->summary ?: $product_detail->description,
+            'Buy ' . $product_detail->title . ' online from Aashi Retail.'
+        );
+        $meta_image = SeoMeta::image($product_detail->photo);
+        $canonical_url = route('product-detail', $product_detail->slug);
+
+        // Structured data: breadcrumb (Home > Category > Sub-category > Product) and Product
+        $crumbs = [['Home', route('home')]];
+        if ($product_detail->cat_info) {
+            $crumbs[] = [$product_detail->cat_info->title, route('productlist', $product_detail->cat_info->slug)];
+            if ($product_detail->sub_cat_info) {
+                $crumbs[] = [$product_detail->sub_cat_info->title, route('productlist-with-sub', [$product_detail->cat_info->slug, $product_detail->sub_cat_info->slug])];
+            }
+        }
+        $crumbs[] = [$product_detail->title, $canonical_url];
+        $schemas = [
+            SeoMeta::breadcrumbSchema($crumbs),
+            SeoMeta::productSchema($product_detail, $meta_description),
+        ];
+
+        return view('frontend.pages.product_detail', compact('product_detail', 'canReview', 'hasReviewed', 'orderId', 'meta_title', 'meta_description', 'meta_image', 'canonical_url', 'schemas'));
     }
 
     public function productGrids(Request $request)
@@ -169,6 +208,18 @@ class FrontendController extends Controller
 
     public function showProductList(Request $request, $slug, $sub_slug = null)
     {
+        // SEO: old sub-category slug or "?page=1" -> one 301 redirect to the clean URL
+        $new_sub_slug = $sub_slug ? (SeoMeta::OLD_SUB_CATEGORY_SLUGS[$sub_slug] ?? null) : null;
+        if ($new_sub_slug || $request->query('page') === '1') {
+            $query = $request->query();
+            if (($query['page'] ?? null) === '1') {
+                unset($query['page']);
+            }
+            $sub_slug = $new_sub_slug ?: $sub_slug;
+            $url = $sub_slug ? route('productlist-with-sub', [$slug, $sub_slug]) : route('productlist', $slug);
+            return redirect($url . ($query ? '?' . http_build_query($query) : ''), 301);
+        }
+
         $category = Category::where('slug', $slug)->first();
 
         if (!$category) {
@@ -177,7 +228,8 @@ class FrontendController extends Controller
 
         $productsQuery = Product::query();
         $productsQuery->where('status', 'active');
-        
+        $subcategory = null;
+
         if ($sub_slug) {
             $subcategory = Category::where('slug', $sub_slug)
                             ->where('parent_id', $category->id)
@@ -192,7 +244,7 @@ class FrontendController extends Controller
         }
 
         if ($request->has('brand') && !empty($request->brand)) {
-            $slugs = explode(',', $request->brand);
+            $slugs = SeoMeta::brandSlugs($request->brand);
             $brand_ids = Brand::select('id')->whereIn('slug', $slugs)->pluck('id')->toArray();
             if (!empty($brand_ids)) {
                 $productsQuery->whereIn('brand_id', $brand_ids);
@@ -236,10 +288,48 @@ class FrontendController extends Controller
             $products = $productsQuery->paginate(12)->appends($request->query());
         }
 
-        return view('frontend.pages.product-lists', compact('products', 'category', 'sub_slug', 'recent_products'));
+        // SEO: sorting, show-count, price and brand filters all point to the clean URL.
+        // Only the page number is kept (page 1 = base URL).
+        if ($subcategory) {
+            $meta_title = $subcategory->meta_title ?: SeoMeta::title($category->title . ' ' . $subcategory->title);
+            $meta_description = $subcategory->meta_description ?: SeoMeta::description(
+                $subcategory->summary ?: $category->summary,
+                'Shop ' . $category->title . ' ' . $subcategory->title . ' at Aashi Retail.'
+            );
+            $meta_image = SeoMeta::image($subcategory->photo ?: $category->photo);
+            $base_url = route('productlist-with-sub', [$category->slug, $subcategory->slug]);
+            $page_heading = $category->title . ' ' . $subcategory->title;
+        } else {
+            $meta_title = $category->meta_title ?: SeoMeta::title($category->title . ' for Men & Women');
+            $meta_description = $category->meta_description ?: SeoMeta::description($category->summary, 'Shop ' . $category->title . ' at Aashi Retail.');
+            $meta_image = SeoMeta::image($category->photo);
+            $base_url = route('productlist', $category->slug);
+            $page_heading = $category->title . ' for Men & Women';
+        }
+        $canonical_url = SeoMeta::listCanonical($base_url, $request->query('page'));
+
+        // Structured data: breadcrumb (Home > Category [> Sub-category]) and the products on this page
+        $crumbs = [['Home', route('home')], [$category->title, route('productlist', $category->slug)]];
+        if ($subcategory) {
+            $crumbs[] = [$subcategory->title, $base_url];
+        }
+        $schemas = [
+            SeoMeta::breadcrumbSchema($crumbs),
+            SeoMeta::itemListSchema($products, $products->firstItem() ?: 1),
+        ];
+
+        // Editable intro text and FAQ (sub-category uses its own, otherwise the category). Shown on page 1 only.
+        $content_category = $subcategory ?: $category;
+        $intro_content = $products->currentPage() == 1 ? $content_category->intro_content : null;
+        $faqs = $products->currentPage() == 1 ? SeoMeta::faqList($content_category->faq) : [];
+        if ($faqs) {
+            $schemas[] = SeoMeta::faqSchema($faqs);
+        }
+
+        return view('frontend.pages.product-lists', compact('products', 'category', 'sub_slug', 'recent_products', 'subcategory', 'intro_content', 'faqs', 'page_heading', 'meta_title', 'meta_description', 'meta_image', 'canonical_url', 'schemas'));
     }
 
-    public function productLists(){
+    public function productLists($brand_slug = null){
         \DB::enableQueryLog();
         $products = Product::query();
         $products = $products->where('status', 'active');
@@ -250,8 +340,9 @@ class FrontendController extends Controller
             $products->whereIn('cat_id', $cat_ids);
         }
 
-        if (!empty($_GET['brand'])) {
-            $slugs = explode(',', $_GET['brand']);
+        $brand_param = $brand_slug ?: ($_GET['brand'] ?? '');
+        if (!empty($brand_param)) {
+            $slugs = SeoMeta::brandSlugs($brand_param);
             $brand_ids = Brand::select('id')->whereIn('slug', $slugs)->pluck('id')->toArray();
             $products->whereIn('brand_id', $brand_ids);
         }
@@ -292,7 +383,26 @@ class FrontendController extends Controller
             $products = $products->where('status', 'active')->paginate(9)->appends(request()->query());
         }
 
-        return view('frontend.pages.product-lists')->with('products',$products)->with('recent_products',$recent_products);
+        // SEO: the canonical URL never carries filter parameters (brand, price, sorting, show-count).
+        // /product-brand/{slug} is the brand page and has its own canonical; every /product-lists URL points to /product-lists.
+        // Only "?page=N" (page 2 and above) is kept, as page 1 is the base URL.
+        $page_heading = 'Aashi Retail Products';
+        if ($brand_slug) {
+            $brand = Brand::where('slug', $brand_slug)->first();
+            if (!$brand) {
+                abort(404, 'Brand not found');
+            }
+            $page_heading = $brand->title . ' Products';
+            $canonical_url = SeoMeta::listCanonical(route('product-brand', $brand->slug), request()->query('page'));
+            $meta_title = SeoMeta::title($page_heading);
+            $meta_description = SeoMeta::description('', 'Shop ' . $brand->title . ' products online at Aashi Retail.');
+        } else {
+            $canonical_url = SeoMeta::listCanonical(route('product-lists'), request()->query('page'));
+        }
+
+        return view('frontend.pages.product-lists', compact('products', 'recent_products', 'canonical_url', 'page_heading'))
+            ->with('meta_title', $meta_title ?? null)
+            ->with('meta_description', $meta_description ?? null);
     }
 
     public function productFilter(Request $request){
@@ -417,24 +527,38 @@ class FrontendController extends Controller
     }
 
     public function productBrand(Request $request){
-        $params = request()->query();
-        $params['brand'] = isset($params['brand']) && $params['brand'] ? $params['brand'] . ',' . $request->slug : $request->slug;
+        // Renamed brand slug: one permanent redirect to the new brand URL (query string kept)
+        if (isset(SeoMeta::OLD_BRAND_SLUGS[$request->slug])) {
+            $query = $request->getQueryString();
+            return redirect(route('product-brand', SeoMeta::OLD_BRAND_SLUGS[$request->slug]) . ($query ? '?' . $query : ''), 301);
+        }
 
-        $url = route('product-lists') . (count($params) ? '?' . http_build_query($params) : '');
-        return redirect($url);
+        return $this->productLists($request->slug);
     }
     
     public function productCat(Request $request) {
-        $query = request()->getQueryString();
+        $query = $this->queryWithoutFirstPage($request);
         $url = route('productlist', $request->slug) . ($query ? '?' . $query : '');
-        return redirect($url);
+        return redirect($url, 301);
+    }
+
+    // Query string for a redirect, without "page=1" (page 1 is the base URL, so this avoids a second redirect)
+    private function queryWithoutFirstPage(Request $request)
+    {
+        $query = $request->query();
+        if (($query['page'] ?? null) === '1') {
+            unset($query['page']);
+        }
+
+        return http_build_query($query);
     }
 
     public function productSubCat(Request $request)
     {
-        $query = request()->getQueryString();
-        $url = route('productlist-with-sub', ['slug' => $request->slug, 'sub_slug' => $request->sub_slug]) . ($query ? '?' . $query : '');
-        return redirect($url);
+        $query = $this->queryWithoutFirstPage($request);
+        $sub_slug = SeoMeta::OLD_SUB_CATEGORY_SLUGS[$request->sub_slug] ?? $request->sub_slug;
+        $url = route('productlist-with-sub', ['slug' => $request->slug, 'sub_slug' => $sub_slug]) . ($query ? '?' . $query : '');
+        return redirect($url, 301);
     }
 
     public function blog(){
@@ -465,7 +589,21 @@ class FrontendController extends Controller
     public function blogDetail($slug){
         $post=Post::getPostBySlug($slug);
         $rcnt_post=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
-        return view('frontend.pages.blog-detail')->with('post',$post)->with('recent_posts',$rcnt_post);
+        // SEO values for the page head
+        $meta_title = $post->meta_title ?: SeoMeta::title($post->title);
+        $meta_description = $post->meta_description ?: SeoMeta::description($post->summary, $post->title . ' - read more on the Aashi Retail blog.');
+        $meta_image = SeoMeta::image($post->photo);
+        $canonical_url = route('blog.detail', $post->slug);
+        $og_type = 'article';
+        $schemas = [
+            SeoMeta::breadcrumbSchema([
+                ['Home', route('home')],
+                ['Blog', route('blog')],
+                [$post->title, $canonical_url],
+            ]),
+        ];
+
+        return view('frontend.pages.blog-detail', compact('meta_title', 'meta_description', 'meta_image', 'canonical_url', 'og_type', 'schemas'))->with('post',$post)->with('recent_posts',$rcnt_post);
     }
 
     public function blogSearch(Request $request){

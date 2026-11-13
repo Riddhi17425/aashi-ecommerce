@@ -1,4 +1,5 @@
 @extends('frontend.layouts.master')
+@section('robots', 'noindex, follow')
 @section('title','Aashi-Ecommerce || Order Details')
 @section('main-content')
 
@@ -168,9 +169,9 @@
                               <div class="rating_card">
                                  <div>
                                  @if(isset($item->color_img) && $item->color_img != null) 
-                                    <td><a href="{{route('product-detail',$item->product['slug'])}}" target="_blank"><img width="80" class="rounded" src="{{$item->color_img}}" alt="{{ $item->color_img }}"></a></td>
+                                    <td><a href="{{route('product-detail',$item->product['slug'])}}" target="_blank"><img width="80" class="rounded" src="{{$item->color_img}}" alt="{{ $item->product['title'] }}"></a></td>
                                 @else
-                                    <td><a href="{{route('product-detail',$item->product['slug'])}}" target="_blank"><img width="80" class="rounded" src="{{asset('public/'.$photo[0])}}" alt="{{asset('public/'.$photo[0])}}"></a></td>
+                                    <td><a href="{{route('product-detail',$item->product['slug'])}}" target="_blank"><img width="80" class="rounded" src="{{asset('public' . $photo[0])}}" alt="{{ $item->product['title'] }}"></a></td>
                                 @endif
                                </div>
                                <div>

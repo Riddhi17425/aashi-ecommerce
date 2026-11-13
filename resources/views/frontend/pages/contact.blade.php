@@ -1,4 +1,6 @@
 @extends('frontend.layouts.master')
+@section('meta_title', 'Contact Us | Aashi Retail')
+@section('meta_description', 'Get in touch with Aashi Retail for product questions, orders and support. Find our address, phone number and email here.')
 
 @section('main-content')
 	<!-- Breadcrumbs -->

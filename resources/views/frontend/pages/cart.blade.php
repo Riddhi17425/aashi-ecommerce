@@ -1,4 +1,5 @@
 @extends('frontend.layouts.master')
+@section('robots', 'noindex, follow')
 @section('title', 'Aashi-Ecommerce || Cart Page')
 @section('main-content')
     <!-- Breadcrumbs -->
@@ -49,10 +50,10 @@
                                         @endphp
                                         <td class="image" data-title="No">
                                             @if (isset($cart->color_img) && $cart->color_img != null)
-                                                <img src="{{ $cart->color_img }}" alt="{{ $cart->color_img }}">
+                                                <img src="{{ $cart->color_img }}" alt="{{ $cart->product['title'] }}">
                                             @else
-                                                <img src="{{ asset('public/' . $photo[0]) }}"
-                                                    alt="{{ asset('public/' . $photo[0]) }}">
+                                                <img src="{{ asset('public' . $photo[0]) }}"
+                                                    alt="{{ $cart->product['title'] }}">
                                             @endif
                                         </td>
                                         <td class="product-des" data-title="Description">

@@ -143,6 +143,13 @@
         </div>
     </li>
 
+    <!-- Stock alerts (notify me requests) -->
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('stock-notifications.index') }}">
+            <i class="fas fa-bell"></i>
+            <span>Stock Alerts</span></a>
+    </li>
+
     <!-- Reviews -->
     <!-- <li class="nav-item">
         <a class="nav-link" href="{{route('review.index')}}">

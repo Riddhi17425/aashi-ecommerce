@@ -29,10 +29,10 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="image">
-                                    <img src="{{asset('public/'.$post->photo)}}" alt="{{asset('public/'.$post->photo)}}">
+                                    <img src="{{asset('public' . $post->photo)}}" alt="{{ $post->title }}">
                                 </div>
                                 <div class="blog-detail">
-                                    <h2 class="blog-title">{{$post->title}}</h2>
+                                    <h1 class="blog-title">{{$post->title}}</h1>
                                     <div class="blog-meta">
                                         <span class="author"><a href="javascript:void(0);"><i class="fa fa-user"></i>By {{$post->author_info['name']}}</a><a href="javascript:void(0);"><i class="fa fa-calendar"></i>{{$post->created_at->format('M d, Y')}}</a></span>
                                     </div>
@@ -56,7 +56,7 @@
                                 <!-- Single Post -->
                                 <div class="single-post">
                                     <div class="image">
-                                        <img src="{{asset('public/'.$post->photo)}}" alt="{{asset('public/'.$post->photo)}}">
+                                        <img src="{{asset('public' . $post->photo)}}" alt="{{ $post->title }}">
                                     </div>
                                     <div class="content">
                                         <h5><a href="{{route('blog.detail',$post->slug)}}">{{$post->title}}</a></h5>

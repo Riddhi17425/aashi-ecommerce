@@ -1,0 +1,130 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Post;
+use App\Models\Product;
+
+/**
+ * Serves /robots.txt and /sitemap.xml.
+ * Read-only: nothing here changes any data.
+ */
+class SeoController extends Controller
+{
+    // robots.txt - allow public pages, block private pages and action URLs.
+    public function robots()
+    {
+        $lines = [
+            'User-agent: *',
+
+            // Private pages
+            'Disallow: /cart',
+            'Disallow: /checkout',
+            'Disallow: /wishlist',
+            'Disallow: /my-orders',
+            'Disallow: /order',
+            'Disallow: /thank-you',
+            'Disallow: /user/',
+            'Disallow: /admin',
+            'Disallow: /password/',
+            'Disallow: /forgot-password',
+
+            // Payment and other action URLs
+            'Disallow: /razorpay/',
+            'Disallow: /payment',
+            'Disallow: /cancel',
+            'Disallow: /add-to-cart',
+            'Disallow: /coupon',
+            'Disallow: /header/',
+            'Disallow: /laravel-filemanager',
+            'Disallow: /cache-clear',
+            'Disallow: /storage-link',
+            'Disallow: /testgst',
+            'Disallow: /email-preview',
+            'Disallow: /income',
+
+            // Search and tracking pages
+            'Disallow: /product/search',
+            'Disallow: /product/track',
+            'Disallow: /blog/search',
+
+            // CSS, JS, images and /public/storage are not blocked on purpose.
+
+            '',
+            'Sitemap: ' . url('/sitemap.xml'),
+        ];
+
+        return response(implode("\n", $lines) . "\n", 200)
+            ->header('Content-Type', 'text/plain; charset=UTF-8');
+    }
+
+    // sitemap.xml - only public, active pages.
+    public function sitemap()
+    {
+        $urls = [];
+
+        // Home, blog index and static pages
+        $staticRoutes = ['home', 'blog', 'about-us', 'contact', 'privacy-policy',
+            'terms-conditions', 'return-refund-policy', 'exchange-policy'];
+        foreach ($staticRoutes as $name) {
+            $urls[] = ['loc' => route($name), 'lastmod' => null];
+        }
+
+        // Categories and sub-categories (one query, then matched in memory)
+        $categories = Category::where('status', 'active')
+            ->select('id', 'slug', 'parent_id', 'is_parent', 'updated_at')
+            ->get();
+        $parents = $categories->where('is_parent', 1)->keyBy('id');
+
+        foreach ($parents as $parent) {
+            $urls[] = [
+                'loc' => route('productlist', $parent->slug),
+                'lastmod' => $parent->updated_at,
+            ];
+        }
+        foreach ($categories->where('is_parent', 0) as $sub) {
+            $parent = $parents->get($sub->parent_id);
+            if ($parent) {
+                $urls[] = [
+                    'loc' => route('productlist-with-sub', [$parent->slug, $sub->slug]),
+                    'lastmod' => $sub->updated_at,
+                ];
+            }
+        }
+
+        // Active brand pages
+        foreach (Brand::where('status', 'active')->select('slug', 'updated_at')->get() as $brand) {
+            $urls[] = [
+                'loc' => route('product-brand', $brand->slug),
+                'lastmod' => $brand->updated_at,
+            ];
+        }
+
+        // Active products that belong to an active category (soft-deleted ones are skipped automatically)
+        $products = Product::where('status', 'active')
+            ->whereIn('cat_id', $parents->keys())
+            ->select('slug', 'updated_at')
+            ->get();
+        foreach ($products as $product) {
+            $urls[] = [
+                'loc' => route('product-detail', $product->slug),
+                'lastmod' => $product->updated_at,
+            ];
+        }
+
+        // Active blog posts
+        $posts = Post::where('status', 'active')->select('slug', 'updated_at')->get();
+        foreach ($posts as $post) {
+            $urls[] = [
+                'loc' => route('blog.detail', $post->slug),
+                'lastmod' => $post->updated_at,
+            ];
+        }
+
+        return response()
+            ->view('sitemap', ['urls' => $urls])
+            ->header('Content-Type', 'application/xml; charset=UTF-8');
+    }
+}

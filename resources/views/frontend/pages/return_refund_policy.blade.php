@@ -1,4 +1,6 @@
 @extends('frontend.layouts.master')
+@section('meta_title', 'Return & Refund Policy | Aashi Retail')
+@section('meta_description', 'Read the Aashi Retail return and refund policy to see how returns work and how refunds are processed for your order.')
 
 @section('title','Aashi-Ecommerce || Return & Refund Policy')
 

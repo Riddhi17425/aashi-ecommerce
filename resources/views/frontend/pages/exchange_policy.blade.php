@@ -1,4 +1,6 @@
 @extends('frontend.layouts.master')
+@section('meta_title', 'Exchange Policy | Aashi Retail')
+@section('meta_description', 'Read the Aashi Retail exchange policy to see how to exchange a product and what conditions apply to your order.')
 
 @section('title','Aashi-Ecommerce || Exchange Policy')
 
