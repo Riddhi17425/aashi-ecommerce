@@ -1310,6 +1310,35 @@
                 margin: 6px 0;
             }
         }
+        /* ===== Gallery look: framed main photo, rounded thumbnails, less empty space above and below ===== */
+        .product-gallery .main-banner {
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f3f3f3;
+            box-shadow: 0 8px 26px rgba(0, 0, 0, 0.09);
+        }
+
+        .product-gallery .small-banner .slick-slide img,
+        .product-gallery .small-banner .slick-slide video {
+            border-radius: 8px;
+        }
+
+        .product-gallery .small-banner .slick-current img {
+            box-shadow: 0 4px 12px rgba(93, 184, 69, 0.35);
+        }
+
+        @media only screen and (min-width: 768px) {
+            /* the 30px theme margin above the gallery and details only added empty space under the breadcrumb */
+            .shop.single .product-gallery,
+            .shop.single .product-des {
+                margin-top: 0;
+            }
+
+            .shop.single .product-des {
+                padding-bottom: 0;
+            }
+        }
+
         /* ===== Size buttons: hover tooltip ===== */
         .shop.single .product-des .product-sizeoptions ul {
             margin-top: 14px;
@@ -1428,6 +1457,211 @@
                 margin-top: 10px !important;
             }
         }
+        /* ===== Smaller size, add to cart, wishlist and buy now buttons ===== */
+        .shop.single .product-des .product-sizeoptions ul li {
+            margin-right: 6px;
+        }
+
+        .shop.single .product-des .product-sizeoptions ul li a {
+            height: 34px;
+            line-height: 32px;
+            padding: 0 10px;
+            font-size: 13px;
+            min-width: 38px;
+        }
+
+        .shop.single .product-des .add-to-cart {
+            margin-top: 14px !important;
+        }
+
+        .shop.single .product-des .add-to-cart .btn {
+            height: 38px;
+            line-height: 36px;
+            padding: 0 26px;
+            font-size: 13px;
+            margin-right: 2px;
+        }
+
+        .shop.single .product-des .add-to-cart .btn.min {
+            padding: 0 14px;
+            font-size: 15px;
+        }
+
+        /* ===== Smaller quantity box ===== */
+        .shop.single .product-des .quantity .input-group {
+            width: 120px;
+        }
+
+        .shop.single .product-des .quantity .input-number {
+            width: 120px;
+            height: 38px;
+            padding: 0 30px;
+            font-size: 13px;
+        }
+
+        .shop.single .product-des .quantity .button .btn {
+            width: 30px;
+            height: 38px;
+            line-height: 38px;
+            font-size: 11px;
+        }
+
+        /* ===== Purchase options: one tidy column (colour, size), then quantity + buttons on one row, then share ===== */
+        .shop.single .product-des .color,
+        .shop.single .product-des .size {
+            display: block;
+            margin-right: 0;
+        }
+
+        .shop.single .product-des .size h4 {
+            margin-bottom: 0;
+            color: #333;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+        }
+
+        .shop.single .product-des .color ul,
+        .shop.single .product-des .size ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0 0;
+        }
+
+        .shop.single .product-des .color ul li,
+        .shop.single .product-des .size ul li {
+            margin-right: 0;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px 16px;
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .quantity,
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart {
+            display: flex;
+            align-items: center;
+            margin: 0 !important;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .quantity h6 {
+            margin: 0 10px 0 0;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart .btn {
+            margin: 0;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .product-share {
+            flex: 0 0 100%;
+            margin-top: 4px !important;
+        }
+
+        /* ===== Product info under the buttons: category, sub category and size chart share one tidy row (no big gaps) ===== */
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 22px;
+        }
+
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > #add-to-cart-wrapper,
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:has(b) {
+            flex: 0 0 100%;
+        }
+
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:not(.mb-2),
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart) {
+            margin: 0 !important;
+        }
+
+        /* paragraphs that come out of the features text keep their own full-width lines */
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:not(.cat):not(:has(> .View-Size-Chart)) {
+            flex: 0 0 100%;
+        }
+
+        /* highlighted bar: category | sub category | size chart, with a divider between them */
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) {
+            column-gap: 0;
+        }
+
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > #add-to-cart-wrapper + p,
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:not(:has(b)),
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart) {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border: 1px solid #dcefd5;
+            background: #f4fbf1;
+            margin: 0 -1px 0 0 !important;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:not(:has(b)) a,
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart) a {
+            color: #3f9a2c;
+            font-weight: 600;
+        }
+
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:not(:has(b)) a:hover,
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart) a:hover {
+            color: #2e7a1f;
+        }
+
+        /* rounded ends of the bar */
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > #add-to-cart-wrapper + p {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart),
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:has(+ p.cat.mb-2) {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > #add-to-cart-wrapper + p:has(+ p.cat.mb-2) {
+            border-radius: 10px;
+        }
+
+        /* size chart link: no extra underline, it already sits in the bar */
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart) .View-Size-Chart {
+            border-bottom: 0;
+            margin-top: 0;
+            text-decoration: underline;
+        }
+
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart) .View-Size-Chart,
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart) .View-Size-Chart b {
+            font-weight: 400;
+        }
+
+        /* a thin line and some air above the product details (features) */
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:has(b) {
+            margin-top: 10px !important;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .product-share {
+            margin-bottom: 2px;
+        }
+
+        .shop.single .product-des .product-share h6 {
+            margin: 0;
+        }
+
         /* Product title is an H1 (SEO) - same look as the old H4 */
         .shop.single .product-des .short h1 {
             font-size: 22px;
@@ -2373,6 +2607,26 @@
                 vertical: true,
                 verticalSwiping: true
             });
+
+            // Thumbnails: the mouse wheel scrolls them up / down (the page scrolls as usual once the first or last one is reached).
+            // Added with passive:false, otherwise the browser would not let us stop the page from scrolling too.
+            var thumbs = document.querySelector(".small-banner");
+            if (thumbs) {
+                var wheelBusy = false;
+                thumbs.addEventListener("wheel", function(e) {
+                    var slick = $(thumbs).slick("getSlick");
+                    var down = e.deltaY > 0;
+                    var last = slick.slideCount - slick.options.slidesToShow;
+                    if ((down && slick.currentSlide < last) || (!down && slick.currentSlide > 0)) {
+                        e.preventDefault();
+                        if (!wheelBusy) {
+                            wheelBusy = true;
+                            $(thumbs).slick(down ? "slickNext" : "slickPrev");
+                            setTimeout(function() { wheelBusy = false; }, 250);
+                        }
+                    }
+                }, { passive: false });
+            }
 
             // Size chart panel: mark the page while it is open (used by the CSS above)
             $('#sizeChartModal')
