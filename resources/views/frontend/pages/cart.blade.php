@@ -106,14 +106,18 @@
                             @else
                                 <tr class="empty-cart-row">
                                     <td class="text-center" colspan="7">
-                                        There are no any carts available. <a href="{{ route('product-lists') }}"
-                                            style="color:blue;">Continue shopping</a>
+                                        @include('frontend.partials.empty-cart')
                                     </td>
                                 </tr>
                             @endif
                         </tbody>
                     </table>
                     <!--/ End Shopping Summery -->
+
+                    {{-- Used by cart-ajax.js when the last item is removed --}}
+                    <template id="empty-cart-template">
+                        @include('frontend.partials.empty-cart')
+                    </template>
                 </div>
             </div>
             @if (Helper::getAllProductFromCart()->count() > 0)
@@ -334,6 +338,7 @@
 
 @endsection
 @push('styles')
+    @include('frontend.partials.empty-state-styles')
     <style>
         li.shipping {
             display: inline-flex;

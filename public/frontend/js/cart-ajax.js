@@ -147,9 +147,10 @@ $(document).on('click', '.delete-cart-item', function () {
                         refreshMiniCart();
 
                         if ($('#cart_item_list .cart-item-row').length === 0) {
-                            let emptyRow = `<tr class="empty-cart-row"><td class="text-center" colspan="7">
-                                There are no any carts available. <a href="${window.appData.productListUrl}" style="color:blue;">Continue shopping</a>
-                            </td></tr>`;
+                            // Same "empty cart" block the cart page shows on load (kept in a <template>); the plain text is only a fallback
+                            let emptyContent = $('#empty-cart-template').html() ||
+                                `There are no any carts available. <a href="${window.appData.productListUrl}" style="color:blue;">Continue shopping</a>`;
+                            let emptyRow = `<tr class="empty-cart-row"><td class="text-center" colspan="7">${emptyContent}</td></tr>`;
                             $('#cart_item_list').html(emptyRow);
                             $('#calculation-section').remove();
                         }

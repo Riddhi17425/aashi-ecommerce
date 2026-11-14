@@ -120,7 +120,7 @@
                                                     <a href="{{ route('product-detail', $product->slug) }}"
                                                         class="card-img-link">
                                                         @php $photo = explode(',', $product->photo); @endphp
-                                                        <img class="default-img" src="{{ asset('public' . $photo[0]) }}"
+                                                        <img class="default-img" loading="lazy" src="{{ asset('public' . $photo[0]) }}"
                                                             alt="{{ $product->title }}">
                                                     </a>
                                                 </div>
@@ -212,7 +212,7 @@
                                                         <a href="{{ route('product-detail', $product->slug) }}"
                                                             class="card-img-link">
                                                             @php $photo = explode(',', $product->photo); @endphp
-                                                            <img class="default-img"
+                                                            <img class="default-img" loading="lazy"
                                                                 src="{{ asset('public' . $photo[0]) }}"
                                                                 alt="{{ $product->title }}">
                                                         </a>
@@ -324,16 +324,16 @@
             </div>
             <div class="row text-center justify-content-center">
                 <div class="col-lg-3 col-md-4 mb-3 brand_mg">
-                    <img src="{{ asset('public/brand/aashi-logo.png') }}" alt="" class="img-fluid">
+                    <img src="{{ asset('public/brand/aashi-logo.png') }}" alt="" class="img-fluid" loading="lazy">
                 </div>
                 <div class="col-lg-3 col-md-4 mb-3 brand_mg">
-                    <img src="{{ asset('public/brand/Aone-logo.jpg') }}" alt="" class="img-fluid">
+                    <img src="{{ asset('public/brand/Aone-logo.jpg') }}" alt="" class="img-fluid" loading="lazy">
                 </div>
                 <div class="col-lg-3 col-md-4 mb-3 brand_mg">
-                    <img src="{{ asset('public/brand/kiash-logo.jpg') }}" alt="" class="img-fluid">
+                    <img src="{{ asset('public/brand/kiash-logo.jpg') }}" alt="" class="img-fluid" loading="lazy">
                 </div>
                 <div class="col-lg-3 col-md-4 mb-3 brand_mg">
-                    <img src="{{ asset('public/brand/Rainshell-Logo.jpeg') }}" alt="" class="img-fluid">
+                    <img src="{{ asset('public/brand/Rainshell-Logo.jpeg') }}" alt="" class="img-fluid" loading="lazy">
                 </div>
             </div>
         </div>
@@ -578,6 +578,94 @@
 
 @push('styles')
     <style>
+        /* ===== Home page effects (CSS only) ===== */
+
+        /* Hero banner: slow, subtle zoom on the active slide */
+        #Gslider .carousel-item.active .first-slide {
+            animation: heroZoom 10s ease-out both;
+        }
+
+        @keyframes heroZoom {
+            from { transform: scale(1); }
+            to { transform: scale(1.07); }
+        }
+
+        /* Category tiles under the banner: fade up one after another when the page loads
+           (animation uses "backwards" so the hover lift below still works afterwards) */
+        .small-banner .single-banner {
+            border-radius: 6px;
+            animation: tileRise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        .small-banner .owl-item:nth-child(2) .single-banner { animation-delay: 0.12s; }
+        .small-banner .owl-item:nth-child(3) .single-banner { animation-delay: 0.24s; }
+
+        @keyframes tileRise {
+            from { opacity: 0; transform: translateY(28px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Tile hover: lift, soft shadow, image zoom, text slides in */
+        .small-banner .single-banner:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 30px -10px rgba(0, 0, 0, 0.28);
+        }
+
+        .small-banner .single-banner:hover img {
+            transform: scale(1.06);
+        }
+
+        .small-banner .single-banner .content {
+            transition: transform 0.4s ease;
+        }
+
+        .small-banner .single-banner:hover .content {
+            transform: translateX(8px);
+        }
+
+        /* Room around the tiles, so the lift and shadow are not cut off by the carousel.
+           "overflow: clip" with a clip margin lets the shadow show outside the carousel edge (the gap between tiles is 30px, so no neighbouring tile shows). */
+        .small-banner-slider .owl-stage-outer {
+            padding: 10px 0 18px;
+            margin: -10px 0 -18px;
+            overflow: clip;
+            overflow-clip-margin: 26px;
+        }
+
+        /* Carousel dots: the active dot becomes a green pill */
+        .small-banner-slider .owl-dots .owl-dot span {
+            transition: all 0.3s ease;
+        }
+
+        .small-banner-slider .owl-dots .owl-dot.active span {
+            width: 28px;
+            border-radius: 10px;
+            background: #5db845;
+        }
+
+        /* Brands section hover: the logo card lifts, grows a little and gets a deeper shadow */
+        .brand_mg img {
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        .brand_mg img:hover {
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: rgba(100, 100, 111, 0.35) 0px 16px 34px -4px;
+        }
+        /* People who prefer less motion get none of the above */
+        @media (prefers-reduced-motion: reduce) {
+            #Gslider .carousel-item.active .first-slide,
+            .small-banner .single-banner {
+                animation: none !important;
+            }
+
+            .small-banner .single-banner,
+            .small-banner .single-banner .content,
+            .brand_mg img {
+                transition: none;
+            }
+        }
         /* Blinking text cursor (caret) ko page me kahin bhi na dikhaye */
 * {
     caret-color: transparent;

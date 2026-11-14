@@ -83,6 +83,9 @@ class FrontendController extends Controller
 
     public function productDetail($slug){
         $product_detail= Product::getProductBySlug($slug);
+        if (!$product_detail) {
+            abort(404, 'Product not found');
+        }
         $canReview = false;
         $orderId = null;
         if (auth()->check()) {
@@ -380,7 +383,7 @@ class FrontendController extends Controller
             $perPage = (int) $show;
             $products = $products->where('status', 'active')->paginate($perPage)->appends(request()->query());
         } else {
-            $products = $products->where('status', 'active')->paginate(9)->appends(request()->query());
+            $products = $products->where('status', 'active')->paginate(12)->appends(request()->query());
         }
 
         // SEO: the canonical URL never carries filter parameters (brand, price, sorting, show-count).
@@ -588,6 +591,9 @@ class FrontendController extends Controller
 
     public function blogDetail($slug){
         $post=Post::getPostBySlug($slug);
+        if (!$post) {
+            abort(404, 'Post not found');
+        }
         $rcnt_post=Post::where('status','active')->orderBy('id','DESC')->limit(3)->get();
         // SEO values for the page head
         $meta_title = $post->meta_title ?: SeoMeta::title($post->title);

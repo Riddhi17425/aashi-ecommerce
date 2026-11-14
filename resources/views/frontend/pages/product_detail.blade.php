@@ -1168,20 +1168,32 @@
 
 
     @if ($product_detail->size_chart)
+        {{-- Size chart: a panel that slides in from the right (same id as before, so the "View Size Chart" link still opens it) --}}
         <div class="modal fade size-chart-modal" id="sizeChartModal" tabindex="-1" role="dialog"
-            aria-labelledby="sizeChartModalLabel" aria-hidden="true">
+            aria-label="Size Chart" aria-hidden="true">
 
-            <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+            <div class="modal-dialog" role="document">
                 <div class="modal-content">
 
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span>&times;</span>
+                            <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
 
                     <div class="modal-body">
-                        {!! $product_detail->size_chart !!}
+                        <div class="size-chart-section">
+                            <button type="button" class="size-chart-toggle" data-toggle="collapse"
+                                data-target="#sizeChartCollapse" aria-expanded="true" aria-controls="sizeChartCollapse">
+                                <span class="size-chart-label"><i class="fa fa-arrows-alt" aria-hidden="true"></i>Size Chart</span>
+                                <span class="size-chart-icon" aria-hidden="true"></span>
+                            </button>
+                            <div id="sizeChartCollapse" class="collapse show">
+                                <div class="size-chart-content">
+                                    {!! $product_detail->size_chart !!}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -1192,6 +1204,230 @@
 @endsection
 @push('styles')
     <style>
+        /* Zoom on the main image: the photo stays inside its frame while it zooms */
+        .main-banner .slick-slide {
+            overflow: hidden;
+        }
+
+        .main-banner .slick-slide img {
+            transition: transform 0.25s ease;
+        }
+
+        @media (hover: hover) {
+            .main-banner .slick-slide img {
+                cursor: zoom-in;
+            }
+        }
+
+        /* ===== Gallery: thumbnails in a column on the left of the main image (all screen sizes) ===== */
+        .product-gallery {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .product-gallery .small-banner {
+            order: -1;
+            flex: 0 0 64px;
+            width: 64px;
+            padding: 28px 0;
+        }
+
+        .product-gallery .main-banner {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .product-gallery .small-banner .slick-slide {
+            margin: 5px 0;
+        }
+
+        /* thumbnails keep the 3:4 shape of the photos, so the whole photo shows (no cropping) */
+        .product-gallery .small-banner .slick-slide img,
+        .product-gallery .small-banner .slick-slide video {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 3 / 4;
+            object-fit: contain;
+            background: #f3f3f3;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .product-gallery .small-banner .slick-current img,
+        .product-gallery .small-banner .slick-slide img:hover {
+            border-color: #5db845;
+        }
+
+        /* up / down arrows above and below the thumbnails (centred, so nothing sticks out at the sides) */
+        .product-gallery .small-banner .slick-prev,
+        .product-gallery .small-banner .slick-next {
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%) rotate(90deg);
+        }
+
+        .product-gallery .small-banner .slick-prev {
+            top: 4px;
+        }
+
+        .product-gallery .small-banner .slick-next {
+            top: auto;
+            bottom: 4px;
+        }
+
+        /* tablets: a little wider thumbnail column */
+        @media only screen and (min-width: 576px) {
+            .product-gallery {
+                gap: 10px;
+            }
+
+            .product-gallery .small-banner {
+                flex-basis: 80px;
+                width: 80px;
+            }
+        }
+
+        /* desktops: widest column, and the gallery stays in view while the product details scroll past
+           (top offset = the menu bar that sticks to the top of the screen) */
+        @media only screen and (min-width: 992px) {
+            .product-gallery {
+                gap: 12px;
+                position: sticky;
+                top: 70px;
+            }
+
+            .product-gallery .small-banner {
+                flex-basis: 96px;
+                width: 96px;
+                padding: 30px 0;
+            }
+
+            .product-gallery .small-banner .slick-slide {
+                margin: 6px 0;
+            }
+        }
+        /* ===== Size buttons: hover tooltip ===== */
+        .shop.single .product-des .product-sizeoptions ul {
+            margin-top: 14px;
+        }
+
+        .shop.single .product-des .product-sizeoptions ul li {
+            margin-right: 8px;
+        }
+
+        .shop.single .product-des .product-sizeoptions ul li a {
+            position: relative;
+            display: block;
+            width: auto;
+            min-width: 44px;
+            height: 40px;
+            padding: 0 12px;
+            line-height: 38px;
+            font-weight: 500;
+            color: #555;
+            background: #f6f6f6;
+            border: 1px solid #e6e6e6;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* hovered size: white box, dark border, soft shadow underneath */
+        .shop.single .product-des .product-sizeoptions ul li a:hover {
+            color: #222;
+            background: #fff;
+            border-color: #333;
+            box-shadow: 0 8px 10px -6px rgba(0, 0, 0, 0.45);
+        }
+
+        /* selected size: theme green */
+        .shop.single .product-des .product-sizeoptions ul li a.set_active,
+        .shop.single .product-des .product-sizeoptions ul li a.set_active:hover {
+            color: #fff !important;
+            background: #5db845;
+            border-color: #5db845;
+        }
+
+        /* tooltip above the size: dark label with a small arrow (only where a mouse can hover) */
+        @media (hover: hover) {
+            .shop.single .product-des .product-sizeoptions ul li a::after {
+                content: attr(data-size-id);
+                position: absolute;
+                bottom: calc(100% + 10px);
+                left: 50%;
+                transform: translate(-50%, 4px);
+                padding: 6px 30px;
+                font-size: 13px;
+                line-height: 1.3;
+                white-space: nowrap;
+                color: #fff;
+                background: #444;
+                border-radius: 4px;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+                z-index: 20;
+            }
+
+            .shop.single .product-des .product-sizeoptions ul li a::before {
+                content: "";
+                position: absolute;
+                bottom: calc(100% + 4px);
+                left: 50%;
+                transform: translate(-50%, 4px);
+                border: 6px solid transparent;
+                border-top-color: #444;
+                border-bottom: 0;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+                z-index: 20;
+            }
+
+            .shop.single .product-des .product-sizeoptions ul li a:hover::after,
+            .shop.single .product-des .product-sizeoptions ul li a:hover::before {
+                opacity: 1;
+                visibility: visible;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        /* ===== Less empty space on the product page (tablets and desktops; phones keep their own spacing) ===== */
+        @media only screen and (min-width: 768px) {
+            .breadcrumbs {
+                padding: 14px 0;
+            }
+
+            section.shop.single:not(.pt-0) {
+                padding-top: 24px;
+            }
+
+            section.shop.single.pb-5:not(.pt-0) {
+                padding-bottom: 24px !important;
+            }
+
+            .shop.single .product-des .short .description {
+                margin-top: 10px;
+                margin-bottom: 10px;
+                padding-bottom: 12px;
+            }
+
+            .shop.single .product-des .color.mt-4,
+            .shop.single .product-des .size.mt-4 {
+                margin-top: 14px !important;
+            }
+
+            .shop.single .product-des #add-to-cart-wrapper .quantity.mt-3 {
+                margin-top: 10px !important;
+            }
+        }
         /* Product title is an H1 (SEO) - same look as the old H4 */
         .shop.single .product-des .short h1 {
             font-size: 22px;
@@ -1225,153 +1461,336 @@
             caret-color: auto !important;
         }
 
-        /*modal css start*/
+        /* ===== Size chart: panel that slides in from the right ===== */
         #sizeChartModal .modal-dialog {
-            max-width: 900px;
-            width: 95%;
-            margin: 1.75rem auto;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            max-width: 540px;
+            height: 100%;
+            margin: 0;
+            padding: 0; /* the theme adds 35px top and bottom on phones */
+        }
+
+        /* slides in from the right instead of dropping from the top */
+        #sizeChartModal.fade .modal-dialog {
+            transform: translateX(100%);
+            transition: transform 0.35s ease;
+        }
+
+        #sizeChartModal.show .modal-dialog {
+            transform: translateX(0);
         }
 
         #sizeChartModal .modal-content {
-            position: relative;
+            height: 100%;
             border: 0;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 0;
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.18);
         }
 
+        /* the theme (reset.css) places every modal header in the top-right corner: put it back in the normal flow here */
         #sizeChartModal .modal-header {
-            padding: 0px 10px;
+            position: relative;
+            top: auto;
+            right: auto;
+            z-index: auto;
+            flex: 0 0 auto;
+            align-items: center;
             justify-content: flex-end;
+            padding: 14px 20px;
+            border-top: 4px solid #5db845;
+            border-bottom: 1px solid #ececec;
         }
 
         #sizeChartModal .close {
+            flex: 0 0 auto;
             margin: 0;
             padding: 0;
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border: 0;
-            background: #f5f5f5;
             border-radius: 50%;
-            font-size: 28px;
+            background: #f2f4f6;
+            font-size: 26px;
+            font-weight: 400;
             line-height: 36px;
-            text-align: center;
+            color: #333;
             opacity: 1;
             outline: none;
             box-shadow: none;
-            transition: all 0.3s ease;
+            transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
         }
 
         #sizeChartModal .close:hover {
-            background: #e9e9e9;
+            color: #fff;
+            background: #5db845;
+            border-color: transparent;
+            transform: rotate(90deg);
         }
 
         #sizeChartModal .modal-body {
-            padding: 25px;
-            max-height: 85vh;
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none;
+            padding: 0 28px 28px;
             overflow-y: auto;
         }
 
-        #sizeChartModal h4,
-        #sizeChartModal h5 {
-            margin: 0 0 20px;
-            font-weight: 700;
-            color: #222;
-            line-height: 1.4;
-        }
+        /* ===== Size chart look: green theme ===== */
 
-        #sizeChartModal h4 {
-            font-size: 28px;
-        }
-
-        #sizeChartModal h5 {
-            font-size: 24px;
-        }
-
-        #sizeChartModal table {
+        /* collapsible "Size Chart" heading: a soft green bar (minus when open, plus when closed) */
+        #sizeChartModal .size-chart-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             width: 100%;
-            margin-bottom: 30px;
-            border-collapse: collapse;
+            margin: 22px 0 18px;
+            padding: 12px 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #eef8ea;
+            font-size: 17px;
+            font-weight: 600;
+            color: #1f3a17;
+            text-align: left;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.25s ease;
         }
 
-        #sizeChartModal table th,
-        #sizeChartModal table td {
-            padding: 14px 16px;
+        #sizeChartModal .size-chart-toggle:hover {
+            background: #e3f3de;
+        }
+
+        #sizeChartModal .size-chart-label {
+            display: flex;
+            align-items: center;
+        }
+
+        #sizeChartModal .size-chart-label .fa {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            margin-right: 12px;
+            border-radius: 50%;
+            background: #5db845;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        #sizeChartModal .size-chart-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #fff;
+            color: #3f9a2c;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        #sizeChartModal .size-chart-icon::before {
+            content: "\2212";
+            font-size: 20px;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        #sizeChartModal .size-chart-toggle.collapsed .size-chart-icon::before {
+            content: "+";
+        }
+
+        /* the chart itself */
+        #sizeChartModal .size-chart-content {
+            overflow-x: auto;
+            padding: 0 2px 6px;
+        }
+
+        /* "SIZE GUIDE - All measurements are in inches": a small green label */
+        #sizeChartModal .size-chart-content h4 {
+            display: inline-block;
+            margin: 0 0 16px;
+            padding: 7px 14px;
+            border-radius: 20px;
+            background: #eef8ea;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+            letter-spacing: 0.2px;
+            color: #2f7d1f;
+            text-transform: none;
+        }
+
+        #sizeChartModal .size-chart-content table {
+            width: 100%;
+            margin-bottom: 24px;
+            border: 0;
+            border-radius: 12px;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            font-size: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        #sizeChartModal .size-chart-content table th,
+        #sizeChartModal .size-chart-content table td {
+            padding: 12px 14px;
             text-align: center;
-            border: 1px solid #e5e5e5;
             vertical-align: middle;
+            border: 0;
+            border-bottom: 1px solid #edf1ee;
         }
 
-        #sizeChartModal table th {
-            background: #f8f8f8;
+        #sizeChartModal .size-chart-content table tr:last-child td,
+        #sizeChartModal .size-chart-content table tr:last-child th {
+            border-bottom: 0;
+        }
+
+        /* first header row: the table title (TOP, BOTTOM ... or the column names when there is no title row) */
+        #sizeChartModal .size-chart-content table thead tr:first-child th {
+            background: #5db845;
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+        }
+
+        /* second header row: the column names (Particular, sizes ...) */
+        #sizeChartModal .size-chart-content table thead tr:nth-child(2) th {
+            background: #eef8ea;
+            color: #1f3a17;
             font-weight: 600;
         }
 
-        #sizeChartModal ul {
+        #sizeChartModal .size-chart-content table tbody tr:nth-child(even) td {
+            background: #f8fbf7;
+        }
+
+        #sizeChartModal .size-chart-content table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        #sizeChartModal .size-chart-content table tbody tr:hover td {
+            background: #eaf6e6;
+        }
+
+        /* first column (the measurement names): left aligned, bold, with a green marker */
+        #sizeChartModal .size-chart-content table tbody td:first-child,
+        #sizeChartModal .size-chart-content table thead tr:nth-child(2) th:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #222;
+        }
+
+        #sizeChartModal .size-chart-content table tbody td:first-child {
+            border-left: 3px solid #5db845;
+        }
+
+        /* "Size Selection Tips": a heading with an icon, and the tips as soft cards with a check mark */
+        #sizeChartModal .size-chart-content h5 {
+            margin: 26px 0 14px;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.5;
+            color: #1f3a17;
+        }
+
+        #sizeChartModal .size-chart-content h5::before {
+            content: "\f0eb";
+            font-family: FontAwesome;
+            margin-right: 8px;
+            color: #f7941d;
+        }
+
+        #sizeChartModal .size-chart-content ul {
             list-style: none;
             padding: 0;
             margin: 0;
         }
 
-        #sizeChartModal ul li {
+        #sizeChartModal .size-chart-content ul li {
             position: relative;
-            padding-left: 20px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
+            padding: 12px 14px 12px 46px;
+            border-radius: 10px;
+            background: #f7faf6;
+            font-size: 14px;
             line-height: 1.6;
             color: #444;
         }
 
-        #sizeChartModal ul li:last-child {
+        #sizeChartModal .size-chart-content ul li:last-child {
             margin-bottom: 0;
         }
 
-        #sizeChartModal ul li::before {
-            content: "";
+        #sizeChartModal .size-chart-content ul li::before {
+            content: "\f00c";
+            font-family: FontAwesome;
             position: absolute;
-            left: 0;
-            top: 10px;
-            width: 7px;
-            height: 7px;
-            background: #5db845;
+            left: 12px;
+            top: 12px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
+            background: #5db845;
+            color: #fff;
+            font-size: 11px;
+            line-height: 22px;
+            text-align: center;
         }
 
-        @media (max-width: 767px) {
-            #sizeChartModal .modal-header {
-                padding: 0px;
-            }
+        /* a chart that is a picture */
+        #sizeChartModal .size-chart-content img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 0 auto 16px;
+            border-radius: 10px;
+        }
 
-            #sizeChartModal .modal-dialog {
-                width: calc(100% - 20px);
-                margin: 10px;
+        @media (max-width: 575px) {
+            #sizeChartModal .modal-header {
+                padding: 12px 14px;
             }
 
             #sizeChartModal .modal-body {
-                padding: 20px 15px;
+                padding: 0 18px 22px;
             }
 
-            #sizeChartModal h4 {
-                font-size: 22px;
+            #sizeChartModal .size-chart-toggle {
+                margin: 16px 0 14px;
+                font-size: 16px;
             }
 
-            #sizeChartModal h5 {
-                font-size: 20px;
+            #sizeChartModal .size-chart-content table th,
+            #sizeChartModal .size-chart-content table td {
+                padding: 10px 8px;
+                font-size: 13px;
             }
 
-            #sizeChartModal table th,
-            #sizeChartModal table td {
-                padding: 10px;
-                font-size: 14px;
-                white-space: nowrap;
-            }
-
-            #sizeChartModal ul li {
-                font-size: 14px;
-                line-height: 1.5;
+            #sizeChartModal .size-chart-content ul li {
+                padding: 10px 12px 10px 42px;
+                font-size: 13px;
             }
         }
+        /* while the panel is open, the header cart / user icons (z-index 9999 in the theme) stay below it */
+        body.size-chart-open .header .sinlge-bar.shopping,
+        body.size-chart-open .header .mobile-user-menu {
+            z-index: auto;
+        }
 
-        /*modal css end*/
+        /* people who prefer less motion: the panel just appears */
+        @media (prefers-reduced-motion: reduce) {
+            #sizeChartModal.fade .modal-dialog {
+                transition: none;
+            }
+        }
 
         .shop.single .product-des .color ul li a .selected {
             opacity: 1;
@@ -1737,13 +2156,13 @@
                     });
 
                     $('.small-banner').slick({
-                        slidesToShow: 3,
+                        slidesToShow: Math.min(4, $('.small-banner').children().length),
                         slidesToScroll: 1,
                         asNavFor: '.main-banner',
-                        dots: true,
-                        centerMode: true,
                         focusOnSelect: true,
-                        arrows: true
+                        arrows: true,
+                        vertical: true,
+                        verticalSwiping: true
                     });
                 },
                 error: function(xhr) {
@@ -1944,13 +2363,40 @@
                 asNavFor: '.small-banner'
             });
 
+            // Thumbnails: a vertical column on the left of the main image (CSS sizes it for the screen)
             $('.small-banner').slick({
-                slidesToShow: 3,
+                slidesToShow: Math.min(4, $('.small-banner').children().length),
                 slidesToScroll: 1,
                 asNavFor: '.main-banner',
                 focusOnSelect: true,
                 arrows: true,
+                vertical: true,
+                verticalSwiping: true
             });
+
+            // Size chart panel: mark the page while it is open (used by the CSS above)
+            $('#sizeChartModal')
+                .on('show.bs.modal', function() { $('body').addClass('size-chart-open'); })
+                .on('hidden.bs.modal', function() { $('body').removeClass('size-chart-open'); });
+
+            // Zoom on the main image (devices with a mouse only): it zooms in and follows the mouse pointer.
+            // Events are attached to the page, so images added when the colour changes zoom too.
+            if (window.matchMedia('(hover: hover)').matches) {
+                $(document)
+                    .on('mouseenter', '.main-banner .slick-slide img', function() {
+                        $(this).css('transform', 'scale(1.8)');
+                    })
+                    .on('mousemove', '.main-banner .slick-slide img', function(e) {
+                        // position inside the (unzoomed) frame, so the zoom follows the pointer
+                        var frame = $(this).closest('.slick-slide')[0].getBoundingClientRect();
+                        var x = ((e.clientX - frame.left) / frame.width) * 100;
+                        var y = ((e.clientY - frame.top) / frame.height) * 100;
+                        $(this).css('transform-origin', x + '% ' + y + '%');
+                    })
+                    .on('mouseleave', '.main-banner .slick-slide img', function() {
+                        $(this).css('transform', 'scale(1)');
+                    });
+            }
         });
     </script>
 @endpush

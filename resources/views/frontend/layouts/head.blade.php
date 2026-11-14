@@ -70,6 +70,32 @@
 <link rel="stylesheet" href="{{asset('public/frontend/css/responsive.css')}}">
 <link rel="shortcut icon" type="image/x-icon" href="{{asset('public/frontend/img/favicon.png')}}">
 <style>
+    /* Header: less empty space on desktop (phones and tablets keep their own layout) */
+    @media only screen and (min-width: 992px) {
+        .header.shop .topbar { padding: 6px 0; }
+        .header.shop .middle-inner { padding: 8px 0; }
+        .header.shop .middle-inner .logo img { margin: -6px 0; }  /* the logo image has blank space above and below the visible logo */
+        .header.shop .search-bar-top { margin-top: 5px; }
+        .header.shop .nav li a { padding-top: 12px; padding-bottom: 12px; }
+    }
+
+    /* Header wishlist / cart dropdowns when they are empty */
+    .header .shopping-list li.mini-empty {
+        display: block;
+        padding: 18px 10px;
+        border: 0;
+        text-align: center;
+        font-size: 14px;
+        color: #777;
+    }
+
+    .header .shopping-list li.mini-empty i {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 28px;
+        color: #5db845;
+    }
+
     /* Multilevel dropdown */
     .dropdown-submenu {
     position: relative;

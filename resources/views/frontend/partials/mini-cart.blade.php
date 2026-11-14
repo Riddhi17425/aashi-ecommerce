@@ -22,6 +22,9 @@
             </h4>
         </li>
     @empty
-        <li style="border:none; text-align:center; padding:10px 0;">Your cart is empty.</li>
+        <li class="mini-empty">
+            <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+            <span>Your cart is empty</span>
+        </li>
     @endforelse
 </ul>

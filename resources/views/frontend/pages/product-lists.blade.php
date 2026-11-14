@@ -231,6 +231,13 @@
                     <!-- 4 Cards Per Row Grid -->
                     <div class="row">
                         @if ($products)
+                            @php
+                                // Products already in this visitor's wishlist (guests are tracked by their session)
+                                $wishlistRows = App\Models\Wishlist::whereNull('cart_id')
+                                    ->whereIn('product_id', $products->pluck('id'))
+                                    ->where(Auth::check() ? 'user_id' : 'session_id', Auth::check() ? Auth::id() : session()->getId())
+                                    ->get(['product_id', 'color_id']);
+                            @endphp
                             @foreach ($products as $product)
                                 @php
                                     $productPrice = 0;
@@ -263,6 +270,7 @@
                                     }
                                     $whishlist_check = $whishlist_check->first();
                                     $wishlisted = $whishlist_check ? 'active' : '';
+                                    $inWishlist = $wishlistRows->where('product_id', $product->id)->where('color_id', $defaultColorId)->isNotEmpty();
                                 @endphp
 
                                 <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4">
@@ -284,6 +292,14 @@
                                                 <div class="card-left-badges">
                                                     <span class="card-badge-tag badge-hot">Out of Stock</span>
                                                 </div>
+                                            @endif
+                                            @if ($product->stock > 0)
+                                                <button type="button" class="card-wishlist-btn {{ $inWishlist ? 'active' : '' }}"
+                                                    data-slug="{{ $product->slug }}" data-color-id="{{ $defaultColorId }}"
+                                                    title="{{ $inWishlist ? 'Remove from wishlist' : 'Add to wishlist' }}"
+                                                    aria-label="Wishlist" aria-pressed="{{ $inWishlist ? 'true' : 'false' }}">
+                                                    <i class="fa {{ $inWishlist ? 'fa-heart' : 'fa-heart-o' }}" aria-hidden="true"></i>
+                                                </button>
                                             @endif
                                         </div>
 
@@ -1188,6 +1204,58 @@
             opacity: 0.45;
             pointer-events: none;
         }
+        /* Less empty space at the top of the list page (tablets and desktops; phones keep their own spacing) */
+        @media only screen and (min-width: 768px) {
+            .breadcrumbs {
+                padding: 14px 0;
+            }
+
+            section.product-area.pt-4 {
+                padding-top: 14px !important;
+            }
+
+            .shop-top-bar-custom {
+                margin-bottom: 12px;
+            }
+
+            .shop-list .list-content {
+                margin-top: 16px;
+            }
+        }
+        /* Wishlist heart on the product cards */
+        .card-wishlist-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 3;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: #fff;
+            color: #555;
+            font-size: 17px;
+            line-height: 36px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+            cursor: pointer;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .card-wishlist-btn:hover {
+            transform: scale(1.1);
+            color: #e53935;
+        }
+
+        .card-wishlist-btn.active {
+            color: #e53935;
+        }
+
+        .card-wishlist-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
     </style>
 @endpush
 @push('scripts')
@@ -1334,5 +1402,45 @@
                 }
             });
         });
+    </script>
+    <script>
+        // Wishlist heart on the product cards: adds / removes the product without a page reload (works without login too)
+        $(document).on('click', '.card-wishlist-btn', function() {
+            var btn = $(this);
+            btn.prop('disabled', true);
+
+            $.ajax({
+                url: "{{ url('wishlist') }}/" + btn.data('slug'),
+                method: 'GET',
+                data: { color_id: btn.data('color-id') },
+                success: function(response) {
+                    if (response.status) {
+                        btn.toggleClass('active', response.wishlisted);
+                        btn.attr('aria-pressed', response.wishlisted ? 'true' : 'false');
+                        btn.attr('title', response.wishlisted ? 'Remove from wishlist' : 'Add to wishlist');
+                        btn.find('i').toggleClass('fa-heart', response.wishlisted).toggleClass('fa-heart-o', !response.wishlisted);
+
+                        // header: wishlist count and the small wishlist list (the route is defined by the header)
+                        $('.wishlist-total-count').text(response.wishlist_count);
+                        if (window.appRoutes && window.appRoutes.miniWishlist) {
+                            $.get(window.appRoutes.miniWishlist, function(html) {
+                                $('#mini-wishlist-box').html(html);
+                            });
+                        }
+                    }
+                    wishlistToast(response.status ? 'success' : 'warning', response.message);
+                },
+                error: function() {
+                    wishlistToast('error', 'Something went wrong!');
+                },
+                complete: function() {
+                    btn.prop('disabled', false);
+                }
+            });
+        });
+
+        function wishlistToast(icon, message) {
+            Swal.fire({ toast: true, position: 'top-end', icon: icon, title: message, showConfirmButton: false, timer: 2000 });
+        }
     </script>
 @endpush

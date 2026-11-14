@@ -251,7 +251,7 @@
                                         <a href="{{route('wishlist')}}">View Wishlist</a>
                                     </div>
                                     <ul class="shopping-list">
-                                            @foreach(Helper::getAllProductFromWishlist() as $data)
+                                            @forelse(Helper::getAllProductFromWishlist() as $data)
                                                     @php
                                                         $photo=explode(',',$data->product['photo']);
                                                     @endphp
@@ -266,7 +266,12 @@
                                                         </a>
                                                         <h4><a href="{{route('product-detail',$data->product['slug'])}}" target="_blank">{{$data->product['product_code']}}</a></h4>
                                                     </li>
-                                            @endforeach
+                                            @empty
+                                                    <li class="mini-empty">
+                                                        <i class="fa fa-heart-o" aria-hidden="true"></i>
+                                                        <span>Your wishlist is empty</span>
+                                                    </li>
+                                            @endforelse
                                     </ul>
                                 </div>
                             @endauth
@@ -282,7 +287,7 @@
                                         <a href="{{route('cart')}}">View Cart</a>
                                     </div>
                                     <ul class="shopping-list">
-                                            @foreach(Helper::getAllProductFromCart() as $data)
+                                            @forelse(Helper::getAllProductFromCart() as $data)
                                                     @php
                                                         $photo=explode(',',$data->product['photo']);
                                                     @endphp
@@ -302,7 +307,12 @@
                                                             @endif
                                                         </h4>
                                                     </li>
-                                            @endforeach
+                                            @empty
+                                                    <li class="mini-empty">
+                                                        <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+                                                        <span>Your cart is empty</span>
+                                                    </li>
+                                            @endforelse
                                     </ul>
                                 </div>
                             @endauth

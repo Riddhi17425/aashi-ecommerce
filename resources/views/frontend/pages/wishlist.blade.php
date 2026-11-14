@@ -36,7 +36,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Helper::getAllProductFromWishlist())
+                            @if (Helper::getAllProductFromWishlist()->count() > 0)
                                 @foreach (Helper::getAllProductFromWishlist() as $key => $wishlist)
                                     @php
                                         $photo = explode(',', $wishlist->product['photo']);
@@ -82,11 +82,9 @@
                                     </tr>
                                 @endforeach
                             @else
-                                <tr>
-                                    <td class="text-center">
-                                        There are no any wishlist available. <a href="{{ route('product-grids') }}"
-                                            style="color:blue;">Continue shopping</a>
-
+                                <tr class="empty-wishlist-row">
+                                    <td class="text-center" colspan="5">
+                                        @include('frontend.partials.empty-wishlist')
                                     </td>
                                 </tr>
                             @endif
@@ -101,16 +99,11 @@
     </div>
     <!--/ End Shopping Cart -->
 
-    <!-- Start Shop Services Area  -->
-    <section class="shop-services section mb-3">
-        <div class="container">
-            <div class="row">
-            </div>
-        </div>
-    </section>
-    <!-- End Shop Newsletter -->
 
 @endsection
+@push('styles')
+    @include('frontend.partials.empty-state-styles')
+@endpush
 @push('scripts')
 <script src="{{ asset('public/frontend/js/sweetalert.min.js') }}"></script>
 <script>

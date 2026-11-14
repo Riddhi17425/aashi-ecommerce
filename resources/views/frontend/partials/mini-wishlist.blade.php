@@ -17,6 +17,9 @@
             <h4><a href="{{ route('product-detail', $data->product['slug']) }}" target="_blank">{{ $data->product['product_code'] }}</a></h4>
         </li>
     @empty
-        <li style="border:none; text-align:center; padding:10px 0;">Your wishlist is empty.</li>
+        <li class="mini-empty">
+            <i class="fa fa-heart-o" aria-hidden="true"></i>
+            <span>Your wishlist is empty</span>
+        </li>
     @endforelse
 </ul>
