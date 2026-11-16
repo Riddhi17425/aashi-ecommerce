@@ -24,7 +24,7 @@
                                     <li><a href="{{ route('productlist-with-sub', [$product_detail->cat_info->slug, $product_detail->sub_cat_info->slug]) }}">{{ $product_detail->sub_cat_info->title }}<i class="ti-arrow-right"></i></a></li>
                                 @endif
                             @endif
-                            <li class="active"><a href="">{{ $product_detail->title }}</a></li>
+                            <li class="active"><span>{{ $product_detail->title }}</span></li>
                         </ul>
                     </div>
                 </div>
@@ -313,13 +313,13 @@
                                                         Buy Now
                                                     </button>
                                                 @else
-                                                    <button type="button" class="btn" disabled>Out of Stock</button>
+                                                    <button type="button" class="btn out-of-stock-btn" disabled><i class="fa fa-ban" aria-hidden="true"></i> Out of Stock</button>
                                                     {{-- Out of stock: visitor can leave an email to be notified --}}
-                                                    <form action="{{ route('product.notify-me', $product_detail->slug) }}" method="POST" class="mt-3">
+                                                    <form action="{{ route('product.notify-me', $product_detail->slug) }}" method="POST" class="mt-3 notify-form">
                                                         @csrf
-                                                        <label for="notify-email"><small>Get an email when this product is back in stock</small></label>
+                                                        <label for="notify-email"><i class="fa fa-bell-o" aria-hidden="true"></i> Get an email when this product is back in stock</label>
                                                         <div class="d-flex">
-                                                            <input type="email" id="notify-email" name="email" class="form-control mr-2" placeholder="Your email" required maxlength="191">
+                                                            <input type="email" id="notify-email" name="email" class="form-control mr-2" placeholder="Enter your email" required maxlength="191">
                                                             <button type="submit" class="btn">Notify Me</button>
                                                         </div>
                                                     </form>
@@ -363,10 +363,232 @@
                                                     <b>View Size Chart</b>
                                                 </a></p>
                                         @endif
-                                        @if ($product_detail->product_features)
-                                            <p class="cat mb-2"> <b style="font-size:20px;">Features :</b>
-                                                {!! $product_detail->product_features !!}</p>
-                                        @endif
+                                        <div class="product-accordion">
+                                            <div id="accordion" class="custom-accordion">
+                                                    @if ($product_detail->product_features)
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                <button class="btn btn-link" data-toggle="collapse"
+                                                                    data-target="#collapseFeatures">
+                                                                    <i class="fa fa-list-ul accordion-left-icon"></i>
+                                                                    Features
+                                                                    <span class="plus-minus">
+                                                                        <i class="fa fa-plus"></i>
+                                                                        <i class="fa fa-minus"></i>
+                                                                    </span>
+                                                                </button>
+                                                            </div>
+                                                            <div id="collapseFeatures" class="collapse show"
+                                                                data-parent="#accordion">
+                                                                <div class="card-body product-features">
+                                                                    {!! $product_detail->product_features !!}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                    @php $productName = strtolower($product_detail->product_code); @endphp
+                                                    @if (!in_array($productName, ['apt poncho', 'apn poncho', 'jlpc-101', 'rlpc-104']))
+                                                        @if ($product_detail->cat_info->slug == 'rainwear')
+                                                            <div class="card">
+                                                                <div class="card-header">
+                                                                    <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                        data-target="#collapseOne">
+                                                                        <i
+                                                                            class="fa fa-arrows-alt accordion-left-icon"></i>
+                                                                        Size Guide
+                                                                        <span class="plus-minus">
+                                                                            <span class="fa fa-plus"></span>
+                                                                            <span class="fa fa-minus"></span>
+                                                                        </span>
+                                                                    </button>
+                                                                </div>
+                                                                <div id="collapseOne" class="collapse"
+                                                                    data-parent="#accordion">
+                                                                    <div class="card-body">
+                                                                        <ul>
+                                                                            <li>Choose a raincoat that is one size larger
+                                                                                than your regular shirt size for a
+                                                                                comfortable fit.</li>
+                                                                            <li>If you plan to wear a backpack inside the
+                                                                                raincoat, we recommend choosing two sizes
+                                                                                larger. (Do not Put this on APT, APN, JLPC,
+                                                                                RLPC code)</li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    @endif
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseTwo">
+                                                                <i class="fa fa-truck accordion-left-icon"></i>
+                                                                Shipping Instructions
+                                                                <span class="plus-minus">
+                                                                    <i class=" fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseTwo" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Orders are usually processed within 24–48 hours
+                                                                        after confirmation.</li>
+                                                                    <li>Delivery timelines may vary depending on your
+                                                                        location and courier availability</li>
+                                                                    <li>Please provide a complete and accurate shipping
+                                                                        address with a valid contact number.</li>
+                                                                    <li>Delivery timelines may be affected due to bad
+                                                                        weather conditions or unforeseen courier delays.
+                                                                    </li>
+                                                                    <li>Once your order is shipped, tracking details
+                                                                        will be shared via SMS or email.</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseThree">
+                                                                <i class="fa fa-exchange accordion-left-icon"></i>
+                                                                7-Day Easy Exchange
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseThree" class="collapse"
+                                                            data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Free Exchange Available.</li>
+                                                                    <li>Request an exchange within 7 days of delivery.
+                                                                    </li>
+                                                                    <li>Exchange is not applicable on free products or
+                                                                        promotional items.</li>
+                                                                    <li>Only one-time exchange is allowed per order.
+                                                                    </li>
+                                                                    <li>If you receive a wrong product, please share an
+                                                                        images of the Product for verification.</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseFour">
+                                                                <i class="fa fa-refresh accordion-left-icon"></i>
+                                                                7-Day Easy Return & Refund
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseFour" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>We offer a 7-day return policy for eligible
+                                                                        products.</li>
+                                                                    <li>To be eligible for a return, the product must be
+                                                                        unused and in its original condition and
+                                                                        packaging.</li>
+                                                                    <li>Returns cannot be initiated before the product
+                                                                        is delivered.</li>
+                                                                    <li>Refunds will be processed to the original
+                                                                        payment method after the returned item is
+                                                                        received and verified.</li>
+                                                                    <li>For Cash on Delivery (COD) orders, customers
+                                                                        will be required to provide bank account details
+                                                                        for refund processing.</li>
+                                                                    <li>Refunds are usually initiated within 2–4 working
+                                                                        days after receiving the returned product.</li>
+                                                                    <li>If you receive a wrong product, please share an
+                                                                        images of the Product for verification purposes.
+                                                                    </li>
+                                                                    <li>In case your pin code is not serviceable for
+                                                                        reverse pickup, you may be required to self-ship
+                                                                        the product.</li>
+                                                                    <li>Please do not accept the package if it appears
+                                                                        tampered with or damaged.</li>
+                                                                    <li>Do not share the OTP (One-Time Password) with
+                                                                        the delivery partner unless you have received
+                                                                        the package</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseFive">
+                                                                <i class="fa fa-tint accordion-left-icon"></i>
+                                                                Wash & Care Instructions
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseFive" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>Clean the product using running water.</li>
+                                                                    <li>Do not iron the garment.</li>
+                                                                    <li>Do not tumble dry.</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseSix">
+                                                                <i class="fa fa-globe accordion-left-icon"></i>
+                                                                Country Origin
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseSix" class="collapse" data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>India</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                                                data-target="#collapseSeven">
+                                                                <i class="fa fa-industry accordion-left-icon"></i>
+                                                                Manufactured and Marketed By
+                                                                <span class="plus-minus">
+                                                                    <i class="fa fa-plus"></i>
+                                                                    <i class="fa fa-minus"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div id="collapseSeven" class="collapse"
+                                                            data-parent="#accordion">
+                                                            <div class="card-body">
+                                                                <ul>
+                                                                    <li>NEW AASHI RAINWEAR, 843/2, NIDHI IND ESTATE,
+                                                                        RAKANPUR, Gandhinagar, Gujarat, 382721</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -659,285 +881,83 @@
                 </div>
     </section> --}}
 
-    <section class="shop single pt-0 pb-5">
+    <section class="shop single pt-0 pb-5 product-lower">
         <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <div class="product-info mt-0">
-                        <div class="nav-main">
-                            <ul class="nav nav-tabs" id="myTab" role="tablist">
-                                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#description"
-                                        role="tab">Description</a></li>
-                                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#reviews"
-                                        role="tab">Reviews</a></li>
-                            </ul>
+            @if (trim(strip_tags($product_detail->description)) !== '')
+                <div class="product-description">
+                    <h3 class="pr-title">Product Description</h3>
+                    <div class="pr-description">{!! $product_detail->description !!}</div>
+                </div>
+            @endif
+
+            {{-- Customer reviews: summary (average + bars) on the left, review cards on the right --}}
+            @php
+                $reviews = $product_detail->getReview;
+                $reviewTotal = $reviews->count();
+                $reviewAvg = $reviewTotal > 0 ? round($reviews->avg('rate'), 1) : 0;
+            @endphp
+            <div class="product-reviews" id="reviews">
+                <h3 class="pr-title">Customer Reviews</h3>
+                @if ($reviewTotal > 0)
+                    <div class="pr-grid">
+                        <div class="pr-summary">
+                            <div class="pr-average">{{ number_format($reviewAvg, 1) }}</div>
+                            <div class="pr-stars" aria-label="{{ $reviewAvg }} out of 5">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <i class="fa {{ $reviewAvg >= $i ? 'fa-star' : ($reviewAvg >= $i - 0.5 ? 'fa-star-half-o' : 'fa-star-o') }}"></i>
+                                @endfor
+                            </div>
+                            <div class="pr-based">Based on {{ $reviewTotal }} {{ $reviewTotal == 1 ? 'review' : 'reviews' }}</div>
+                            <div class="pr-bars">
+                                @for ($star = 5; $star >= 1; $star--)
+                                    @php
+                                        $starCount = $reviews->filter(fn($r) => (int) round($r->rate) === $star)->count();
+                                        $starPercent = round(($starCount / $reviewTotal) * 100);
+                                    @endphp
+                                    <div class="pr-bar-row">
+                                        <span class="pr-bar-label">{{ $star }} <i class="fa fa-star"></i></span>
+                                        <span class="pr-bar"><span style="width: {{ $starPercent }}%"></span></span>
+                                        <span class="pr-bar-count">{{ $starCount }}</span>
+                                    </div>
+                                @endfor
+                            </div>
                         </div>
-                        <div class="tab-content" id="myTabContent">
-                            <div class="tab-pane fade show active" id="description" role="tabpanel">
-                                <div class="tab-single">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="single-des">
-                                                <p>{!! $product_detail->description !!}</p>
-                                                <div id="accordion" class="custom-accordion mt-4">
-                                                    @php $productName = strtolower($product_detail->product_code); @endphp
-                                                    @if (!in_array($productName, ['apt poncho', 'apn poncho', 'jlpc-101', 'rlpc-104']))
-                                                        @if ($product_detail->cat_info->slug == 'rainwear')
-                                                            <div class="card">
-                                                                <div class="card-header">
-                                                                    <button class="btn btn-link" data-toggle="collapse"
-                                                                        data-target="#collapseOne">
-                                                                        <i
-                                                                            class="fa fa-arrows-alt accordion-left-icon"></i>
-                                                                        Size Guide
-                                                                        <span class="plus-minus">
-                                                                            <span class="fa fa-plus"></span>
-                                                                            <span class="fa fa-minus"></span>
-                                                                        </span>
-                                                                    </button>
-                                                                </div>
-                                                                <div id="collapseOne" class="collapse show"
-                                                                    data-parent="#accordion">
-                                                                    <div class="card-body">
-                                                                        <ul>
-                                                                            <li>Choose a raincoat that is one size larger
-                                                                                than your regular shirt size for a
-                                                                                comfortable fit.</li>
-                                                                            <li>If you plan to wear a backpack inside the
-                                                                                raincoat, we recommend choosing two sizes
-                                                                                larger. (Do not Put this on APT, APN, JLPC,
-                                                                                RLPC code)</li>
-                                                                        </ul>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        @endif
-                                                    @endif
-                                                    <div class="card">
-                                                        <div class="card-header">
-                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
-                                                                data-target="#collapseTwo">
-                                                                <i class="fa fa-truck accordion-left-icon"></i>
-                                                                Shipping Instructions
-                                                                <span class="plus-minus">
-                                                                    <i class=" fa fa-plus"></i>
-                                                                    <i class="fa fa-minus"></i>
-                                                                </span>
-                                                            </button>
-                                                        </div>
-                                                        <div id="collapseTwo" class="collapse" data-parent="#accordion">
-                                                            <div class="card-body">
-                                                                <ul>
-                                                                    <li>Orders are usually processed within 24–48 hours
-                                                                        after confirmation.</li>
-                                                                    <li>Delivery timelines may vary depending on your
-                                                                        location and courier availability</li>
-                                                                    <li>Please provide a complete and accurate shipping
-                                                                        address with a valid contact number.</li>
-                                                                    <li>Delivery timelines may be affected due to bad
-                                                                        weather conditions or unforeseen courier delays.
-                                                                    </li>
-                                                                    <li>Once your order is shipped, tracking details
-                                                                        will be shared via SMS or email.</li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card">
-                                                        <div class="card-header">
-                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
-                                                                data-target="#collapseThree">
-                                                                <i class="fa fa-exchange accordion-left-icon"></i>
-                                                                7-Day Easy Exchange
-                                                                <span class="plus-minus">
-                                                                    <i class="fa fa-plus"></i>
-                                                                    <i class="fa fa-minus"></i>
-                                                                </span>
-                                                            </button>
-                                                        </div>
-                                                        <div id="collapseThree" class="collapse"
-                                                            data-parent="#accordion">
-                                                            <div class="card-body">
-                                                                <ul>
-                                                                    <li>Free Exchange Available.</li>
-                                                                    <li>Request an exchange within 7 days of delivery.
-                                                                    </li>
-                                                                    <li>Exchange is not applicable on free products or
-                                                                        promotional items.</li>
-                                                                    <li>Only one-time exchange is allowed per order.
-                                                                    </li>
-                                                                    <li>If you receive a wrong product, please share an
-                                                                        images of the Product for verification.</li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card">
-                                                        <div class="card-header">
-                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
-                                                                data-target="#collapseFour">
-                                                                <i class="fa fa-refresh accordion-left-icon"></i>
-                                                                7-Day Easy Return & Refund
-                                                                <span class="plus-minus">
-                                                                    <i class="fa fa-plus"></i>
-                                                                    <i class="fa fa-minus"></i>
-                                                                </span>
-                                                            </button>
-                                                        </div>
-                                                        <div id="collapseFour" class="collapse" data-parent="#accordion">
-                                                            <div class="card-body">
-                                                                <ul>
-                                                                    <li>We offer a 7-day return policy for eligible
-                                                                        products.</li>
-                                                                    <li>To be eligible for a return, the product must be
-                                                                        unused and in its original condition and
-                                                                        packaging.</li>
-                                                                    <li>Returns cannot be initiated before the product
-                                                                        is delivered.</li>
-                                                                    <li>Refunds will be processed to the original
-                                                                        payment method after the returned item is
-                                                                        received and verified.</li>
-                                                                    <li>For Cash on Delivery (COD) orders, customers
-                                                                        will be required to provide bank account details
-                                                                        for refund processing.</li>
-                                                                    <li>Refunds are usually initiated within 2–4 working
-                                                                        days after receiving the returned product.</li>
-                                                                    <li>If you receive a wrong product, please share an
-                                                                        images of the Product for verification purposes.
-                                                                    </li>
-                                                                    <li>In case your pin code is not serviceable for
-                                                                        reverse pickup, you may be required to self-ship
-                                                                        the product.</li>
-                                                                    <li>Please do not accept the package if it appears
-                                                                        tampered with or damaged.</li>
-                                                                    <li>Do not share the OTP (One-Time Password) with
-                                                                        the delivery partner unless you have received
-                                                                        the package</li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card">
-                                                        <div class="card-header">
-                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
-                                                                data-target="#collapseFive">
-                                                                <i class="fa fa-tint accordion-left-icon"></i>
-                                                                Wash & Care Instructions
-                                                                <span class="plus-minus">
-                                                                    <i class="fa fa-plus"></i>
-                                                                    <i class="fa fa-minus"></i>
-                                                                </span>
-                                                            </button>
-                                                        </div>
-                                                        <div id="collapseFive" class="collapse" data-parent="#accordion">
-                                                            <div class="card-body">
-                                                                <ul>
-                                                                    <li>Clean the product using running water.</li>
-                                                                    <li>Do not iron the garment.</li>
-                                                                    <li>Do not tumble dry.</li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card">
-                                                        <div class="card-header">
-                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
-                                                                data-target="#collapseSix">
-                                                                <i class="fa fa-globe accordion-left-icon"></i>
-                                                                Country Origin
-                                                                <span class="plus-minus">
-                                                                    <i class="fa fa-plus"></i>
-                                                                    <i class="fa fa-minus"></i>
-                                                                </span>
-                                                            </button>
-                                                        </div>
-                                                        <div id="collapseSix" class="collapse" data-parent="#accordion">
-                                                            <div class="card-body">
-                                                                <ul>
-                                                                    <li>India</li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card">
-                                                        <div class="card-header">
-                                                            <button class="btn btn-link collapsed" data-toggle="collapse"
-                                                                data-target="#collapseSeven">
-                                                                <i class="fa fa-industry accordion-left-icon"></i>
-                                                                Manufactured and Marketed By
-                                                                <span class="plus-minus">
-                                                                    <i class="fa fa-plus"></i>
-                                                                    <i class="fa fa-minus"></i>
-                                                                </span>
-                                                            </button>
-                                                        </div>
-                                                        <div id="collapseSeven" class="collapse"
-                                                            data-parent="#accordion">
-                                                            <div class="card-body">
-                                                                <ul>
-                                                                    <li>NEW AASHI RAINWEAR, 843/2, NIDHI IND ESTATE,
-                                                                        RAKANPUR, Gandhinagar, Gujarat, 382721</li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                        <div class="pr-list">
+                            @foreach ($reviews as $data)
+                                <div class="pr-card">
+                                    <div class="pr-card-head">
+                                        @if ($data->user_info['photo'])
+                                            <img src="{{ asset('public/' . $data->user_info['photo']) }}" alt="{{ $data->user_info['name'] ?? 'Customer' }}">
+                                        @else
+                                            {{-- no photo: first letters of the first and last name --}}
+                                            @php
+                                                $nameParts = preg_split('/\s+/', trim($data->user_info['name'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+                                                $initials = $nameParts
+                                                    ? mb_strtoupper(mb_substr($nameParts[0], 0, 1) . (count($nameParts) > 1 ? mb_substr(end($nameParts), 0, 1) : ''))
+                                                    : '?';
+                                            @endphp
+                                            <span class="pr-avatar" aria-hidden="true">{{ $initials }}</span>
+                                        @endif
+                                        <div class="pr-card-who">
+                                            <strong>{{ $data->user_info['name'] ?? '' }}</strong>
+                                            @if ($data->created_at)
+                                                <small>{{ $data->created_at->format('d M Y') }}</small>
+                                            @endif
+                                        </div>
+                                        <div class="pr-stars pr-stars-sm" aria-label="{{ $data->rate }} out of 5">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i class="fa {{ $data->rate >= $i ? 'fa-star' : 'fa-star-o' }}"></i>
+                                            @endfor
                                         </div>
                                     </div>
+                                    <p class="pr-card-text">{{ $data->review }}</p>
                                 </div>
-                            </div>
-                            <div class="tab-pane fade" id="reviews" role="tabpanel">
-                                <div class="tab-single review-panel">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="ratting-main">
-                                                <div class="avg-ratting">
-                                                    <h4>{{ ceil($product_detail->getReview->avg('rate')) }}
-                                                        <span>(Overall)</span>
-                                                    </h4>
-                                                    <span>Based on {{ $product_detail->getReview->count() }}
-                                                        Comments</span>
-                                                </div>
-                                                @foreach ($product_detail['getReview'] as $data)
-                                                    <div class="single-rating">
-                                                        <div class="rating-author">
-                                                            @if ($data->user_info['photo'])
-                                                                <img src="{{ asset('public/' . $data->user_info['photo']) }}"
-                                                                    alt="{{ $data->user_info['photo'] }}">
-                                                            @else
-                                                                <img src="{{ asset('public/backend/img/avatar.png') }}"
-                                                                    alt="Profile.jpg">
-                                                            @endif
-                                                        </div>
-                                                        <div class="rating-des">
-                                                            <h6>{{ $data->user_info['name'] ?? '' }}</h6>
-                                                            <div class="ratings">
-                                                                <ul class="rating">
-                                                                    @for ($i = 1; $i <= 5; $i++)
-                                                                        @if ($data->rate >= $i)
-                                                                            <li><i class="fa fa-star"></i></li>
-                                                                        @else
-                                                                            <li><i class="fa fa-star-o"></i></li>
-                                                                        @endif
-                                                                    @endfor
-                                                                </ul>
-                                                                <div class="rate-count">
-                                                                    (<span>{{ $data->rate }}</span>)
-                                                                </div>
-                                                            </div>
-                                                            <p>{{ $data->review }}</p>
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
-                </div>
+                @else
+                    <p class="pr-empty">No reviews yet for this product.</p>
+                @endif
             </div>
         </div>
     </section>
@@ -959,70 +979,84 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="owl-carousel popular-slider">
+                            @php
+                                // Related products already in this visitor's wishlist (guests are tracked by their session)
+                                $relatedWishlistRows = App\Models\Wishlist::whereNull('cart_id')
+                                    ->whereIn('product_id', $product_detail->rel_prods->pluck('id'))
+                                    ->where(Auth::check() ? 'user_id' : 'session_id', Auth::check() ? Auth::id() : session()->getId())
+                                    ->get(['product_id', 'color_id']);
+                            @endphp
                             @foreach ($product_detail->rel_prods as $data)
                                 @if ($data->id !== $product_detail->id)
-                                    <!-- Start Single Product -->
-                                    <div class="single-product">
-                                        <div class="product-img">
-                                            <a href="{{ route('product-detail', $data->slug) }}">
-                                                @php
-                                                    $photo = explode(',', $data->photo);
-                                                @endphp
-                                                <img class="default-img" src="{{ asset('public' . $photo[0]) }}"
-                                                    alt="{{ $data->title }}">
-                                                <img class="hover-img" src="{{ asset('public' . $photo[0]) }}"
-                                                    alt="{{ $data->title }}">
-                                                @if ($data->discount > 0)
-                                                    <span class="price-dec">{{ $data->discount }} % Off</span>
-                                                @endif
-                                            </a>
-                                            <div class="button-head">
-                                                <div class="product-action">
-                                                    <a title="Wishlist" href="#"><i
-                                                            class=" ti-heart "></i><span>Add to Wishlist</span></a>
-                                                    <a title="Compare" href="#"><i
-                                                            class="ti-bar-chart-alt"></i><span>Add to Compare</span></a>
-                                                </div>
-                                                <div class="product-action-2">
-                                                    <a title="Add to cart" href="#">Add to cart</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="product-content">
-                                            <h3>
-                                                <a
-                                                    href="{{ route('product-detail', $data->slug) }}">{{ $data->product_code }}</a>
-                                            </h3>
-                                            <div class="product-price">
-                                                @php
-                                                    $sizes = json_decode($data->size);
-                                                    $priceArr = $sizes->price;
-                                                    $productPrice = 0;
-                                                    foreach ($priceArr as $k => $v) {
-                                                        $productPrice = $v;
-                                                    }
-                                                    $after_discount =
-                                                        $productPrice - ($productPrice * $data->discount) / 100;
-                                                    $sizeData = json_decode($data->size, true);
-                                                @endphp
-                                                @if (isset($data->discount) && $data->discount > 0)
-                                                    <span class="old">
-                                                        @if (isset($data->price) && $data->price != null)
-                                                            ₹{{ number_format($data->price, 2) }}
-                                                        @else
-                                                            ₹{{ number_format($sizeData['price'][0], 2) }}
-                                                        @endif
-                                                    </span>
-                                                    <span>₹{{ number_format($after_discount, 2) }}</span>
+                                    @php
+                                        $decoded = json_decode($data->size, true);
+                                        $relPrice = is_array($decoded) && isset($decoded['price']) ? ($decoded['price'][0] ?? 0) : ($data->price ?? 0);
+                                        $relFinal = $relPrice - ($relPrice * ($data->discount ?? 0)) / 100;
+                                        $relPhoto = explode(',', $data->photo);
+                                        $relColorId = $data->color->first()->id ?? null;
+                                        $relInWishlist = $relatedWishlistRows->where('product_id', $data->id)->where('color_id', $relColorId)->isNotEmpty();
+                                        $relReviewCount = $data->getReview->count();
+                                        $relRate = $relReviewCount > 0 ? round($data->getReview->avg('rate'), 1) : 0;
+                                    @endphp
+                                    <!-- Start Single Product (same card as the product list page) -->
+                                    <div class="related-card">
+                                        <div class="custom-product-card">
+                                            <div class="card-media-wrap">
+                                                <a href="{{ route('product-detail', $data->slug) }}" class="card-img-link">
+                                                    <img class="card-default-img" src="{{ asset('public' . $relPhoto[0]) }}"
+                                                        alt="{{ $data->title }}" loading="lazy">
+                                                    @if (isset($relPhoto[1]))
+                                                        <img class="card-hover-img" src="{{ asset('public' . $relPhoto[1]) }}"
+                                                            alt="{{ $data->title }}" loading="lazy">
+                                                    @endif
+                                                </a>
+                                                @if ($data->stock <= 0)
+                                                    <div class="card-left-badges">
+                                                        <span class="card-badge-tag badge-hot">Out of Stock</span>
+                                                    </div>
                                                 @else
-                                                    <span>
-                                                        @if (isset($data->price) && $data->price != null)
-                                                            ₹{{ number_format($data->price, 2) }}
-                                                        @else
-                                                            ₹{{ number_format($sizeData['price'][0], 2) }}
-                                                        @endif
-                                                    </span>
+                                                    <button type="button" class="card-wishlist-btn {{ $relInWishlist ? 'active' : '' }}"
+                                                        data-slug="{{ $data->slug }}" data-color-id="{{ $relColorId }}"
+                                                        title="{{ $relInWishlist ? 'Remove from wishlist' : 'Add to wishlist' }}"
+                                                        aria-label="Wishlist" aria-pressed="{{ $relInWishlist ? 'true' : 'false' }}">
+                                                        <i class="fa {{ $relInWishlist ? 'fa-heart' : 'fa-heart-o' }}" aria-hidden="true"></i>
+                                                    </button>
                                                 @endif
+                                            </div>
+                                            <div class="card-content-wrap">
+                                                <div class="card-meta-line d-flex justify-content-between align-items-center">
+                                                    <span class="card-cat-name">
+                                                        <a href="{{ route('product-detail', $data->slug) }}">{{ $data->product_code }}</a>
+                                                    </span>
+                                                    @if ($relReviewCount > 0)
+                                                        <div class="card-rating-inline">
+                                                            <span>{{ number_format($relRate, 1) }}</span>
+                                                            <i class="fa fa-star"></i>
+                                                            <span>| {{ $relReviewCount }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <h4 class="card-item-title">
+                                                    <a href="{{ route('product-detail', $data->slug) }}" title="{{ $data->title }}">
+                                                        {!! html_entity_decode($data->title) !!}
+                                                    </a>
+                                                </h4>
+                                                <div class="product-price my-2">
+                                                    @if (!empty($data->discount))
+                                                        <small class="original-price" style="font-size: 11px;">
+                                                            <del class="text-muted">₹{{ number_format($relPrice, 2) }}</del>
+                                                        </small>
+                                                    @endif
+                                                    <span class="final-price font-weight-bold" style="color: #0f172a; font-size: 15px;">
+                                                        ₹{{ number_format(!empty($data->discount) ? $relFinal : $relPrice, 2) }}
+                                                    </span>
+                                                </div>
+                                                <div class="card-cta-container">
+                                                    <a href="{{ route('product-detail', $data->slug) }}" class="btn-card-details">
+                                                        <span>View Details</span>
+                                                        <i class="ti-arrow-right"></i>
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1627,7 +1661,7 @@
         }
 
         .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p:has(> .View-Size-Chart),
-        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:has(+ p.cat.mb-2) {
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > p.cat:has(+ .product-accordion) {
             border-radius: 0 10px 10px 0;
         }
 
@@ -1662,6 +1696,638 @@
             margin: 0;
         }
 
+        /* ===== Tighter spacing in the top part of the details; colour and size share one row (they wrap on narrow screens) ===== */
+        .shop.single .product-des .short p.price {
+            margin-top: 8px;
+        }
+
+        .shop.single .product-des .color.mt-4,
+        .shop.single .product-des .size.mt-4 {
+            display: inline-block;
+            vertical-align: bottom;
+            margin: 8px 40px 0 0 !important;
+        }
+
+        .shop.single .product-des .color ul,
+        .shop.single .product-des .size ul {
+            min-height: 34px;
+            align-items: flex-start;
+            margin-top: 6px;
+        }
+
+        .shop.single .product-des .color h4 span {
+            margin-top: 2px;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper {
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+
+        /* ===== Price | rating on one line, smaller "Available Options", quantity lined up with the buttons ===== */
+        .shop.single .product-des .short > .rating-main > ul.rating {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            width: auto;
+            height: auto;
+        }
+
+        .shop.single .product-des .short > .rating-main > ul.rating > p.price {
+            order: -1;
+            margin: 0;
+            padding-right: 16px;
+            border-right: 1px solid #d9d9d9;
+        }
+
+        .shop.single .product-des .short > .rating-main > ul.rating > p.price:only-child {
+            padding-right: 0;
+            border-right: 0;
+        }
+
+        .shop.single .product-des .color h4 {
+            font-size: 15px;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .quantity.mt-3 {
+            margin-top: 0 !important;
+        }
+
+        /* ===== Accordion under the buttons (Features, size guide, shipping ...) ===== */
+        .shop.single .product-des .short > div:has(> #add-to-cart-wrapper) > .product-accordion {
+            flex: 0 0 100%;
+            margin-top: 16px;
+        }
+
+        .product-accordion .card {
+            margin-bottom: 8px;
+            border: 1px solid #e8efe5;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: none;
+        }
+
+        .product-accordion .card-header {
+            padding: 0;
+            border: 0;
+            background: #f8fbf6;
+        }
+
+        .product-accordion .card-header .btn {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .product-accordion .card-body {
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .product-accordion .card-body ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .product-accordion .product-features p {
+            margin: 0 0 6px;
+        }
+
+        /* ===== Description + customer reviews (below the product) ===== */
+        .product-lower {
+            padding-top: 10px;
+        }
+
+        .pr-title {
+            margin: 0 0 16px;
+            font-size: 22px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        .product-description {
+            margin-bottom: 30px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .pr-description {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .pr-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .pr-summary {
+            padding: 24px;
+            border: 1px solid #e8efe5;
+            border-radius: 14px;
+            background: #f8fbf6;
+            text-align: center;
+        }
+
+        .pr-average {
+            font-size: 52px;
+            font-weight: 700;
+            line-height: 1;
+            color: #222;
+        }
+
+        .pr-stars {
+            margin: 8px 0 4px;
+            color: #f7941d;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        .pr-stars-sm {
+            margin: 0;
+            font-size: 13px;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .pr-based {
+            font-size: 14px;
+            color: #777;
+        }
+
+        .pr-bars {
+            margin-top: 18px;
+        }
+
+        .pr-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .pr-bar-label {
+            flex: 0 0 34px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .pr-bar-label i {
+            color: #f7941d;
+            font-size: 11px;
+        }
+
+        .pr-bar {
+            flex: 1;
+            height: 8px;
+            border-radius: 8px;
+            background: #e5e5e5;
+            overflow: hidden;
+        }
+
+        .pr-bar span {
+            display: block;
+            height: 100%;
+            border-radius: 8px;
+            background: #5db845;
+        }
+
+        .pr-bar-count {
+            flex: 0 0 24px;
+            text-align: right;
+        }
+
+        .pr-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .pr-card {
+            padding: 18px 20px;
+            border: 1px solid #ececec;
+            border-radius: 14px;
+            background: #fff;
+            transition: box-shadow 0.25s ease;
+        }
+
+        .pr-card:hover {
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.07);
+        }
+
+        .pr-card-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .pr-card-head img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .pr-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 42px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5db845, #3f9a2c);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .pr-card-who {
+            flex: 1;
+            min-width: 0;
+            line-height: 1.3;
+        }
+
+        .pr-card-who strong {
+            display: block;
+            font-size: 15px;
+            color: #222;
+        }
+
+        .pr-card-who small {
+            color: #999;
+        }
+
+        .pr-card-text {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .pr-empty {
+            color: #777;
+        }
+
+        @media only screen and (max-width: 767px) {
+            .pr-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .pr-card-head {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* accordion: lighter, smaller version of the theme look (it only applies to the one under the buttons) */
+        .product-accordion .custom-accordion .btn-link {
+            padding: 12px 16px;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .product-accordion .custom-accordion .accordion-left-icon {
+            font-size: 15px;
+        }
+
+        .product-accordion .custom-accordion .btn-link:not(.collapsed) {
+            background: #eef8ea;
+            color: #2f7a1f;
+        }
+
+        .product-accordion .custom-accordion .btn-link:not(.collapsed) .accordion-left-icon {
+            color: #3f9a2c;
+        }
+
+        .product-accordion .custom-accordion .card {
+            margin-bottom: 8px;
+        }
+
+        .product-accordion .custom-accordion .card-body {
+            padding: 12px 16px;
+            line-height: 1.7;
+        }
+
+        /* breadcrumb: the product you are on stands out from the links before it */
+        .breadcrumbs .bread-list li.active span {
+            color: #3f9a2c;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        /* smaller headings for the description and review blocks */
+        .pr-title {
+            position: relative;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e3eedf;
+            font-size: 18px;
+            color: #3f9a2c;
+        }
+
+        /* short theme-colour accent over the separator line */
+        .pr-title::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -1px;
+            width: 60px;
+            height: 3px;
+            border-radius: 3px;
+            background: #5db845;
+        }
+
+        /* ===== Out of stock: a tidy card with the status and the "notify me" form ===== */
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) {
+            display: block;
+            flex: 0 0 100%;
+            padding: 14px 16px;
+            border: 1px solid #f0e1e1;
+            border-radius: 12px;
+            background: #fffafa;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) .out-of-stock-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 30px;
+            line-height: 30px;
+            padding: 0 14px;
+            border: 0;
+            border-radius: 30px;
+            background: #fde8e8;
+            color: #c0392b;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 1;
+            cursor: default;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) .notify-form {
+            margin-top: 12px !important;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) .notify-form label {
+            display: block;
+            margin: 0 0 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) .notify-form label i {
+            margin-right: 4px;
+            color: #3f9a2c;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) .notify-form .form-control {
+            flex: 1;
+            height: 40px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) .notify-form .btn {
+            height: 40px;
+            line-height: 38px;
+            padding: 0 22px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #5db845, #3f9a2c);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        @media only screen and (max-width: 480px) {
+            .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) .notify-form .d-flex {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .shop.single .product-des #add-to-cart-wrapper .add-to-cart:has(.out-of-stock-btn) .notify-form .form-control {
+                flex: 0 0 100%;
+                margin-right: 0 !important;
+            }
+        }
+
+        /* ===== Related products: same card as the product list page ===== */
+        .related-card {
+            padding: 4px 4px 10px;
+        }
+
+        .related-product .custom-product-card {
+            background: #fff;
+            border: 1px solid #e8edf2;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .related-product .custom-product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.09);
+            border-color: #cbd5e1;
+        }
+
+        .related-product .card-media-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background: #f8fafc;
+            overflow: hidden;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .related-product .card-img-link {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .related-product .card-default-img,
+        .related-product .card-hover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            display: block;
+            transition: transform 0.4s ease, opacity 0.35s ease;
+        }
+
+        .related-product .card-hover-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+        }
+
+        .related-product .custom-product-card:hover .card-default-img {
+            transform: scale(1.05);
+        }
+
+        .related-product .custom-product-card:hover .card-hover-img {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .related-product .card-left-badges {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 3;
+        }
+
+        .related-product .card-badge-tag.badge-hot {
+            background: #e11d48;
+            color: #fff;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .related-product .card-content-wrap {
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .related-product .card-meta-line {
+            margin-bottom: 4px;
+            height: 26px;
+            overflow: hidden;
+        }
+
+        .related-product .card-cat-name a {
+            color: #5db845;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .related-product .card-rating-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 7px;
+            border-radius: 6px;
+            background: #f7941d;
+            color: #fff;
+            font-size: 11px;
+        }
+
+        .related-product .card-rating-inline i {
+            font-size: 10px;
+        }
+
+        .related-product .card-item-title {
+            margin: 4px 0 6px;
+            height: 2.7em;
+            font-size: 13.5px;
+            font-weight: 700;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .related-product .card-item-title a {
+            color: #1e293b;
+            text-decoration: none !important;
+            transition: color 0.2s ease;
+        }
+
+        .related-product .card-item-title a:hover {
+            color: #5db845;
+        }
+
+        .related-product .btn-card-details {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 8px 12px;
+            background: #111827;
+            color: #fff !important;
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none !important;
+            transition: all 0.25s ease;
+        }
+
+        .related-product .btn-card-details:hover {
+            background: #5db845;
+            box-shadow: 0 4px 12px rgba(93, 184, 69, 0.35);
+        }
+
+        .related-product .btn-card-details i {
+            font-size: 11px;
+            transition: transform 0.2s ease;
+        }
+
+        .related-product .btn-card-details:hover i {
+            transform: translateX(4px);
+        }
+
+        /* wishlist heart on the cards */
+        .related-product .card-wishlist-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 3;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: #fff;
+            color: #555;
+            font-size: 17px;
+            line-height: 36px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+            cursor: pointer;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .related-product .card-wishlist-btn:hover {
+            transform: scale(1.1);
+            color: #e53935;
+        }
+
+        .related-product .card-wishlist-btn.active {
+            color: #e53935;
+        }
+
+        .related-product .card-wishlist-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
         /* Product title is an H1 (SEO) - same look as the old H4 */
         .shop.single .product-des .short h1 {
             font-size: 22px;
@@ -2628,6 +3294,37 @@
                 }, { passive: false });
             }
 
+            // Wishlist heart on the related product cards: adds / removes without a page reload (works without login too)
+            $(document).on('click', '.related-product .card-wishlist-btn', function() {
+                var btn = $(this);
+                btn.prop('disabled', true);
+                $.ajax({
+                    url: "{{ url('wishlist') }}/" + btn.data('slug'),
+                    method: 'GET',
+                    data: { color_id: btn.data('color-id') },
+                    success: function(response) {
+                        if (response.status) {
+                            btn.toggleClass('active', response.wishlisted);
+                            btn.attr('aria-pressed', response.wishlisted ? 'true' : 'false');
+                            btn.attr('title', response.wishlisted ? 'Remove from wishlist' : 'Add to wishlist');
+                            btn.find('i').toggleClass('fa-heart', response.wishlisted).toggleClass('fa-heart-o', !response.wishlisted);
+                            $('.wishlist-total-count').text(response.wishlist_count);
+                            if (window.appRoutes && window.appRoutes.miniWishlist) {
+                                $.get(window.appRoutes.miniWishlist, function(html) {
+                                    $('#mini-wishlist-box').html(html);
+                                });
+                            }
+                        }
+                        Swal.fire({ toast: true, position: 'top-end', icon: response.status ? 'success' : 'warning', title: response.message, showConfirmButton: false, timer: 2000 });
+                    },
+                    error: function() {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Something went wrong!', showConfirmButton: false, timer: 2000 });
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false);
+                    }
+                });
+            });
             // Size chart panel: mark the page while it is open (used by the CSS above)
             $('#sizeChartModal')
                 .on('show.bs.modal', function() { $('body').addClass('size-chart-open'); })
