@@ -288,8 +288,7 @@ class SeoMeta
     // Canonical URL for list pages: the clean base URL, plus ?page=N only for page 2 and above.
     public static function listCanonical($baseUrl, $page)
     {
-        $page = (int) $page;
-
-        return $page > 1 ? $baseUrl . '?page=' . $page : $baseUrl;
+        // Canonical must never carry query params (e.g. ?page=2).
+        return strtok($baseUrl, '?');
     }
 }

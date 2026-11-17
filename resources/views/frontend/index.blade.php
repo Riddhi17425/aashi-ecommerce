@@ -1046,7 +1046,31 @@ select,
     </style>
 @endpush
 
+<script type="application/ld+json">
+{
+ "@@context": "https://schema.org",
+ "@type": "Organization",
+ "name": "Aashi Rainwear",
+ "alternateName": "Aashi Retail",
+ "url": "https://aashiretail.com/",
+ "logo": "https://aashiretail.com/public/storage/photos/1/40478835614.svg",
+ "contactPoint": {
+   "@type": "ContactPoint",
+   "telephone": "+91 85119 85585",
+   "contactType": "technical support",
+   "areaServed": "IN",
+   "availableLanguage": "en"
+ },
+ "sameAs": [
+ "https://www.facebook.com/aashigroupofcompanies",
+ "https://www.instagram.com/aashi_rainwear_official/",
+ "https://www.youtube.com/@newaashirainwear2779",
+ "https://in.linkedin.com/company/aashigroup/"
+ ]
+}
+</script>
 @push('scripts')
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
     <script>
         $(document).ready(function() {

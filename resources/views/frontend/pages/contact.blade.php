@@ -91,7 +91,11 @@
 									<i class="fa fa-envelope-open"></i>
 									<h4 class="title">Email:</h4>
 									<ul>
-										<li><a href="mailto:info@yourwebsite.com">@foreach($settings as $data) {{$data->email}} @endforeach</a></li>
+										@foreach($settings as $data)
+											<li>
+												<a href="mailto:{{ $data->email }}">{{ $data->email }}</a>
+											</li>
+										@endforeach
 									</ul>
 								</div>
 								<div class="single-info">

@@ -63,7 +63,7 @@ class FrontendController extends Controller
                 ->with('meta_description', $meta_description)
                 ->with('canonical_url', route('home'))
                 ->with('schemas', [
-                    SeoMeta::organizationSchema(Settings::first()),
+                    // Organization schema is hardcoded in frontend/index.blade.php (home page only).
                     SeoMeta::websiteSchema(),
                 ])
                 ->with('featured',$featured)
