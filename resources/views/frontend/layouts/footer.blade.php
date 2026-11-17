@@ -40,7 +40,9 @@
 							</div>
 							
 							<p class="text">@foreach($settings as $data) {!! $data->short_des !!} @endforeach</p>
-							<p class="call">Got Question? Call us 24/7<span><a href="tel:123456789">@foreach($settings as $data) {{$data->phone}} @endforeach</a></span></p>
+							<p class="call">Got Question? Call us 24/7<span>@foreach($settings as $data)
+    <a href="tel:{{ $data->phone }}">{{ $data->phone }}</a>
+@endforeach</span></p>
 						</div>
 						<!-- End Single Widget -->
 					</div>
