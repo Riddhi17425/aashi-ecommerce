@@ -1543,7 +1543,7 @@ Version:1.0
 	position:relative;
 }
 .small-banner .single-banner img{
-	height:100%;
+	/* height:100%; */
 	width:100%;
 	-webkit-transition:all 0.4s ease;
 	-moz-transition:all 0.4s ease;
@@ -5110,5 +5110,6 @@ Version:1.0
 	}
 
 		
-h t m l   {   o v e r f l o w - y :   s c r o l l   ! i m p o r t a n t ;   }  
+h t m l   {   o v e r f l o w - y :   s c r o l l   ! i m p o r t a n t ;   } 
+ 
  
