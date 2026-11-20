@@ -1006,7 +1006,10 @@ select,
             }
 
             #Gslider .carousel-inner img {
-                height: 100%;
+                height: auto;
+            }
+            #Gslider .carousel-indicators{
+                bottom: 10px;
             }
         }
 

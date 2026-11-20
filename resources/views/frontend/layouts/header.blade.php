@@ -20,7 +20,7 @@
                             </li>
                             <li><i class="ti-email"></i> 
                                 @foreach($settings as $data) 
-                                    <a href="mailto:{{ $data->email }}">
+                                    <a href="mailto:{{ $data->email }}" target="_blank">
                                         {{ $data->email }}
                                     </a>
                                 @endforeach
