@@ -36,6 +36,14 @@ class Category extends Model
     public function sub_products(){
         return $this->hasMany('App\Models\Product','child_cat_id','id')->where('status','active')->where('is_featured','0');
     }
+    // Menu helper: does this category (parent) have any active product? Same rule as the category page.
+    public function hasActiveProducts(){
+        return Product::where('status','active')->where('cat_id',$this->id)->exists();
+    }
+    // Menu helper: does this sub category have any active product? Same rule as the sub category page.
+    public function hasActiveSubProducts(){
+        return Product::where('status','active')->where('child_cat_id',$this->id)->exists();
+    }
     public static function getProductByCat($slug){
         // dd($slug);
         return Category::with('products')->where('slug',$slug)->first();

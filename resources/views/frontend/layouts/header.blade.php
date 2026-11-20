@@ -365,14 +365,21 @@
                                         
                                             @if($menuCategory)
                                                 @foreach($menuCategory as $cat)
+                                                    @php
+                                                        // Hide sub categories (and the parent) from the menu when they have no active products
+                                                        $menuSubCats = $cat->child_cat->filter(function ($sub) { return $sub->hasActiveSubProducts(); });
+                                                    @endphp
+                                                    @if(!$cat->hasActiveProducts() && $menuSubCats->count() == 0)
+                                                        @continue
+                                                    @endif
                                                     <li class="{{Request::path()=='product-cat' ? 'active' : ''}}"><a href="{{route('productlist',$cat->slug)}}">{{ $cat->title }}</a>
-                                                        @if($cat->child_cat->count()>0)
+                                                        @if($menuSubCats->count()>0)
                                                         <ul class="dropdown border-0 shadow">
-                                                            
-                                                                @foreach($cat->child_cat as $cat_sub_menu)
+
+                                                                @foreach($menuSubCats as $cat_sub_menu)
                                                                     <li><a href="{{route('productlist', $cat_sub_menu->slug); }}">{{$cat_sub_menu->title; }}</a></li>
                                                                 @endforeach
-                                                            
+
                                                         </ul>
                                                         @endif
                                                     </li>									
