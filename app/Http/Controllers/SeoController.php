@@ -14,51 +14,51 @@ use App\Models\Product;
 class SeoController extends Controller
 {
     // robots.txt - allow public pages, block private pages and action URLs.
-    public function robots()
-    {
-        $lines = [
-            'User-agent: *',
+    // public function robots()
+    // {
+    //     $lines = [
+    //         'User-agent: *',
 
-            // Private pages
-            'Disallow: /cart',
-            'Disallow: /checkout',
-            'Disallow: /wishlist',
-            'Disallow: /my-orders',
-            'Disallow: /order',
-            'Disallow: /thank-you',
-            'Disallow: /user/',
-            'Disallow: /admin',
-            'Disallow: /password/',
-            'Disallow: /forgot-password',
+    //         // Private pages
+    //         'Disallow: /cart',
+    //         'Disallow: /checkout',
+    //         'Disallow: /wishlist',
+    //         'Disallow: /my-orders',
+    //         'Disallow: /order',
+    //         'Disallow: /thank-you',
+    //         'Disallow: /user/',
+    //         'Disallow: /admin',
+    //         'Disallow: /password/',
+    //         'Disallow: /forgot-password',
 
-            // Payment and other action URLs
-            'Disallow: /razorpay/',
-            'Disallow: /payment',
-            'Disallow: /cancel',
-            'Disallow: /add-to-cart',
-            'Disallow: /coupon',
-            'Disallow: /header/',
-            'Disallow: /laravel-filemanager',
-            'Disallow: /cache-clear',
-            'Disallow: /storage-link',
-            'Disallow: /testgst',
-            'Disallow: /email-preview',
-            'Disallow: /income',
+    //         // Payment and other action URLs
+    //         'Disallow: /razorpay/',
+    //         'Disallow: /payment',
+    //         'Disallow: /cancel',
+    //         'Disallow: /add-to-cart',
+    //         'Disallow: /coupon',
+    //         'Disallow: /header/',
+    //         'Disallow: /laravel-filemanager',
+    //         'Disallow: /cache-clear',
+    //         'Disallow: /storage-link',
+    //         'Disallow: /testgst',
+    //         'Disallow: /email-preview',
+    //         'Disallow: /income',
 
-            // Search and tracking pages
-            'Disallow: /product/search',
-            'Disallow: /product/track',
-            'Disallow: /blog/search',
+    //         // Search and tracking pages
+    //         'Disallow: /product/search',
+    //         'Disallow: /product/track',
+    //         'Disallow: /blog/search',
 
-            // CSS, JS, images and /public/storage are not blocked on purpose.
+    //         // CSS, JS, images and /public/storage are not blocked on purpose.
 
-            '',
-            'Sitemap: ' . url('/sitemap.xml'),
-        ];
+    //         '',
+    //         'Sitemap: ' . url('/sitemap.xml'),
+    //     ];
 
-        return response(implode("\n", $lines) . "\n", 200)
-            ->header('Content-Type', 'text/plain; charset=UTF-8');
-    }
+    //     return response(implode("\n", $lines) . "\n", 200)
+    //         ->header('Content-Type', 'text/plain; charset=UTF-8');
+    // }
 
     // sitemap.xml - only public, active pages.
     public function sitemap()
@@ -123,8 +123,18 @@ class SeoController extends Controller
             ];
         }
 
-        return response()
-            ->view('sitemap', ['urls' => $urls])
-            ->header('Content-Type', 'application/xml; charset=UTF-8');
+        // Built as a plain string (not Blade) so view caching / short_open_tag can't break the XML header.
+        $xml = '<' . '?xml version="1.0" encoding="UTF-8"?' . ">\n"
+            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        foreach ($urls as $url) {
+            $xml .= "    <url>\n        <loc>" . htmlspecialchars($url['loc'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n";
+            if ($url['lastmod']) {
+                $xml .= '        <lastmod>' . $url['lastmod']->toAtomString() . "</lastmod>\n";
+            }
+            $xml .= "    </url>\n";
+        }
+        $xml .= "</urlset>\n";
+
+        return response($xml, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 }

@@ -12,7 +12,7 @@
     use App\Http\Controllers\ProductReviewController;
     use App\Http\Controllers\PostCommentController;
     use App\Http\Controllers\CouponController;
-    use App\Http\Controllers\PayPalController;
+    use App\Http\Controllers\PaypalController;
     use App\Http\Controllers\NotificationController;
     use App\Http\Controllers\DelhiveryController;
     use App\Http\Controllers\HomeController;
@@ -92,7 +92,7 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::post('/product-detail/{slug}/notify-me', [\App\Http\Controllers\StockNotificationController::class, 'store'])->middleware('throttle:10,1')->name('product.notify-me');
 
     // SEO files
-    Route::get('/robots.txt', [\App\Http\Controllers\SeoController::class, 'robots'])->name('seo.robots');
+    // Route::get('/robots.txt', [\App\Http\Controllers\SeoController::class, 'robots'])->name('seo.robots');
     Route::get('/sitemap.xml', [\App\Http\Controllers\SeoController::class, 'sitemap'])->name('seo.sitemap');
 
     Route::get('/home', [FrontendController::class, 'index']);
@@ -197,9 +197,9 @@ Route::get('/product-list/{slug}/{sub_slug}', [FrontendController::class, 'showP
     Route::post('/coupon-store', [CouponController::class, 'couponStore'])->name('coupon-store');
     Route::post('/coupon/remove', [CouponController::class, 'couponRemove'])->name('coupon-remove');
 // Payment
-    Route::get('payment', [PayPalController::class, 'payment'])->name('payment');
-    Route::get('cancel', [PayPalController::class, 'cancel'])->name('payment.cancel');
-    Route::get('payment/success', [PayPalController::class, 'success'])->name('payment.success');
+    Route::get('payment', [PaypalController::class, 'payment'])->name('payment');
+    Route::get('cancel', [PaypalController::class, 'cancel'])->name('payment.cancel');
+    Route::get('payment/success', [PaypalController::class, 'success'])->name('payment.success');
 
 
 // Backend section start
