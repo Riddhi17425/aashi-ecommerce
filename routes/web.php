@@ -99,12 +99,12 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::get('/about-us', [FrontendController::class, 'aboutUs'])->name('about-us');
     Route::get('/contact', [FrontendController::class, 'contact'])->name('contact');
     Route::post('/contact/message', [MessageController::class, 'store'])->name('contact.store');
-    Route::get('product-detail/{slug}', [FrontendController::class, 'productDetail'])->name('product-detail');
+    Route::get('product/{slug}', [FrontendController::class, 'productDetail'])->name('product-detail');
     Route::get('/product/search', [FrontendController::class, 'productSearch'])->name('product.search');
     Route::get('/product/search-suggestions', [FrontendController::class, 'searchSuggestions'])->name('product.search.suggestions');
     Route::get('/product-cat/{slug}', [FrontendController::class, 'productCat'])->name('product-cat');
     Route::get('/product-sub-cat/{slug}/{sub_slug}', [FrontendController::class, 'productSubCat'])->name('product-sub-cat');
-    Route::get('/product-brand/{slug}', [FrontendController::class, 'productBrand'])->name('product-brand');
+    Route::get('/brands/{slug}', [FrontendController::class, 'productBrand'])->name('product-brand');
     Route::get('/get-products', [FrontendController::class, 'getProducts'])->name('get-products');
     Route::get('/filter-products', [FrontendController::class, 'filterProducts'])->name('filter-products');
 
@@ -164,8 +164,8 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::get('/income', [OrderController::class, 'incomeChart'])->name('product.order.income');
     Route::get('/product-grids/{slug?}', [FrontendController::class, 'productGrids'])->name('product-grids');
     Route::get('/product-subgrids/{slug}/{sub_slug}', [FrontendController::class, 'productSubGrids'])->name('product-subgrids');
-    Route::get('/product-lists', [FrontendController::class, 'productLists'])->name('product-lists');
-    Route::get('/product-list/{slug}', [FrontendController::class, 'showProductList'])->name('productlist');
+    Route::get('/collections', [FrontendController::class, 'productLists'])->name('product-lists');
+    Route::get('/collections/{slug}', [FrontendController::class, 'showProductList'])->name('productlist');
 Route::get('/product-list/{slug}/{sub_slug}', [FrontendController::class, 'showProductList'])->name('productlist-with-sub');
 
     Route::match(['get', 'post'], '/filter', [FrontendController::class, 'productFilter'])->name('shop.filter');

@@ -56,57 +56,67 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $slug = Str::slug($request->title);
-        $validator = Validator::make(array_merge($request->all(), ['slug' => $slug]), [
-            'title' => 'string|required',
-            'summary' => 'string|nullable',
-            'status' => 'required|in:active,inactive',
-            'gst' => 'required_if:is_parent,1',
+        $titleSlug  = Str::slug($request->title);
+        $manualSlug = $request->filled('slug') ? Str::slug($request->slug) : null;
+    
+        $validator = Validator::make(array_merge($request->all(), ['slug' => $manualSlug]), [
+            'title'     => 'string|required',
+            'summary'   => 'string|nullable',
+            'status'    => 'required|in:active,inactive',
+            'gst'       => 'required_if:is_parent,1',
             'is_parent' => 'sometimes|in:1',
             'parent_id' => 'nullable|exists:categories,id|required_unless:is_parent,1',
-            
             'slug'      => [
-                'required',
-                Rule::unique('categories')->whereNull('deleted_at')->where('is_parent', 1),
+                'nullable', 'string', 'max:255',
+                Rule::unique('categories', 'slug')->whereNull('deleted_at'),
             ],
         ], [
-            'gst.required_if' => 'GST percent is required if This is a Parent Categor.',
+            'gst.required_if'           => 'GST percent is required if This is a Parent Categor.',
             'parent_id.required_unless' => 'Child category is required if this is not a parent category.',
-            'parent_id.exists' => 'The selected parent category is invalid.',
-            
-            'slug.unique'              => 'Category title already exists.',
+            'parent_id.exists'          => 'The selected parent category is invalid.',
+            'slug.unique'               => 'This slug is already in use. Please choose another.',
         ]);
+    
+        // Keep the existing "parent title must be unique" rule
+        $validator->after(function ($validator) use ($titleSlug, $manualSlug) {
+            if (!$manualSlug && Category::where('slug', $titleSlug)
+                    ->whereNull('deleted_at')->where('is_parent', 1)->exists()) {
+                $validator->errors()->add('title', 'Category title already exists.');
+            }
+        });
+    
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
-        
-        $data= $request->all();
+    
+        $data = $request->all();
         $data['faq'] = $this->faqJson($request);
-        if($request->hasFile('photo') && $request->file('photo')->isValid()){
-            $imageName = mt_rand(10000000000,99999999999).'.'.$request->photo->extension();
+    
+        if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+            $imageName = mt_rand(10000000000, 99999999999) . '.' . $request->photo->extension();
             $request->photo->move(public_path('storage/photos/1/Category'), $imageName);
-            $data['photo'] = '/storage/photos/1/Category/'.$imageName;
+            $data['photo'] = '/storage/photos/1/Category/' . $imageName;
         }
-        $slug=Str::slug($request->title);
-        $count=Category::where('slug',$slug)->count();
-        if($count>0){
-            $slug=$slug.'-'.date('ymdis').'-'.rand(0,999);
+    
+        // Slug: manual if given, otherwise auto from title
+        if ($manualSlug) {
+            $slug = $manualSlug;
+        } else {
+            $slug = $titleSlug;
+            if (Category::where('slug', $slug)->count() > 0) {
+                $slug = $slug . '-' . date('ymdis') . '-' . rand(0, 999);
+            }
         }
-        $data['slug']=$slug;
-        $data['is_parent']=$request->input('is_parent',0);
-        // return $data;   
-        $status=Category::create($data);
-        if($status){
-            request()->session()->flash('success','Category successfully added');
-        }
-        else{
-            request()->session()->flash('error','Error occurred, Please try again!');
+        $data['slug'] = $slug;
+        $data['is_parent'] = $request->input('is_parent', 0);
+    
+        $status = Category::create($data);
+        if ($status) {
+            request()->session()->flash('success', 'Category successfully added');
+        } else {
+            request()->session()->flash('error', 'Error occurred, Please try again!');
         }
         return redirect()->route('category.index');
-
-
     }
 
     /**
@@ -135,56 +145,58 @@ class CategoryController extends Controller
 
     public function update(Request $request, $id)
     {
-        $slug = Str::slug($request->title);
-        $category=Category::findOrFail($id);
-        $validator = Validator::make($request->all(), [
-            'title' => 'string|required',
-            'summary' => 'string|nullable',
-            'status' => 'required|in:active,inactive',
+        $category   = Category::findOrFail($id);
+        $titleSlug  = Str::slug($request->title);
+        $manualSlug = $request->filled('slug') ? Str::slug($request->slug) : null;
+    
+        $validator = Validator::make(array_merge($request->all(), ['slug' => $manualSlug]), [
+            'title'     => 'string|required',
+            'summary'   => 'string|nullable',
+            'status'    => 'required|in:active,inactive',
             'is_parent' => 'sometimes|in:1',
-            'gst' => 'required_if:is_parent,1',
-            'parent_id' => 'nullable|exists:categories,id|required_unless:is_parent,1'
-            
+            'gst'       => 'required_if:is_parent,1',
+            'parent_id' => 'nullable|exists:categories,id|required_unless:is_parent,1',
+            'slug'      => [
+                'nullable', 'string', 'max:255',
+                Rule::unique('categories', 'slug')->ignore($category->id)->whereNull('deleted_at'),
+            ],
         ], [
-            //'slug.unique'              => 'Category title already exists.',
-            'gst.required_if' => 'GST percent is required if This is a Parent Categor.',
+            'gst.required_if'           => 'GST percent is required if This is a Parent Categor.',
             'parent_id.required_unless' => 'Child category is required if this is not a parent category.',
-            'parent_id.exists' => 'The selected parent category is invalid.',
+            'parent_id.exists'          => 'The selected parent category is invalid.',
+            'slug.unique'               => 'This slug is already in use. Please choose another.',
         ]);
-        
-        // Add manual slug validation
-        $validator->after(function ($validator) use ($slug, $category) {
-            $exists = Category::where('slug', $slug)
-                ->whereNull('deleted_at')->where('is_parent', 1)
-                ->where('id', '!=', $category->id)
-                ->exists();
-            if ($exists) {
+    
+        // Title-duplicate check only when no manual slug is given
+        $validator->after(function ($validator) use ($titleSlug, $manualSlug, $category) {
+            if (!$manualSlug && Category::where('slug', $titleSlug)
+                    ->whereNull('deleted_at')->where('is_parent', 1)
+                    ->where('id', '!=', $category->id)->exists()) {
                 $validator->errors()->add('title', 'Category title already exists.');
             }
         });
-
+    
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
-        
-        $data= $request->all();
+    
+        $data = $request->all();
         $data['faq'] = $this->faqJson($request);
-        if($request->hasFile('photo') && $request->file('photo')->isValid()){
-            $imageName = mt_rand(10000000000,99999999999).'.'.$request->photo->extension();
+    
+        if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+            $imageName = mt_rand(10000000000, 99999999999) . '.' . $request->photo->extension();
             $request->photo->move(public_path('storage/photos/1/Category'), $imageName);
-            $data['photo'] = '/storage/photos/1/Category/'.$imageName;
+            $data['photo'] = '/storage/photos/1/Category/' . $imageName;
         }
-        $data['is_parent']=$request->input('is_parent',0);
-        $data['slug'] = $slug;
-        // return $data;
-        $status=$category->fill($data)->save();
-        if($status){
-            request()->session()->flash('success','Category successfully updated');
-        }
-        else{
-            request()->session()->flash('error','Error occurred, Please try again!');
+    
+        $data['is_parent'] = $request->input('is_parent', 0);
+        $data['slug']      = $manualSlug ?: $titleSlug;   // manual slug wins
+    
+        $status = $category->fill($data)->save();
+        if ($status) {
+            request()->session()->flash('success', 'Category successfully updated');
+        } else {
+            request()->session()->flash('error', 'Error occurred, Please try again!');
         }
         return redirect()->route('category.index');
     }

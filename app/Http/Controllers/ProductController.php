@@ -51,41 +51,31 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $slug = Str::slug($request->product_code);
-        $validator = Validator::make(array_merge($request->all(), ['slug' => $slug]), [
+        $autoSlug   = Str::slug($request->product_code);
+        $manualSlug = $request->filled('slug') ? Str::slug($request->slug) : null;
+        $slug       = $manualSlug ?: $autoSlug;
+    
+        $validator = Validator::make(array_merge($request->all(), ['slug' => $manualSlug]), [
             'product_code'=>'string|required',
             'title'=>'string|nullable',
             'description'=>'string|nullable',
-            // 'stock'=>"nullable|numeric",
             'cat_id'=>'required|exists:categories,id',
-            // 'brand_id'=>'nullable|exists:brands,id',
             'child_cat_id'=>'nullable|exists:categories,id',
-            // 'is_featured'=>'sometimes|in:1',
             'status'=>'required|in:active,inactive',
             'condition'=>'nullable|in:default,new,hot',
             'discount'=>'nullable|numeric',
             'hsn_code' => 'nullable',
             'gst_percent' => 'required|numeric|min:0|max:100',
             'stock' => 'required|numeric',
-            
-            //'photo' => 'required|array|min:1',             // Must be an array and at least 1 file
-            //'photo.*' => 'file|mimes:jpg,jpeg,png,gif|max:2048', // Each file must be an image and max 2MB
             'size'         => 'required|array|min:1',
             'size.*'       => 'required|string|max:50',
             'price'        => 'required|array|min:1',
             'price.*'      => 'required|numeric|min:0',
-            // 'video' => 'nullable|mimes:mp4,mov,avi,wmv|max:20480', // max 20MB
-            // 'slug'      => [
-            //     'required',
-            //     Rule::unique('products')->whereNull('deleted_at'),
-            // ],
-    
+            'slug' => [
+                'nullable', 'string', 'max:255',
+                Rule::unique('products', 'slug')->whereNull('deleted_at'),
+            ],
         ],[
-            //'photo.required' => 'Please upload at least one image.',
-            //'photo.array' => 'Invalid file upload.',
-            //'photo.*.file' => 'Each uploaded file must be a valid file.',
-            //'photo.*.mimes' => 'Only jpg, jpeg, png, gif files are allowed.',
-            //'photo.*.max' => 'Each file may not be greater than 2MB.',
             'size.required'    => 'Please add at least one size.',
             'size.array'       => 'Size must be in a valid format.',
             'size.min'         => 'Please add at least one size.',
@@ -98,18 +88,17 @@ class ProductController extends Controller
             'price.*.required' => 'Price field is required.',
             'price.*.numeric'  => 'Price must be a number.',
             'price.*.min'      => 'Price must be zero or greater.',
-            
-            // 'slug.unique'              => 'Product title already exists.',
+            'slug.unique'      => 'This slug is already in use. Please choose another.',
         ]);
-        
+    
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
-
-        $count=Product::where('slug',$slug)->count();
-        
+    
+        $count = Product::where('slug', $slug)->count();
+    
         $size = $request->input('size');
         $size_price = $request->input('price');
         $setSizePrice = [
@@ -117,75 +106,72 @@ class ProductController extends Controller
             'price' => $size_price,
         ];
         $jsonData = json_encode($setSizePrice);
-
+    
         if ($request->hasFile('photo')) {
             $sheets = $request->file('photo');
             $upload_files = [];
             foreach ($sheets as $sheet) {
-                $filename = $sheet->getClientOriginalName();
                 $extension = $sheet->getClientOriginalExtension();
                 $filename = mt_rand(10000000000,99999999999) . '.' . $extension;
-                // $filename = str_replace(' ', '_', time(), $filename); // replace spaces with underscores
                 $path = public_path('storage/photos/1/Products');
                 $sheet->move($path, $filename);
                 $upload_files[]= '/storage/photos/1/Products/'.$filename;
-                
             }
             $product = [
-                'product_code' => $request->product_code, 
-                'title' => $request->title, 
-                'description' => $request->description, 
+                'product_code' => $request->product_code,
+                'title' => $request->title,
+                'description' => $request->description,
                 'product_features' => $request->product_features ?? null,
                 'size_chart' => $request->size_chart ?? null,
-                'cat_id' => $request->cat_id, 
-                'child_cat_id' => $request->child_cat_id, 
-                'discount' => $request->discount, 
+                'cat_id' => $request->cat_id,
+                'child_cat_id' => $request->child_cat_id,
+                'discount' => $request->discount,
                 'hsn_code' => $request->hsn_code,
                 'gst_percent' => $request->gst_percent,
-                'brand_id' => $request->brand_id, 
-                'condition' => $request->condition, 
-                'stock' => $request->stock, 
-                'status' => $request->status, 
-                'size' => $jsonData, 
-                'slug' => $slug, 
-                'is_featured' => $request->input('is_featured',0), 
+                'brand_id' => $request->brand_id,
+                'condition' => $request->condition,
+                'stock' => $request->stock,
+                'status' => $request->status,
+                'size' => $jsonData,
+                'slug' => $slug,
+                'is_featured' => $request->input('is_featured',0),
                 'meta_title' => $request->meta_title,
                 'meta_description' => $request->meta_description,
-                'photo' => implode(',', $upload_files), 
+                'photo' => implode(',', $upload_files),
             ];
         } else {
             $product = [
                 'product_code' => $request->product_code,
-                'title' => $request->title, 
-                'description' => $request->description, 
+                'title' => $request->title,
+                'description' => $request->description,
                 'product_features' => $request->product_features ?? null,
                 'size_chart' => $request->size_chart ?? null,
-                'cat_id' => $request->cat_id, 
-                'child_cat_id' => $request->child_cat_id, 
+                'cat_id' => $request->cat_id,
+                'child_cat_id' => $request->child_cat_id,
                 'discount' => $request->discount,
                 'hsn_code' => $request->hsn_code,
                 'gst_percent' => $request->gst_percent,
-                'brand_id' => $request->brand_id, 
-                'condition' => $request->condition, 
-                'stock' => $request->stock, 
-                'status' => $request->status, 
-                'size' => $jsonData, 
-                'slug' => $slug, 
-                'is_featured' => $request->input('is_featured',0), 
+                'brand_id' => $request->brand_id,
+                'condition' => $request->condition,
+                'stock' => $request->stock,
+                'status' => $request->status,
+                'size' => $jsonData,
+                'slug' => $slug,
+                'is_featured' => $request->input('is_featured',0),
                 'meta_title' => $request->meta_title,
                 'meta_description' => $request->meta_description,
             ];
         }
-        
-        
-        // dd($product);
-        $product=Product::create($product);
-        if($count>0){
-            $slug=$slug.'-'.$product->id;
+    
+        $product = Product::create($product);
+    
+        // Only auto-append the ID when the slug was auto-generated
+        if (!$manualSlug && $count > 0) {
+            $slug = $slug.'-'.$product->id;
             $product->slug = $slug;
             $product->save();
         }
-
+    
         foreach ($request->color_name as $index => $colorName) {
             $color = new Color();
             $color->product_id = $product->id;
@@ -205,16 +191,7 @@ class ProductController extends Controller
                 }
             }
         }
-
-        // $videoName = null;
-        // if ($request->hasFile('video')) {
-        //     $video = $request->file('video');
-        //     $videoName = time().'_'.$product->id.'_'.$video->getClientOriginalName();
-        //     $video->move(public_path('product_videos'), $videoName);
-        // }
-        // $product->video = $videoName;
-        // $product->save();
-
+    
         if($product){
             request()->session()->flash('success','Product Successfully added');
         }
@@ -222,7 +199,6 @@ class ProductController extends Controller
             request()->session()->flash('error','Please try again!!');
         }
         return redirect()->route('product.index');
-
     }
 
     /**
@@ -264,9 +240,12 @@ class ProductController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $slug = Str::slug($request->product_code);
-        $product=Product::findOrFail($id);
-        $validator = Validator::make($request->all(), [
+        $product    = Product::findOrFail($id);
+        $autoSlug   = Str::slug($request->product_code);
+        $manualSlug = $request->filled('slug') ? Str::slug($request->slug) : null;
+        $slug       = $manualSlug ?: $autoSlug;
+    
+        $validator = Validator::make(array_merge($request->all(), ['slug' => $manualSlug]), [
             'product_code'=>'string|required',
             'title'=>'string|nullable',
             'description'=>'string|nullable',
@@ -278,53 +257,36 @@ class ProductController extends Controller
             'hsn_code' => 'nullable',
             'gst_percent' => 'required|numeric|min:0|max:100',
             'stock' => 'required|numeric',
-            
             'size'         => 'required|array|min:1',
             'size.*'       => 'required|string|max:50',
             'price'        => 'required|array|min:1',
             'price.*'      => 'required|numeric|min:0',
-            //'video' => 'nullable|mimes:mp4,mov,avi,wmv|max:20480',
+            'slug' => [
+                'nullable', 'string', 'max:255',
+                Rule::unique('products', 'slug')->ignore($product->id)->whereNull('deleted_at'),
+            ],
         ],[
-            // Size messages
             'size.required'    => 'Please add at least one size.',
             'size.array'       => 'Size must be in a valid format.',
             'size.min'         => 'Please add at least one size.',
             'size.*.required'  => 'Size field is required.',
             'size.*.string'    => 'Size must be valid text.',
             'size.*.max'       => 'Size may not be greater than 50 characters.',
-    
-            // Price messages
             'price.required'   => 'Please add at least one price.',
             'price.array'      => 'Price must be in a valid format.',
             'price.min'        => 'Please add at least one price.',
             'price.*.required' => 'Price field is required.',
             'price.*.numeric'  => 'Price must be a number.',
             'price.*.min'      => 'Price must be zero or greater.',
+            'slug.unique'      => 'This slug is already in use. Please choose another.',
         ]);
-        // Add manual slug validation
-        // $validator->after(function ($validator) use ($slug, $product) {
-        //     $exists = Product::where('slug', $slug)
-        //         ->whereNull('deleted_at')
-        //         ->where('id', '!=', $product->id)
-        //         ->first();
-        //     if ($exists) {
-        //         $validator->errors()->add('title', 'Product title already exists.');
-        //     }
-        // });
+    
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
-        
-        // $checkSlug = Product::where('title',$request->title)->first();
-        // if(!$checkSlug){
-        //     $slug=Str::slug($request->title);
-        //     $productSlug = Product::find($id);
-        //     $productSlug->slug = $slug;
-        //     $productSlug->save();
-        // }
-        
+    
         $size = $request->input('size');
         $size_price = $request->input('price');
         $setSizePrice = [
@@ -332,24 +294,22 @@ class ProductController extends Controller
             'price' => $size_price,
         ];
         $jsonData = json_encode($setSizePrice);
-
-        $count=Product::where('slug',$slug)->where('id', '!=', $product->id)->count();
-        if($count>0){
-            $slug=$slug.'-'.$product->id;
+    
+        // Only auto-append the ID when the slug was auto-generated
+        $count = Product::where('slug', $slug)->where('id', '!=', $product->id)->count();
+        if (!$manualSlug && $count > 0) {
+            $slug = $slug.'-'.$product->id;
         }
-        
+    
         if ($request->hasFile('photo')) {
             $sheets = $request->file('photo');
             $upload_files = [];
             foreach ($sheets as $sheet) {
-                $filename = $sheet->getClientOriginalName();
                 $extension = $sheet->getClientOriginalExtension();
                 $filename = mt_rand(10000000000,99999999999) . '.' . $extension;
-                // $filename = str_replace(' ', '_', time(), $filename); // replace spaces with underscores
                 $path = public_path('storage/photos/1/Products');
                 $sheet->move($path, $filename);
                 $upload_files[]= '/storage/photos/1/Products/'.$filename;
-                
             }
             $product = Product::find($id);
             $product->product_code = $request->product_code;
@@ -396,17 +356,15 @@ class ProductController extends Controller
             $product->meta_description = $request->meta_description;
             $product->save();
         }
+    
         if(isset($request->color_name)){
             foreach ($request->color_name as $index => $colorName) {
-                // dd($request->color_id);
                 if (isset($request->color_id[$index])) {
-                    // Update existing color
                     $color = Color::find($request->color_id[$index]);
                     $color->color_name = $colorName;
                     $color->color_code = $request->color_code[$index];
                     $color->save();
                 } else {
-                    // Create new color
                     $color = new Color();
                     $color->product_id = $id;
                     $color->color_name = $colorName;
@@ -426,12 +384,12 @@ class ProductController extends Controller
                 }
             }
         }
+    
         if ($request->deleted_colors) {
             $deletedColorIds = explode(',', $request->deleted_colors);
             foreach ($deletedColorIds as $colorId) {
                 $color = Color::find($colorId);
                 if ($color) {
-                    // Optionally, delete associated images here as well
                     foreach ($color->images as $image) {
                         $image->delete();
                     }
@@ -439,7 +397,7 @@ class ProductController extends Controller
                 }
             }
         }
-
+    
         if ($request->has('delete_images')) {
             foreach ($request->delete_images as $imageId) {
                 $image = ProductImage::find($imageId);
@@ -448,19 +406,7 @@ class ProductController extends Controller
                 }
             }
         }
-        // if ($request->hasFile('video')) {
-        //     // Delete old video if exists
-        //     if (!empty($product->video) && file_exists(public_path('product_videos/'.$product->video))) {
-        //         unlink(public_path('product_videos/'.$product->video));
-        //     }
-        //     // Upload new video
-        //     $video = $request->file('video');
-        //     $videoName = time() . '_' . $product->id . '_' . $video->getClientOriginalName();
-        //     $video->move(public_path('product_videos'), $videoName);
-        //     $product->video = $videoName;
-        //     $product->save();
-        // }
-
+    
         if($product){
             request()->session()->flash('success','Product Successfully updated');
         }
