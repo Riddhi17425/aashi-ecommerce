@@ -63,7 +63,7 @@
                                         <ul class="child-category">
                                             @foreach ($cat_info->child_cat as $sub_menu)
                                                 <li><a
-                                                        href="{{ route('productlist-with-sub', [$cat_info->slug, $sub_menu->slug]) }}">{{ $sub_menu->title }}</a>
+                                                        href="{{ route('productlist', $sub_menu->slug) }}">{{ $sub_menu->title }}</a>
                                                 </li>
                                             @endforeach
                                         </ul>

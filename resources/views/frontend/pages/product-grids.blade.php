@@ -41,7 +41,7 @@
                                     <li><a href="{{route('productlist',$cat_info->slug)}}">{{$cat_info->title}}</a>
                                         <ul>
                                             @foreach($cat_info->child_cat as $sub_menu)
-                                                <li><a href="{{route('productlist-with-sub',[$cat_info->slug,$sub_menu->slug])}}">{{$sub_menu->title}}</a></li>
+                                                <li><a href="{{route('productlist', $sub_menu->slug)}}">{{$sub_menu->title}}</a></li>
                                             @endforeach
                                         </ul>
                                     </li>

@@ -165,8 +165,11 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::get('/product-grids/{slug?}', [FrontendController::class, 'productGrids'])->name('product-grids');
     Route::get('/product-subgrids/{slug}/{sub_slug}', [FrontendController::class, 'productSubGrids'])->name('product-subgrids');
     Route::get('/collections', [FrontendController::class, 'productLists'])->name('product-lists');
+    // Category AND sub-category pages share /collections/{slug} (slugs are unique across the categories table)
     Route::get('/collections/{slug}', [FrontendController::class, 'showProductList'])->name('productlist');
-Route::get('/product-list/{slug}/{sub_slug}', [FrontendController::class, 'showProductList'])->name('productlist-with-sub');
+    // Old two-part sub-category URLs -> 301 to /collections/{sub-category-slug}
+    Route::get('/collections/{slug}/{sub_slug}', [FrontendController::class, 'productSubCat']);
+    Route::get('/product-list/{slug}/{sub_slug}', [FrontendController::class, 'productSubCat'])->name('productlist-with-sub');
 
     Route::match(['get', 'post'], '/filter', [FrontendController::class, 'productFilter'])->name('shop.filter');
 // Order Track

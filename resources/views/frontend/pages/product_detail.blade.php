@@ -21,7 +21,7 @@
                             @if ($product_detail->cat_info)
                                 <li><a href="{{ route('productlist', $product_detail->cat_info->slug) }}">{{ $product_detail->cat_info->title }}<i class="ti-arrow-right"></i></a></li>
                                 @if ($product_detail->sub_cat_info)
-                                    <li><a href="{{ route('productlist-with-sub', [$product_detail->cat_info->slug, $product_detail->sub_cat_info->slug]) }}">{{ $product_detail->sub_cat_info->title }}<i class="ti-arrow-right"></i></a></li>
+                                    <li><a href="{{ route('productlist', $product_detail->sub_cat_info->slug) }}">{{ $product_detail->sub_cat_info->title }}<i class="ti-arrow-right"></i></a></li>
                                 @endif
                             @endif
                             <li class="active"><span>{{ $product_detail->title }}</span></li>
@@ -354,7 +354,7 @@
                                         @if ($product_detail->sub_cat_info)
                                             <p class="cat mt-1">Sub Category :
                                                 <a
-                                                    href="{{ route('productlist-with-sub', [$product_detail->cat_info['slug'], $product_detail->sub_cat_info['slug']]) }}">{{ $product_detail->sub_cat_info['title'] }}</a>
+                                                    href="{{ route('productlist', $product_detail->sub_cat_info['slug']) }}">{{ $product_detail->sub_cat_info['title'] }}</a>
                                             </p>
                                         @endif
                                         @if ($product_detail->size_chart)

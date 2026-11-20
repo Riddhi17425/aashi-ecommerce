@@ -41,7 +41,7 @@ class Helper{
                                     <?php
                                     foreach($cat_info->child_cat as $sub_menu){
                                         ?>
-                                        <li><a href="<?php echo route('product-sub-cat',[$cat_info->slug,$sub_menu->slug]); ?>"><?php echo $sub_menu->title; ?></a></li>
+                                        <li><a href="<?php echo route('productlist',$sub_menu->slug); ?>"><?php echo $sub_menu->title; ?></a></li>
                                         <?php
                                     }
                                     ?>

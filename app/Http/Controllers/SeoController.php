@@ -13,53 +13,6 @@ use App\Models\Product;
  */
 class SeoController extends Controller
 {
-    // robots.txt - allow public pages, block private pages and action URLs.
-    // public function robots()
-    // {
-    //     $lines = [
-    //         'User-agent: *',
-
-    //         // Private pages
-    //         'Disallow: /cart',
-    //         'Disallow: /checkout',
-    //         'Disallow: /wishlist',
-    //         'Disallow: /my-orders',
-    //         'Disallow: /order',
-    //         'Disallow: /thank-you',
-    //         'Disallow: /user/',
-    //         'Disallow: /admin',
-    //         'Disallow: /password/',
-    //         'Disallow: /forgot-password',
-
-    //         // Payment and other action URLs
-    //         'Disallow: /razorpay/',
-    //         'Disallow: /payment',
-    //         'Disallow: /cancel',
-    //         'Disallow: /add-to-cart',
-    //         'Disallow: /coupon',
-    //         'Disallow: /header/',
-    //         'Disallow: /laravel-filemanager',
-    //         'Disallow: /cache-clear',
-    //         'Disallow: /storage-link',
-    //         'Disallow: /testgst',
-    //         'Disallow: /email-preview',
-    //         'Disallow: /income',
-
-    //         // Search and tracking pages
-    //         'Disallow: /product/search',
-    //         'Disallow: /product/track',
-    //         'Disallow: /blog/search',
-
-    //         // CSS, JS, images and /public/storage are not blocked on purpose.
-
-    //         '',
-    //         'Sitemap: ' . url('/sitemap.xml'),
-    //     ];
-
-    //     return response(implode("\n", $lines) . "\n", 200)
-    //         ->header('Content-Type', 'text/plain; charset=UTF-8');
-    // }
-
     // sitemap.xml - only public, active pages.
     public function sitemap()
     {
@@ -88,7 +41,7 @@ class SeoController extends Controller
             $parent = $parents->get($sub->parent_id);
             if ($parent) {
                 $urls[] = [
-                    'loc' => route('productlist-with-sub', [$parent->slug, $sub->slug]),
+                    'loc' => route('productlist', $sub->slug),
                     'lastmod' => $sub->updated_at,
                 ];
             }

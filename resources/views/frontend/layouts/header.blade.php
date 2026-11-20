@@ -370,7 +370,7 @@
                                                         <ul class="dropdown border-0 shadow">
                                                             
                                                                 @foreach($cat->child_cat as $cat_sub_menu)
-                                                                    <li><a href="{{route('productlist-with-sub',[$cat->slug,$cat_sub_menu->slug]); }}">{{$cat_sub_menu->title; }}</a></li>
+                                                                    <li><a href="{{route('productlist', $cat_sub_menu->slug); }}">{{$cat_sub_menu->title; }}</a></li>
                                                                 @endforeach
                                                             
                                                         </ul>

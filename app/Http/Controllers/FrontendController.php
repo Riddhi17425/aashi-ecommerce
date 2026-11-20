@@ -121,7 +121,7 @@ class FrontendController extends Controller
         if ($product_detail->cat_info) {
             $crumbs[] = [$product_detail->cat_info->title, route('productlist', $product_detail->cat_info->slug)];
             if ($product_detail->sub_cat_info) {
-                $crumbs[] = [$product_detail->sub_cat_info->title, route('productlist-with-sub', [$product_detail->cat_info->slug, $product_detail->sub_cat_info->slug])];
+                $crumbs[] = [$product_detail->sub_cat_info->title, route('productlist', $product_detail->sub_cat_info->slug)];
             }
         }
         $crumbs[] = [$product_detail->title, $canonical_url];
@@ -209,18 +209,13 @@ class FrontendController extends Controller
         ]);
     }
 
-    public function showProductList(Request $request, $slug, $sub_slug = null)
+    // /collections/{slug} - the slug can belong to a category or a sub-category
+    public function showProductList(Request $request, $slug)
     {
-        // SEO: old sub-category slug or "?page=1" -> one 301 redirect to the clean URL
-        $new_sub_slug = $sub_slug ? (SeoMeta::OLD_SUB_CATEGORY_SLUGS[$sub_slug] ?? null) : null;
-        if ($new_sub_slug || $request->query('page') === '1') {
-            $query = $request->query();
-            if (($query['page'] ?? null) === '1') {
-                unset($query['page']);
-            }
-            $sub_slug = $new_sub_slug ?: $sub_slug;
-            $url = $sub_slug ? route('productlist-with-sub', [$slug, $sub_slug]) : route('productlist', $slug);
-            return redirect($url . ($query ? '?' . http_build_query($query) : ''), 301);
+        // SEO: "?page=1" -> one 301 redirect to the clean URL
+        if ($request->query('page') === '1') {
+            $query = $this->queryWithoutFirstPage($request);
+            return redirect(route('productlist', $slug) . ($query ? '?' . $query : ''), 301);
         }
 
         $category = Category::where('slug', $slug)->first();
@@ -233,14 +228,17 @@ class FrontendController extends Controller
         $productsQuery->where('status', 'active');
         $subcategory = null;
 
-        if ($sub_slug) {
-            $subcategory = Category::where('slug', $sub_slug)
-                            ->where('parent_id', $category->id)
-                            ->where('is_parent', 0)
-                            ->first();
-            if (!$subcategory) {
-                abort(404, 'Subcategory not found');
+        // Sub-category slug: keep the sub-category and load its parent as the category
+        if ($category->is_parent == 0) {
+            $subcategory = $category;
+            $category = Category::find($subcategory->parent_id);
+            if (!$category) {
+                abort(404, 'Category not found');
             }
+        }
+        $sub_slug = $subcategory ? $subcategory->slug : null;
+
+        if ($subcategory) {
             $productsQuery->where('child_cat_id', $subcategory->id);
         } else {
             $productsQuery->where('cat_id', $category->id);
@@ -300,7 +298,7 @@ class FrontendController extends Controller
                 'Shop ' . $category->title . ' ' . $subcategory->title . ' at Aashi Retail.'
             );
             $meta_image = SeoMeta::image($subcategory->photo ?: $category->photo);
-            $base_url = route('productlist-with-sub', [$category->slug, $subcategory->slug]);
+            $base_url = route('productlist', $subcategory->slug);
             $page_heading = $category->title . ' ' . $subcategory->title;
         } else {
             $meta_title = $category->meta_title ?: SeoMeta::title($category->title . ' for Men & Women');
@@ -556,12 +554,29 @@ class FrontendController extends Controller
         return http_build_query($query);
     }
 
-    public function productSubCat(Request $request)
+    // Old two-part sub-category URLs (/product-sub-cat/, /product-list/, /collections/{cat}/{sub})
+    // -> one 301 redirect to /collections/{sub-category-slug}
+    public function productSubCat(Request $request, $slug, $sub_slug)
     {
+        $parent = Category::where('slug', $slug)->where('is_parent', 1)->first();
+        if (!$parent) {
+            abort(404, 'Category not found');
+        }
+
+        // Match the old sub slug against the current slug, a renamed old slug, or the
+        // title (old URLs like /rainwear/men keep working after "men" is renamed in admin)
+        $old_sub_slug = SeoMeta::OLD_SUB_CATEGORY_SLUGS[$sub_slug] ?? $sub_slug;
+        $subcategory = Category::where('parent_id', $parent->id)->where('is_parent', 0)->get()
+            ->first(function ($sub) use ($sub_slug, $old_sub_slug) {
+                return in_array($sub->slug, [$sub_slug, $old_sub_slug], true)
+                    || Str::slug($sub->title) === $old_sub_slug;
+            });
+        if (!$subcategory) {
+            abort(404, 'Subcategory not found');
+        }
+
         $query = $this->queryWithoutFirstPage($request);
-        $sub_slug = SeoMeta::OLD_SUB_CATEGORY_SLUGS[$request->sub_slug] ?? $request->sub_slug;
-        $url = route('productlist-with-sub', ['slug' => $request->slug, 'sub_slug' => $sub_slug]) . ($query ? '?' . $query : '');
-        return redirect($url, 301);
+        return redirect(route('productlist', $subcategory->slug) . ($query ? '?' . $query : ''), 301);
     }
 
     public function blog(){
