@@ -54,8 +54,8 @@ class FrontendController extends Controller
         $category=Category::where('status','active')->where('is_parent',1)->orderBy('title','ASC')->get();
         // SEO: title and description built from the active category names
         $categoryNames = $category->pluck('title')->implode(', ');
-        $meta_title = Str::limit('Aashi Retail | ' . $categoryNames, 60, '...');
-        $meta_description = SeoMeta::description('', 'Shop ' . $categoryNames . ' online at Aashi Retail.');
+        $meta_title = 'Buy Rainwears, Windcheaters & Winterwears Online | Aashi Retail';
+        $meta_description = 'Shop rainwear, raincoats, winterwears, windcheaters and bags online for men and women at Aashi Retail. Explore the best collections today!';
 
         return view('frontend.index')
                 ->with('page_heading', 'Aashi Retail - ' . $categoryNames)
