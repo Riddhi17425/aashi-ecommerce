@@ -42,64 +42,76 @@
                                 @foreach (Helper::getAllProductFromCart() as $key => $cart)
                                     @php
                                         $price = json_decode($cart->size_price, true) ?? [];
+                                        $photo = explode(',', $cart->product['photo']);
                                     @endphp
 
                                     <tr id="cart-row-{{ $cart->id }}" class="cart-item-row">
-                                        @php
-                                            $photo = explode(',', $cart->product['photo']);
-                                        @endphp
                                         <td class="image" data-title="No">
                                             @if (isset($cart->color_img) && $cart->color_img != null)
                                                 <img src="{{ $cart->color_img }}" alt="{{ $cart->product['title'] }}">
                                             @else
-                                                <img src="{{ asset('public' . $photo[0]) }}"
-                                                    alt="{{ $cart->product['title'] }}">
+                                                <img src="{{ asset('public' . $photo[0]) }}" alt="{{ $cart->product['title'] }}">
                                             @endif
                                         </td>
                                         <td class="product-des" data-title="Description">
-                                            <p class="product-name"><a
-                                                    href="{{ route('product-detail', $cart->product['slug']) }}"
-                                                    target="_blank">{{ $cart->product['product_code'] }}@if (isset($cart->color_id) && $cart->color_id != null)
+                                            <p class="product-name">
+                                                <a href="{{ route('product-detail', $cart->product['slug']) }}" target="_blank">{{ $cart->product['product_code'] }}@if (isset($cart->color_id) && $cart->color_id != null)
                                                         ({{ optional($cart->color)->color_name }})
                                                     @endif
-                                                </a></p>
+                                                </a>
+                                                @if ($cart->is_gift)
+                                                    <span class="free-gift-badge">FREE GIFT</span>
+                                                @endif
+                                            </p>
                                             <p class="product-des">{!! $cart['summary'] !!}</p>
                                         </td>
-                                        <td class="price" data-title="Price"><span>{{ $price['size'] }}</span></td>
+                                        <td class="price" data-title="Price"><span>{{ $price['size'] ?? '' }}</span></td>
 
-                                        <td class="price" data-title="Price"><span class="unit-price"
-                                                data-price="{{ $cart['price'] }}">
-                                                ₹{{ number_format($cart['price'], 2) }}</span>
+                                        <td class="price" data-title="Price">
+                                            @if ($cart->is_gift)
+                                                <span class="free-text">FREE</span>
+                                            @else
+                                                <span class="unit-price" data-price="{{ $cart['price'] }}">
+                                                    ₹{{ number_format($cart['price'], 2) }}</span>
+                                            @endif
                                         </td>
+
                                         <td class="qty" data-title="Qty">
-                                            <!-- Input Order -->
-                                            <div class="input-group increment_decrement" data-cart-id="{{ $cart->id }}"
-                                                data-stock="{{ $cart->product->stock }}">
-                                                <div class="button minus">
-                                                    <button type="button" class="btn btn-primary btn-number dec_btn">
-                                                        <i class="ti-minus"></i>
-                                                    </button>
+                                            @if ($cart->is_gift)
+                                                1
+                                            @else
+                                                <div class="input-group increment_decrement" data-cart-id="{{ $cart->id }}"
+                                                    data-stock="{{ $cart->product->stock }}">
+                                                    <div class="button minus">
+                                                        <button type="button" class="btn btn-primary btn-number dec_btn">
+                                                            <i class="ti-minus"></i>
+                                                        </button>
+                                                    </div>
+                                                    <input type="text" class="input-number qty_input" data-min="1"
+                                                        data-max="100" value="{{ $cart->quantity }}" readonly>
+                                                    <div class="button plus">
+                                                        <button type="button" class="btn btn-primary btn-number inc_btn">
+                                                            <i class="ti-plus"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
-
-                                                <input type="text" class="input-number qty_input" data-min="1"
-                                                    data-max="100" value="{{ $cart->quantity }}" readonly>
-
-                                                <div class="button plus">
-                                                    <button type="button" class="btn btn-primary btn-number inc_btn">
-                                                        <i class="ti-plus"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <!--/ End Input Order -->
+                                            @endif
                                         </td>
-                                        <td class="total-amount cart_single_price" data-title="Total"><span
-                                                class="money row-total">₹{{ $cart['amount'] }}</span></td>
+
+                                        <td class="total-amount cart_single_price" data-title="Total">
+                                            @if ($cart->is_gift)
+                                                <span class="free-text">FREE</span>
+                                            @else
+                                                <span class="money row-total">₹{{ $cart['amount'] }}</span>
+                                            @endif
+                                        </td>
 
                                         <td class="action" data-title="Remove">
-                                            <a href="javascript:void(0);" class="delete-cart-item"
-                                                data-id="{{ $cart->id }}">
-                                                <i class="ti-trash remove-icon"></i>
-                                            </a>
+                                            @unless ($cart->is_gift)
+                                                <a href="javascript:void(0);" class="delete-cart-item" data-id="{{ $cart->id }}">
+                                                    <i class="ti-trash remove-icon"></i>
+                                                </a>
+                                            @endunless
                                         </td>
                                     </tr>
                                 @endforeach
@@ -148,12 +160,14 @@
                                                 </li>
                                             @endif
                                             @php
-                                                $total_amount = Helper::totalCartPrice();
+                                                $firstOrderDiscount = session()->has('coupon') ? 0 : Helper::firstOrderDiscount();
+                                                $total_amount = Helper::totalCartPrice() - $firstOrderDiscount;
                                                 if (session()->has('coupon')) {
                                                     $total_amount = $total_amount - Session::get('coupon')['value'];
                                                 }
                                                 $gstTotal = Helper::totalGstPrice();
                                             @endphp
+                                            <li class="first-order-discount" id="first-order-row" style="{{ $firstOrderDiscount > 0 ? '' : 'display:none' }}">First order discount (10%)<span>-₹{{ number_format($firstOrderDiscount, 2) }}</span></li>
                                             @if ($gstTotal > 0)
                                                 @php $total_amount += $gstTotal; @endphp
                                                 <li class="last" id="gst_amount">GST
@@ -179,7 +193,7 @@
     </div>
     <!--/ End Shopping Cart -->
 
-    <!-- Checkout Authentication Modal (HNOWW pattern) -->
+    <!-- Checkout Authentication Modal -->
     <div class="modal fade" id="checkoutAuthModal" tabindex="-1" aria-hidden="true" data-backdrop="static"
         data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
@@ -190,14 +204,14 @@
                             aria-hidden="true">&times;</span></button>
                 </div>
                 <div class="modal-body text-center">
-                    <form id="checkout-auth-form">
+                    <form id="checkout-auth-form" novalidate>
                         @csrf
 
                         <div id="step-email" class="auth-step">
                             <p>Please enter your email address to continue.</p>
                             <div class="form-group text-start">
                                 <label>Email address</label>
-                                <input type="email" name="email" id="checkout_email" class="form-control" required>
+                                <input type="email" name="email" id="checkout_email" class="form-control">
                                 <span id="error_checkout_email" class="field-error d-none"></span>
                             </div>
                             <div class="d-flex flex-column align-items-center gap-2 mt-4">
@@ -281,7 +295,7 @@
                             <div class="form-group text-start">
                                 <label>Email Address</label>
                                 <input type="email" name="register_email" id="checkout_register_email"
-                                    class="form-control" readonly>
+                                    class="form-control">
                                 <span id="error_checkout_register_email" class="field-error d-none"></span>
                             </div>
                             <div class="form-group text-start">
@@ -523,6 +537,19 @@
             margin-top: 6px;
             text-align: left;
         }
+
+        .free-gift-badge {
+            display: inline-block;
+            margin-left: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            background: #5db845;
+            padding: 2px 8px;
+            border-radius: 10px;
+            vertical-align: middle;
+        }
+        .free-text { color: #5db845; font-weight: 700; }
     </style>
 @endpush
 @push('scripts')

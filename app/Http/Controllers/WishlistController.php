@@ -5,7 +5,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Wishlist;
-use Helper;
+use Helpers;
 
 class WishlistController extends Controller
 {

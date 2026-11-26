@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Auth;
 use Illuminate\Http\Request;
+use App\Services\FreeGiftService;
 use App\Models\Product;
 use App\Models\Wishlist;
 use App\Models\Cart;
@@ -20,11 +21,25 @@ class CartController extends Controller
     /**
      * Add product to cart via AJAX (Guest + Logged-in both supported)
      */
+<<<<<<< HEAD
     public function singleAddToCart(Request $request)
     {
+=======
+
+    public function singleAddToCart(Request $request)
+    {
+        $maxPerOrder = config('shop.max_qty_per_order', 1000);
+
+        // Step 2: validate quantity format and range
+>>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
         $validator = \Validator::make($request->all(), [
-            'slug'  => 'required',
-            'quant' => 'required',
+            'slug'    => 'required',
+            'quant.1' => 'required|integer|min:1|max:' . $maxPerOrder,
+        ], [
+            'quant.1.required' => 'Please select a quantity.',
+            'quant.1.integer'  => 'Quantity must be a whole number.',
+            'quant.1.min'      => 'Quantity must be at least 1.',
+            'quant.1.max'      => "You can order a maximum of {$maxPerOrder} units of this product at a time.",
         ]);
 
         if ($validator->fails()) {
@@ -43,6 +58,7 @@ class CartController extends Controller
             ]);
         }
 
+<<<<<<< HEAD
         $qty = isset($request->quant[1]) ? (int) $request->quant[1] : 1;
 
         if ($qty < 1) {
@@ -61,12 +77,21 @@ class CartController extends Controller
         $index      = $selectedSize !== null ? array_search($selectedSize, $validSizes, true) : false;
 
         if ($index === false || !isset($sizeData['price'][$index])) {
+=======
+        $selectedSize  = $request->selected_size ?? null;
+        $selectedPrice = $request->selected_price ?? null;
+        $selectedColor = $request->selected_color ?? null;
+        $qty           = (int) $request->quant[1];
+
+        if ($product->stock <= 0) {
+>>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
             return response()->json([
                 'status'  => false,
                 'message' => 'Please select a valid size.',
             ]);
         }
 
+<<<<<<< HEAD
         if ($selectedColorId && !Color::where('product_id', $product->id)->where('id', $selectedColorId)->exists()) {
             return response()->json([
                 'status'  => false,
@@ -80,12 +105,29 @@ class CartController extends Controller
         $finalPrice    = $basePrice - ($basePrice * (float) $product->discount) / 100;
         $selectedPrice = number_format($finalPrice, 2, '.', '');
 
+=======
+        // Step 3: the largest quantity allowed in one cart line
+        $maxAllowed = min($maxPerOrder, (int) $product->stock);
+
+        // Step 4: check the quantity for a new cart line
+        if ($qty > $maxAllowed) {
+            return response()->json([
+                'status'  => false,
+                'message' => "You can order up to {$maxAllowed} units of this product.",
+            ]);
+        }
+
+>>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
         // GUEST vs LOGGED-IN
         $user_id    = Auth::check() ? Auth::id() : null;
         $session_id = Auth::check() ? null : session()->getId();
 
+<<<<<<< HEAD
         // Stock for this exact size and colour
         $available = $product->variantQuantity((string) $selectedSize, $selectedColorId);
+=======
+        $already_cart = Cart::where('order_id', null)->where('product_id', $product->id)->where('is_gift', false);
+>>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
 
         if ($available <= 0) {
             return response()->json([
@@ -111,12 +153,38 @@ class CartController extends Controller
                         ->whereJsonContains('size_price->price', $selectedPrice)
                         ->first();
 
+<<<<<<< HEAD
         if ($existing) {
             $newQty = $existing->quantity + $qty;
 
             $existing->quantity = $newQty;
             $existing->amount   = $selectedPrice * $newQty;
             $existing->save();
+=======
+        if ($already_cart) {
+            // Step 5: check the combined quantity for the existing cart line
+            $newQty = $already_cart->quantity + $qty;
+
+            if ($newQty > $maxAllowed) {
+                $canAdd = max(0, $maxAllowed - $already_cart->quantity);
+
+                return response()->json([
+                    'status'  => false,
+                    'message' => $canAdd > 0
+                        ? "You can add only {$canAdd} more unit(s) of this product."
+                        : 'You already have the maximum quantity of this product in your cart.',
+                    'data'    => [
+                        'available_stock' => $product->stock,
+                        'already_in_cart' => $already_cart->quantity,
+                    ],
+                ]);
+            }
+
+            // Step 6: save (unchanged)
+            $already_cart->quantity = $newQty;
+            $already_cart->amount   = $selectedPrice * $newQty;
+            $already_cart->save();
+>>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
 
         } else {
             $data = [
@@ -136,10 +204,23 @@ class CartController extends Controller
             $cart->save();
         }
 
+<<<<<<< HEAD
         // Calculate cart count for header badge
         $cartCount = Cart::whereNull('order_id')
             ->when($user_id, fn ($q) => $q->where('user_id', $user_id), fn ($q) => $q->where('session_id', $session_id))
             ->sum('quantity');
+=======
+        FreeGiftService::sync();
+
+        // Cart count for header badge
+        $cartCountQuery = Cart::where('order_id', null);
+        if ($user_id) {
+            $cartCountQuery->where('user_id', $user_id);
+        } else {
+            $cartCountQuery->where('session_id', $session_id);
+        }
+        $cartCount = $cartCountQuery->sum('quantity');
+>>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
 
         return response()->json([
             'status'     => true,
@@ -151,7 +232,8 @@ class CartController extends Controller
     /**
      * Update cart quantity via AJAX (Guest + Logged-in both supported)
      */
-    public function cartUpdate(Request $request){
+    public function cartUpdate(Request $request)
+    {
         if (!$request->quant) {
             return response()->json([
                 'status'  => false,
@@ -174,6 +256,9 @@ class CartController extends Controller
                     'status'  => false,
                     'message' => 'Cart item not found!',
                 ]);
+            }
+            if ($cart->is_gift) {
+                continue; // the free gift quantity can't be changed
             }
 
             // Ownership check (guest / user)
@@ -221,6 +306,8 @@ class CartController extends Controller
             $cart->save();
         }
 
+        $giftChanged = FreeGiftService::sync();
+
         /* ===============================
             RE-VALIDATE COUPON HERE
         =============================== */
@@ -256,18 +343,31 @@ class CartController extends Controller
         }
 
         return response()->json([
+<<<<<<< HEAD
             'status'      => true,
             'message'     => 'Cart updated successfully',
             'subtotal'    => Helper::totalCartPrice(),
             'gst_total'   => Helper::totalGstPrice(),
             'grand_total' => Helper::totalCartPrice() + Helper::totalGstPrice() - (session()->has('coupon') ? session('coupon')['value'] : 0),
+=======
+            'status' => true,
+            'message' => 'Cart updated successfully',
+            'subtotal' => Helper::totalCartPrice(),
+            'gst_total' => Helper::totalGstPrice(),
+            'first_order_discount' => Helper::firstOrderDiscount(),
+            'grand_total' => Helper::totalCartPrice() + Helper::totalGstPrice()
+                - (session()->has('coupon') ? session('coupon')['value'] : 0)
+                - Helper::firstOrderDiscount(),
+            'gift_changed' => $giftChanged,
+>>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
         ]);
     }
 
     /**
      * Delete cart item via AJAX (Guest + Logged-in both supported)
      */
-    public function cartDelete(Request $request, $id = null){
+    public function cartDelete(Request $request, $id = null)
+    {
         $cartId = $id ?? $request->cart_id;
         $cart   = Cart::find($cartId);
 
@@ -295,11 +395,50 @@ class CartController extends Controller
             ]);
         }
 
+        if ($cart->is_gift) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'The free gift cannot be removed from the cart.',
+            ]);
+        }
+
         $cart->delete();
 
+        $couponRemoved = false;
+        if (session()->has('coupon')) {
+            $totalQuery = Cart::where('order_id', null);
+            if ($user_id) {
+                $totalQuery->where('user_id', $user_id);
+            } else {
+                $totalQuery->where('session_id', $session_id);
+            }
+            $total_price = $totalQuery->sum('amount');
+
+            $coupon         = Coupon::find(session('coupon')['id']);
+            $discountAmount = $coupon ? $coupon->discount($total_price) : 0;
+
+            if (!$coupon || $discountAmount >= $total_price || ($total_price - $discountAmount) < 100) {
+                session()->forget('coupon');
+                $couponRemoved = true;
+            } else {
+                session()->put('coupon.value', $discountAmount);
+            }
+        }
+
+        FreeGiftService::sync();
+
         return response()->json([
-            'status'  => true,
-            'message' => 'Item removed from cart.',
+            'status'               => true,
+            'message'              => $couponRemoved
+                ? 'Item removed. Coupon removed because cart total no longer meets minimum amount.'
+                : 'Item removed from cart.',
+            'coupon_removed'       => $couponRemoved,
+            'subtotal'             => Helper::totalCartPrice(),
+            'gst_total'            => Helper::totalGstPrice(),
+            'first_order_discount' => Helper::firstOrderDiscount(),
+            'grand_total'          => Helper::totalCartPrice() + Helper::totalGstPrice()
+                - (session()->has('coupon') ? session('coupon')['value'] : 0)
+                - Helper::firstOrderDiscount(),
         ]);
     }
 
@@ -307,6 +446,7 @@ class CartController extends Controller
      * Checkout page (Auth protected - middleware('user') lagaya hai route me)
      */
     public function checkout(Request $request){
+        FreeGiftService::sync();
         return view('frontend.pages.checkout');
     }
 

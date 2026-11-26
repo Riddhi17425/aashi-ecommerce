@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use App\Services\FreeGiftService;
 
 class OrderController extends Controller
 {
@@ -65,6 +66,10 @@ class OrderController extends Controller
             'state' => 'required',
             'city' => 'required',
         ]);
+
+        // Make sure the gift matches the final cart, including any coupon
+        FreeGiftService::sync();
+
         if(empty(Cart::where('user_id',auth()->user()->id)->where('order_id',null)->first())){
             request()->session()->flash('error','Cart is Empty !');
             return back();
@@ -81,6 +86,12 @@ class OrderController extends Controller
         $order_data['sub_total']=Helper::totalCartPrice();
         $order_data['quantity']=Helper::cartCount();
         $gstTotal = Helper::totalGstPrice();
+        $firstOrderDiscount = 0;
+        if (!session('coupon') && Helper::totalCartPrice() > 0
+            && Helper::isFirstOrderCustomer($request->user()->id, $request->email)) {
+            $firstOrderDiscount = round(Helper::totalCartPrice() * 0.10, 2);
+        }
+        $order_data['first_order_discount'] = $firstOrderDiscount;
         if(session('coupon')){
             $order_data['coupon']=session('coupon')['value'];
         }
@@ -100,6 +111,7 @@ class OrderController extends Controller
                 $order_data['total_amount']=Helper::totalCartPrice();
             }
         }
+        $order_data['total_amount'] -= $firstOrderDiscount;
         $order_data['total_amount'] += $gstTotal;
         $amount = round($order_data['total_amount']);
         $order_data['total_amount'] = (int)$amount;

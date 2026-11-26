@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
-    protected $fillable=['user_id','product_id','order_id', 'size_price' ,'quantity','amount','price','status', 'color_id', 'gst_percent', 'gst_amt'];
+    protected $fillable = ['user_id','product_id','order_id', 'size_price' ,'quantity','amount','price','status', 'color_id', 'gst_percent', 'gst_amt', 'is_gift'];
+
+    protected $casts = [
+        'is_gift' => 'boolean',
+    ];
     
     // public function product(){
     //     return $this->hasOne('App\Models\Product','id','product_id');
