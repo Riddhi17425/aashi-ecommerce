@@ -21,17 +21,12 @@ class CartController extends Controller
     /**
      * Add product to cart via AJAX (Guest + Logged-in both supported)
      */
-<<<<<<< HEAD
-    public function singleAddToCart(Request $request)
-    {
-=======
 
     public function singleAddToCart(Request $request)
     {
         $maxPerOrder = config('shop.max_qty_per_order', 1000);
 
         // Step 2: validate quantity format and range
->>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
         $validator = \Validator::make($request->all(), [
             'slug'    => 'required',
             'quant.1' => 'required|integer|min:1|max:' . $maxPerOrder,
@@ -58,7 +53,6 @@ class CartController extends Controller
             ]);
         }
 
-<<<<<<< HEAD
         $qty = isset($request->quant[1]) ? (int) $request->quant[1] : 1;
 
         if ($qty < 1) {
@@ -77,35 +71,12 @@ class CartController extends Controller
         $index      = $selectedSize !== null ? array_search($selectedSize, $validSizes, true) : false;
 
         if ($index === false || !isset($sizeData['price'][$index])) {
-=======
-        $selectedSize  = $request->selected_size ?? null;
-        $selectedPrice = $request->selected_price ?? null;
-        $selectedColor = $request->selected_color ?? null;
-        $qty           = (int) $request->quant[1];
-
-        if ($product->stock <= 0) {
->>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
             return response()->json([
                 'status'  => false,
                 'message' => 'Please select a valid size.',
             ]);
         }
 
-<<<<<<< HEAD
-        if ($selectedColorId && !Color::where('product_id', $product->id)->where('id', $selectedColorId)->exists()) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Invalid Color Selected',
-            ]);
-        }
-
-        // Price comes from the product, not from the browser.
-        // Same discount calculation as the product page.
-        $basePrice     = (float) $sizeData['price'][$index];
-        $finalPrice    = $basePrice - ($basePrice * (float) $product->discount) / 100;
-        $selectedPrice = number_format($finalPrice, 2, '.', '');
-
-=======
         // Step 3: the largest quantity allowed in one cart line
         $maxAllowed = min($maxPerOrder, (int) $product->stock);
 
@@ -117,17 +88,11 @@ class CartController extends Controller
             ]);
         }
 
->>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
         // GUEST vs LOGGED-IN
         $user_id    = Auth::check() ? Auth::id() : null;
         $session_id = Auth::check() ? null : session()->getId();
 
-<<<<<<< HEAD
-        // Stock for this exact size and colour
-        $available = $product->variantQuantity((string) $selectedSize, $selectedColorId);
-=======
         $already_cart = Cart::where('order_id', null)->where('product_id', $product->id)->where('is_gift', false);
->>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
 
         if ($available <= 0) {
             return response()->json([
@@ -153,14 +118,6 @@ class CartController extends Controller
                         ->whereJsonContains('size_price->price', $selectedPrice)
                         ->first();
 
-<<<<<<< HEAD
-        if ($existing) {
-            $newQty = $existing->quantity + $qty;
-
-            $existing->quantity = $newQty;
-            $existing->amount   = $selectedPrice * $newQty;
-            $existing->save();
-=======
         if ($already_cart) {
             // Step 5: check the combined quantity for the existing cart line
             $newQty = $already_cart->quantity + $qty;
@@ -184,7 +141,6 @@ class CartController extends Controller
             $already_cart->quantity = $newQty;
             $already_cart->amount   = $selectedPrice * $newQty;
             $already_cart->save();
->>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
 
         } else {
             $data = [
@@ -204,12 +160,6 @@ class CartController extends Controller
             $cart->save();
         }
 
-<<<<<<< HEAD
-        // Calculate cart count for header badge
-        $cartCount = Cart::whereNull('order_id')
-            ->when($user_id, fn ($q) => $q->where('user_id', $user_id), fn ($q) => $q->where('session_id', $session_id))
-            ->sum('quantity');
-=======
         FreeGiftService::sync();
 
         // Cart count for header badge
@@ -220,7 +170,6 @@ class CartController extends Controller
             $cartCountQuery->where('session_id', $session_id);
         }
         $cartCount = $cartCountQuery->sum('quantity');
->>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
 
         return response()->json([
             'status'     => true,
@@ -343,13 +292,6 @@ class CartController extends Controller
         }
 
         return response()->json([
-<<<<<<< HEAD
-            'status'      => true,
-            'message'     => 'Cart updated successfully',
-            'subtotal'    => Helper::totalCartPrice(),
-            'gst_total'   => Helper::totalGstPrice(),
-            'grand_total' => Helper::totalCartPrice() + Helper::totalGstPrice() - (session()->has('coupon') ? session('coupon')['value'] : 0),
-=======
             'status' => true,
             'message' => 'Cart updated successfully',
             'subtotal' => Helper::totalCartPrice(),
@@ -359,7 +301,6 @@ class CartController extends Controller
                 - (session()->has('coupon') ? session('coupon')['value'] : 0)
                 - Helper::firstOrderDiscount(),
             'gift_changed' => $giftChanged,
->>>>>>> 2abde053c018287214e06b668fbdefbb93f83bb6
         ]);
     }
 
