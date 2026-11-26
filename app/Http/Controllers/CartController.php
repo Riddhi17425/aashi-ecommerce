@@ -19,9 +19,9 @@ class CartController extends Controller
 
     /**
      * Add product to cart via AJAX (Guest + Logged-in both supported)
-     * : session_id for guest, user_id for logged-in
      */
-    public function singleAddToCart(Request $request){
+    public function singleAddToCart(Request $request)
+    {
         $validator = \Validator::make($request->all(), [
             'slug'  => 'required',
             'quant' => 'required',
@@ -43,10 +43,7 @@ class CartController extends Controller
             ]);
         }
 
-        $selectedSize      = $request->selected_size ?? null;
-        $selectedPrice     = $request->selected_price ?? null;
-        $selectedColor     = $request->selected_color ?? null;
-        $qty               = isset($request->quant[1]) ? (int) $request->quant[1] : 1;
+        $qty = isset($request->quant[1]) ? (int) $request->quant[1] : 1;
 
         if ($qty < 1) {
             return response()->json([
@@ -55,57 +52,71 @@ class CartController extends Controller
             ]);
         }
 
-        if ($product->stock < $qty || $product->stock <= 0) {
+        $selectedSize    = $request->selected_size ?: null;
+        $selectedColorId = $request->selected_color ? (int) $request->selected_color : null;
+
+        // The size must be one of this product's sizes
+        $sizeData   = json_decode($product->size, true);
+        $validSizes = $sizeData['size'] ?? [];
+        $index      = $selectedSize !== null ? array_search($selectedSize, $validSizes, true) : false;
+
+        if ($index === false || !isset($sizeData['price'][$index])) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Out of stock, You can add other products.',
+                'message' => 'Please select a valid size.',
             ]);
         }
 
-        // GUEST vs LOGGED-IN 
+        if ($selectedColorId && !Color::where('product_id', $product->id)->where('id', $selectedColorId)->exists()) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Invalid Color Selected',
+            ]);
+        }
+
+        // Price comes from the product, not from the browser.
+        // Same discount calculation as the product page.
+        $basePrice     = (float) $sizeData['price'][$index];
+        $finalPrice    = $basePrice - ($basePrice * (float) $product->discount) / 100;
+        $selectedPrice = number_format($finalPrice, 2, '.', '');
+
+        // GUEST vs LOGGED-IN
         $user_id    = Auth::check() ? Auth::id() : null;
         $session_id = Auth::check() ? null : session()->getId();
 
-        $already_cart = Cart::where('order_id', null)->where('product_id', $product->id);
+        // Stock for this exact size and colour
+        $available = $product->variantQuantity((string) $selectedSize, $selectedColorId);
 
-        if ($user_id) {
-            $already_cart = $already_cart->where('user_id', $user_id);
-        } else {
-            $already_cart = $already_cart->where('session_id', $session_id);
+        if ($available <= 0) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'This size and colour is out of stock.',
+            ]);
         }
 
-        if ($selectedColor != null) {
-            $productColor = Color::where('product_id', $product->id)->where('id', $selectedColor)->exists();
-            if (!$productColor) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Invalid Color Selected',
-                ]);
-            }
-            $already_cart = $already_cart->where('color_id', $selectedColor);
+        // Quantity of this size and colour already in the cart
+        $inCart    = (int) $this->variantCartLines($user_id, $session_id, $product, $selectedSize, $selectedColorId)->sum('quantity');
+        $remaining = $available - $inCart;
+
+        if ($qty > $remaining) {
+            return response()->json([
+                'status'  => false,
+                'message' => $remaining > 0
+                    ? "Only {$remaining} more can be added for this size and colour."
+                    : 'You already have all the available stock of this size and colour in your cart.',
+            ]);
         }
 
-        $already_cart = $already_cart->whereJsonContains('size_price->size', $selectedSize)
+        $existing = $this->variantCartLines($user_id, $session_id, $product, $selectedSize, $selectedColorId)
                         ->whereJsonContains('size_price->price', $selectedPrice)
                         ->first();
 
-        if ($already_cart) {
-            $newQty = $already_cart->quantity + $qty;
+        if ($existing) {
+            $newQty = $existing->quantity + $qty;
 
-            if ($product->stock < $newQty || $product->stock <= 0) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Stock not sufficient!',
-                    'data'    => [
-                        'available_stock' => $product->stock,
-                        'already_in_cart' => $already_cart->quantity,
-                    ],
-                ]);
-            }
-
-            $already_cart->quantity = $newQty;
-            $already_cart->amount   = $selectedPrice * $newQty;
-            $already_cart->save();
+            $existing->quantity = $newQty;
+            $existing->amount   = $selectedPrice * $newQty;
+            $existing->save();
 
         } else {
             $data = [
@@ -117,7 +128,7 @@ class CartController extends Controller
             $cart->user_id     = $user_id;
             $cart->session_id  = $session_id;
             $cart->product_id  = $product->id;
-            $cart->color_id    = $selectedColor;
+            $cart->color_id    = $selectedColorId;
             $cart->price       = $selectedPrice;
             $cart->size_price  = json_encode($data);
             $cart->quantity    = $qty;
@@ -126,13 +137,9 @@ class CartController extends Controller
         }
 
         // Calculate cart count for header badge
-        $cartCountQuery = Cart::where('order_id', null);
-        if ($user_id) {
-            $cartCountQuery->where('user_id', $user_id);
-        } else {
-            $cartCountQuery->where('session_id', $session_id);
-        }
-        $cartCount = $cartCountQuery->sum('quantity');
+        $cartCount = Cart::whereNull('order_id')
+            ->when($user_id, fn ($q) => $q->where('user_id', $user_id), fn ($q) => $q->where('session_id', $session_id))
+            ->sum('quantity');
 
         return response()->json([
             'status'     => true,
@@ -155,46 +162,63 @@ class CartController extends Controller
         $user_id    = Auth::check() ? Auth::id() : null;
         $session_id = Auth::check() ? null : session()->getId();
 
-        $error   = [];
-        $success = '';
+        // 1) Check every line first. If one fails, nothing is saved.
+        $lines = [];
 
         foreach ($request->quant as $k => $quant) {
-            $id   = $request->qty_id[$k];
-            $cart = Cart::find($id);
+            $quant = (int) $quant;
+            $cart  = isset($request->qty_id[$k]) ? Cart::with('product')->find($request->qty_id[$k]) : null;
 
-            // Ownership check (guest / user dono ke liye)
-            if (!$cart) {
-                $error[] = 'Cart item not found!';
-                continue;
-            }
-            if ($user_id && $cart->user_id != $user_id) {
-                continue; // skip - not this user's cart item
-            }
-            if (!$user_id && $cart->session_id != $session_id) {
-                continue; // skip - not this session's cart item
+            if (!$cart || !$cart->product) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Cart item not found!',
+                ]);
             }
 
-            if ($quant > 0 && $cart) {
-                if ($cart->product->stock < $quant) {
-                    return response()->json([
-                        'status'  => false,
-                        'message' => 'Out of stock',
-                    ]);
-                }
-
-                $cart->quantity = ($cart->product->stock > $quant) ? $quant : $cart->product->stock;
-
-                if ($cart->product->stock <= 0) continue;
-
-                $cart_stored_price = json_decode($cart->size_price, true);
-                $stored_price       = $cart_stored_price['price'] ?? 0;
-
-                $cart->amount = $stored_price * $quant;
-                $cart->save();
-                $success = 'Cart successfully updated!';
-            } else {
-                $error[] = 'Cart Invalid!';
+            // Ownership check (guest / user)
+            if (($user_id && $cart->user_id != $user_id) || (!$user_id && $cart->session_id != $session_id)) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Unauthorized action.',
+                ]);
             }
+
+            if ($quant < 1) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Cart Invalid!',
+                ]);
+            }
+
+            $stored = json_decode($cart->size_price, true);
+            $size   = $stored['size'] ?? null;
+
+            $available = $cart->product->variantQuantity((string) $size, $cart->color_id);
+
+            // Other open cart lines for the same size and colour (not this line)
+            $others    = (int) $this->variantCartLines($user_id, $session_id, $cart->product, $size, $cart->color_id)
+                                    ->where('id', '!=', $cart->id)
+                                    ->sum('quantity');
+            $remaining = $available - $others;
+
+            if ($quant > $remaining) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $remaining > 0
+                        ? "Only {$remaining} available for this size and colour."
+                        : 'This size and colour is out of stock.',
+                ]);
+            }
+
+            $lines[] = [$cart, $quant, $stored['price'] ?? 0];
+        }
+
+        // 2) Save
+        foreach ($lines as [$cart, $quant, $price]) {
+            $cart->quantity = $quant;
+            $cart->amount   = $price * $quant;
+            $cart->save();
         }
 
         /* ===============================
@@ -210,7 +234,7 @@ class CartController extends Controller
             $total_price = $totalQuery->sum('amount');
 
             $couponData = session('coupon');
-            $coupon = Coupon::where('id', $couponData['id'])->first();
+            $coupon     = Coupon::where('id', $couponData['id'])->first();
 
             if (!$coupon) {
                 session()->forget('coupon');
@@ -232,11 +256,12 @@ class CartController extends Controller
         }
 
         return response()->json([
-            'status' => true,
-            'message' => 'Cart updated successfully',
-            'subtotal' => Helper::totalCartPrice(),
-            'gst_total' => Helper::totalGstPrice(),
-            'grand_total' => Helper::totalCartPrice() + Helper::totalGstPrice() - (session()->has('coupon') ? session('coupon')['value'] : 0),        ]);
+            'status'      => true,
+            'message'     => 'Cart updated successfully',
+            'subtotal'    => Helper::totalCartPrice(),
+            'gst_total'   => Helper::totalGstPrice(),
+            'grand_total' => Helper::totalCartPrice() + Helper::totalGstPrice() - (session()->has('coupon') ? session('coupon')['value'] : 0),
+        ]);
     }
 
     /**
@@ -283,5 +308,32 @@ class CartController extends Controller
      */
     public function checkout(Request $request){
         return view('frontend.pages.checkout');
+    }
+
+    /**
+     * Open cart lines (not yet ordered) for one product, size and colour,
+     * for the current guest or logged-in user.
+     */
+    private function variantCartLines(?int $userId, ?string $sessionId, Product $product, ?string $size, ?int $colorId)
+    {
+        $query = Cart::whereNull('order_id')->where('product_id', $product->id);
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('session_id', $sessionId);
+        }
+
+        if ($colorId) {
+            $query->where('color_id', $colorId);
+        } else {
+            $query->whereNull('color_id');
+        }
+
+        if ($size !== null && $size !== '') {
+            $query->whereJsonContains('size_price->size', $size);
+        }
+
+        return $query;
     }
 }

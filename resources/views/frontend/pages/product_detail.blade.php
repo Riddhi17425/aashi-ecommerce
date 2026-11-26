@@ -198,6 +198,13 @@
                                     </div>
                                     <!--/ End Description -->
                                     <!-- Color -->
+                                    @php
+                                        $variantStock = $product_detail->variants
+                                            ->mapWithKeys(fn ($v) => [$v->size . '|' . ($v->color_id ?? 'none') => (int) $v->quantity])
+                                            ->all();
+                                    @endphp
+                                    <script type="application/json" id="variant-stock">@json($variantStock)</script>
+
                                     @if ($product_detail->color->first())
                                         <div class="color mt-4">
                                             <h4>Available Options <span>Color</span></h4>
@@ -210,15 +217,12 @@
                                                             strtolower($color->color_name) == 'white';
                                                     @endphp
                                                     <li>
-                                                        <a style="
-                                 background-color: {{ $color->color_code }};
-                                 border: {{ $isWhite ? '1px solid #eee' : '1px solid transparent' }};
-                                 "
+                                                        <a style="background-color: {{ $color->color_code }};
+                                                                  border: {{ $isWhite ? '1px solid #eee' : '1px solid transparent' }};"
                                                             href="javascript:void(0);"
                                                             class="one color-selector {{ $key == 0 ? 'set_active' : '' }}"
                                                             data-color-id="{{ $color->id }}"
-                                                            data-color-name="{{ $color->color_name }}"
-                                                            onclick="setPriceId(this)">
+                                                            data-color-name="{{ $color->color_name }}">
                                                             <i class="ti-check {{ $loop->first ? 'selected' : '' }}"
                                                                 style="color: {{ $isWhite ? '#000' : '#fff' }};">
                                                             </i>
@@ -231,18 +235,17 @@
                                     <!--/ End Color -->
                                     <!-- Size -->
                                     @if ($product_detail->size)
-                                        <div class="size mt-4  product-sizeoptions">
+                                        @php
+                                            $sizes = json_decode($product_detail->size, true);
+                                        @endphp
+                                        <div class="size mt-4 product-sizeoptions">
                                             <h4>Size</h4>
                                             <ul id="size-options">
-                                                @php
-                                                    $sizes = json_decode($product_detail->size, true);
-                                                @endphp
                                                 @foreach ($sizes['size'] as $key => $size)
                                                     <li><a href="javascript:void(0);"
                                                             data-price-id="{{ $sizes['price'][$key] }}"
-                                                            data-size-id="{{ $sizes['size'][$key] }}"
-                                                            class="one {{ $key == 0 ? 'set_active' : '' }}"
-                                                            onclick="setPriceId(this)">{{ $size }}</a>
+                                                            data-size-id="{{ $size }}"
+                                                            class="one size-selector {{ $key == 0 ? 'set_active' : '' }}">{{ $size }}</a>
                                                     </li>
                                                 @endforeach
                                             </ul>
@@ -278,6 +281,7 @@
                                                     </div>
                                                     <!--/ End Input Order -->
                                                 </div>
+                                                <p id="variant-stock-msg" style="display:none;"></p>
                                             @endif
                                             <?php
                                             $defaultColorId = $product_detail->color->first()->id ?? null;
@@ -297,7 +301,7 @@
                                                 <input type="hidden" name="selected_size" id="selected_size"
                                                     value="{{ $sizes['size'][0] ?? '' }}">
                                                 <input type="hidden" name="selected_price" id="selected_price"
-                                                    value="{{ $sizeData['price'][0], 2 ?? '' }}">
+                                                    value="{{ $sizeData['price'][0] }}">
                                                 <input type="hidden" name="selected_color" id="selected_color"
                                                     value="{{ $product_detail->color->first()->id ?? '' }}">
                                                 <input type="hidden" name="selected_color_name" id="selected_color_name"
@@ -1238,6 +1242,23 @@
 @endsection
 @push('styles')
     <style>
+        /* ===== Variant stock: unavailable size / colour ===== */
+        .color-selector.is-unavailable,
+        .product-sizeoptions .size-selector.is-unavailable {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .product-sizeoptions .size-selector.is-unavailable {
+            text-decoration: line-through;
+        }
+
+        #variant-stock-msg {
+            margin: 8px 0 0;
+            font-size: 13px;
+            color: #c0392b;
+        }
+
         /* Zoom on the main image: the photo stays inside its frame while it zooms */
         .main-banner .slick-slide {
             overflow: hidden;
@@ -3248,6 +3269,395 @@
             var newImageSrc = $(this).data('image');
             $('#main-img').attr('src', newImageSrc);
         });
+        });
+    </script>
+
+        <script>
+        // ===== Variant stock map: "size|colorId" => quantity (or "size|none") =====
+        var variantStock = {};
+
+        function variantKey(size, colorId) {
+            return size + '|' + (colorId ? colorId : 'none');
+        }
+
+        function stockFor(size, colorId) {
+            return parseInt(variantStock[variantKey(size, colorId)] || 0, 10) || 0;
+        }
+
+        function maxQty() {
+            return stockFor($('#selected_size').val(), $('#selected_color').val());
+        }
+
+        // ===== Price (same discount rule as before) =====
+        function applyPrice(basePriceRaw) {
+            var $price = $('p.price[data-discount]').first();
+            var discount = parseFloat($price.data('discount') || 0);
+            var base = parseFloat(basePriceRaw);
+            var finalPrice = discount > 0 ? base - (base * discount / 100) : base;
+
+            if (discount > 0) {
+                $price.find('.original-price del').text('₹' + base.toFixed(2));
+            }
+            $('#targetDivId').text('₹' + finalPrice.toFixed(2));
+            $('#selected_price').val(finalPrice.toFixed(2));
+        }
+
+        function setSize($el) {
+            $('#size-options .size-selector').removeClass('set_active');
+            $el.addClass('set_active');
+            $('#selected_size').val($el.attr('data-size-id'));
+            applyPrice($el.attr('data-price-id'));
+        }
+
+        function setColor($el) {
+            $('#color-options .color-selector').removeClass('set_active');
+            $('#color-options i').removeClass('selected');
+            $el.addClass('set_active');
+            $el.find('i').addClass('selected');
+            $('#selected_color').val($el.attr('data-color-id'));
+            $('#selected_color_name').val($el.attr('data-color-name'));
+        }
+
+        // Greys out unavailable options, switches away from them, and sets the quantity limit and buttons
+        function refreshVariantState() {
+            var $sizes  = $('#size-options .size-selector');
+            var $colors = $('#color-options .color-selector');
+
+            // 1. A size is available when at least one colour has stock in it
+            $sizes.each(function () {
+                var size = $(this).attr('data-size-id');
+                var ok = $colors.length
+                    ? $colors.toArray().some(function (c) { return stockFor(size, $(c).attr('data-color-id')) > 0; })
+                    : stockFor(size, '') > 0;
+                $(this).toggleClass('is-unavailable', !ok);
+            });
+
+            if ($sizes.filter('.set_active').hasClass('is-unavailable')) {
+                var $firstSize = $sizes.not('.is-unavailable').first();
+                if ($firstSize.length) {
+                    setSize($firstSize);
+                }
+            }
+
+            // 2. Colours with no stock in the chosen size are greyed out
+            var size = $('#selected_size').val();
+            $colors.each(function () {
+                var out = stockFor(size, $(this).attr('data-color-id')) <= 0;
+                $(this).toggleClass('is-unavailable', out)
+                       .attr('title', out ? 'Out of stock in this size' : $(this).attr('data-color-name'));
+            });
+
+            if ($colors.filter('.set_active').hasClass('is-unavailable')) {
+                var $firstColor = $colors.not('.is-unavailable').first();
+                if ($firstColor.length) {
+                    setColor($firstColor);
+                    fetchColorImages($firstColor.attr('data-color-id'));
+                }
+            }
+
+            // 3. Quantity limit and buttons for this size and colour
+            var max = maxQty();
+            var $qty = $('#quantity');
+            var val = Math.min(Math.max(parseInt($qty.val(), 10) || 1, 1), Math.max(max, 1));
+            $qty.val(val).attr('data-max', max);
+            $('.quantity .button.minus button').prop('disabled', val <= 1);
+            $('.quantity .button.plus button').prop('disabled', max <= 0 || val >= max);
+
+            var inStock = max > 0;
+            $('.add_to_cart_btn, .buy-now-btn').prop('disabled', !inStock);
+
+            var msg = '';
+            if (!inStock) {
+                msg = 'This size and colour is out of stock.';
+            } else if (max <= 5) {
+                msg = 'Only ' + max + ' left in this size and colour.';
+            }
+            $('#variant-stock-msg').text(msg).toggle(msg !== '');
+        }
+
+        // Plus / minus buttons: capture phase so the theme's own handler does not change the value too
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest ? e.target.closest('.quantity .btn-number') : null;
+            if (!btn || btn.disabled) {
+                return;
+            }
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            var input = document.getElementById('quantity');
+            var max = Math.max(maxQty(), 1);
+            var val = parseInt(input.value, 10) || 1;
+
+            val = btn.getAttribute('data-type') === 'plus' ? Math.min(val + 1, max) : Math.max(val - 1, 1);
+            input.value = val;
+            refreshVariantState();
+        }, true);
+
+        function checkWishlistStatus() {
+            let productId = "{{ $product_detail->id }}";
+            let colorId = $('#selected_color').val();
+
+            $.ajax({
+                url: "{{ route('wishlist.check') }}",
+                type: "GET",
+                data: {
+                    product_id: productId,
+                    color_id: colorId
+                },
+                success: function(res) {
+                    if (res.wishlisted) {
+                        $('.add-to-wishlist').addClass('active');
+                    } else {
+                        $('.add-to-wishlist').removeClass('active');
+                    }
+                }
+            });
+        }
+
+        function fetchColorImages(colorId) {
+            var fetchUrl = '{{ url('get-color-images') }}' + '/' + colorId;
+            $.ajax({
+                url: fetchUrl,
+                type: 'GET',
+                success: function(response) {
+                    $('.main-banner').slick('unslick');
+                    $('.small-banner').slick('unslick');
+                    $('.main-banner').empty();
+                    $('.small-banner').empty();
+
+                    $.each(response.images, function(index, image) {
+                        $('.main-banner').append(
+                            '<div><img src="' + image + '" alt="Main Image ' + (index + 1) + '"></div>'
+                        );
+                    });
+                    $.each(response.images, function(index, image) {
+                        $('.small-banner').append(
+                            '<div><img src="' + image + '" alt="Thumbnail Image ' + (index + 1) + '"></div>'
+                        );
+                    });
+
+                    $('.main-banner').slick({
+                        slidesToShow: 1,
+                        slidesToScroll: 1,
+                        arrows: false,
+                        fade: true,
+                        asNavFor: '.small-banner'
+                    });
+
+                    $('.small-banner').slick({
+                        slidesToShow: Math.min(4, $('.small-banner').children().length),
+                        slidesToScroll: 1,
+                        asNavFor: '.main-banner',
+                        focusOnSelect: true,
+                        arrows: true,
+                        vertical: true,
+                        verticalSwiping: true
+                    });
+                },
+                error: function(xhr) {
+                    console.error("Error fetching color images: ", xhr);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            // Read the stock map
+            var stockEl = document.getElementById('variant-stock');
+            try {
+                variantStock = stockEl ? (JSON.parse(stockEl.textContent) || {}) : {};
+            } catch (err) {
+                variantStock = {};
+            }
+
+            // Start with the default size's price (with discount), then set availability
+            var $activeSize = $('#size-options .size-selector.set_active').first();
+            if ($activeSize.length) {
+                applyPrice($activeSize.attr('data-price-id'));
+            }
+            refreshVariantState();
+            checkWishlistStatus();
+
+            // ---- Size and colour clicks ----
+            $(document).on('click', '#size-options .size-selector', function(e) {
+                e.preventDefault();
+                if ($(this).hasClass('is-unavailable')) return;
+                setSize($(this));
+                refreshVariantState();
+            });
+
+            $(document).on('click', '#color-options .color-selector', function(e) {
+                e.preventDefault();
+                if ($(this).hasClass('is-unavailable')) return;
+                setColor($(this));
+                fetchColorImages($(this).attr('data-color-id'));
+                checkWishlistStatus();
+                refreshVariantState();
+            });
+
+            // Typed quantity
+            $(document).on('change blur', '#quantity', refreshVariantState);
+
+            // ---- WISHLIST (AJAX, no page reload) ----
+            $('.add-to-wishlist').on('click', function(e) {
+                e.preventDefault();
+
+                let btn = $(this);
+                let baseUrl = "{{ route('add-to-wishlist', $product_detail->slug) }}";
+                let colorId = $('#selected_color').val();
+
+                $.ajax({
+                    url: baseUrl,
+                    method: "GET",
+                    data: {
+                        color_id: colorId
+                    },
+                    success: function(response) {
+                        if (response.status) {
+                            btn.toggleClass('active', response.wishlisted);
+                            $('.wishlist-total-count').text(response.wishlist_count);
+                            if (typeof refreshMiniWishlist === 'function') {
+                                refreshMiniWishlist();
+                            }
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message,
+                                showConfirmButton: true,
+                                confirmButtonColor: '#F7941D',
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning',
+                                text: response.message,
+                                showConfirmButton: true,
+                                confirmButtonColor: '#F7941D',
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Something went wrong!',
+                        });
+                    }
+                });
+            });
+
+            // ---- ADD TO CART ----
+            $(document).on('click', '.add_to_cart_btn', function() {
+                let qty = $('#quantity').val() || 1;
+
+                $.ajax({
+                    url: "{{ route('single-add-to-cart') }}",
+                    method: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        slug: $('#product_slug').val(),
+                        quant: {
+                            1: qty
+                        },
+                        selected_size: $('#selected_size').val(),
+                        selected_price: $('#selected_price').val(),
+                        selected_color: $('#selected_color').val(),
+                        selected_color_name: $('#selected_color_name').val()
+                    },
+                    success: function(response) {
+                        if (response.status) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message,
+                                showConfirmButton: true,
+                                confirmButtonColor: '#F7941D',
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $('.total-count').text(response.cart_count || 0);
+                                    if (typeof refreshMiniCart === 'function') {
+                                        refreshMiniCart();
+                                    }
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning',
+                                text: response.message,
+                                showConfirmButton: true,
+                                confirmButtonColor: '#F7941D',
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Something went wrong!',
+                        });
+                    }
+                });
+            });
+
+            // ---- BUY NOW ----
+            $(document).on('click', '.buy-now-btn', function(e) {
+                e.preventDefault();
+                let qty = $('#quantity').val() || 1;
+
+                $.ajax({
+                    url: "{{ route('single-add-to-cart') }}",
+                    method: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        slug: $('#product_slug').val(),
+                        quant: {
+                            1: qty
+                        },
+                        selected_size: $('#selected_size').val(),
+                        selected_price: $('#selected_price').val(),
+                        selected_color: $('#selected_color').val(),
+                        selected_color_name: $('#selected_color_name').val()
+                    },
+                    success: function(response) {
+                        if (response.status) {
+                            if (typeof refreshMiniCart === 'function') {
+                                refreshMiniCart();
+                            }
+                            @auth
+                                window.location.href = "{{ route('checkout') }}";
+                            @else
+                                $('.auth-step').addClass('d-none');
+                                $('#step-email').removeClass('d-none');
+                                $('#checkoutAuthTitle').text('Login to Checkout');
+                                $('#checkout_email').val('');
+                                $('.auth-step .field-error').addClass('d-none').text('');
+                                $('#checkoutAuthModal').addClass('show').css('display', 'flex');
+                                $('body').addClass('modal-open');
+                            @endauth
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning',
+                                text: response.message,
+                                showConfirmButton: true,
+                                confirmButtonColor: '#F7941D',
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Something went wrong!',
+                        });
+                    }
+                });
+            });
+
+            $(document).on('click', '.thumbnail', function() {
+                var newImageSrc = $(this).data('image');
+                $('#main-img').attr('src', newImageSrc);
+            });
         });
     </script>
 

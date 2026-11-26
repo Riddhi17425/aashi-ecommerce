@@ -9,47 +9,88 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Product extends Model
 {
     use SoftDeletes;
-    protected $fillable=['title','slug','product_code','description','cat_id','child_cat_id','price','brand_id','amazon_code','discount','status','photo','size','stock','is_featured','condition', 'product_features', 'size_chart','meta_title','meta_description'];
 
-    public function cat_info(){
-        return $this->hasOne('App\Models\Category','id','cat_id');
+    
+    protected $fillable = ['title', 'slug', 'product_code', 'description', 'cat_id', 'child_cat_id', 'price', 'brand_id', 'amazon_code', 'discount', 'status', 'photo', 'size', 'is_featured', 'condition', 'product_features', 'size_chart', 'meta_title', 'meta_description', 'hsn_code', 'gst_percent'];
+
+    public function cat_info()
+    {
+        return $this->hasOne('App\Models\Category', 'id', 'cat_id');
     }
-    public function sub_cat_info(){
-        return $this->hasOne('App\Models\Category','id','child_cat_id');
+
+    public function sub_cat_info()
+    {
+        return $this->hasOne('App\Models\Category', 'id', 'child_cat_id');
     }
-    public static function getAllProduct(){
-        return Product::with(['cat_info','sub_cat_info'])->orderBy('id','desc')->paginate(10);
+
+    public static function getAllProduct()
+    {
+        return Product::with(['cat_info', 'sub_cat_info'])->orderBy('id', 'desc')->paginate(10);
     }
-    public function rel_prods(){
-        return $this->hasMany('App\Models\Product','child_cat_id','child_cat_id')->where('status','active')->orderBy('id','DESC')->limit(8);
+
+    public function rel_prods()
+    {
+        return $this->hasMany('App\Models\Product', 'child_cat_id', 'child_cat_id')->where('status', 'active')->orderBy('id', 'DESC')->limit(8);
     }
-    public function getReview(){
-        return $this->hasMany('App\Models\ProductReview','product_id','id')->with('user_info')->where('status','active')->orderBy('id','DESC');
+
+    public function getReview()
+    {
+        return $this->hasMany('App\Models\ProductReview', 'product_id', 'id')->with('user_info')->where('status', 'active')->orderBy('id', 'DESC');
     }
-    public static function getProductBySlug($slug){
-        return Product::with(['cat_info','rel_prods','getReview'])->where('slug',$slug)->first();
+
+    public static function getProductBySlug($slug)
+    {
+        return Product::with(['cat_info', 'rel_prods', 'getReview', 'variants'])->where('slug', $slug)->first();
     }
-    public static function countActiveProduct(){
-        $data=Product::where('status','active')->count();
-        if($data){
+
+    public static function countActiveProduct()
+    {
+        $data = Product::where('status', 'active')->count();
+        if ($data) {
             return $data;
         }
         return 0;
     }
 
-    public function carts(){
+    public function carts()
+    {
         return $this->hasMany(Cart::class)->whereNotNull('order_id');
     }
 
-    public function wishlists(){
+    public function wishlists()
+    {
         return $this->hasMany(Wishlist::class)->whereNotNull('cart_id');
     }
 
-    public function brand(){
-        return $this->hasOne(Brand::class,'id','brand_id');
+    public function brand()
+    {
+        return $this->hasOne(Brand::class, 'id', 'brand_id');
     }
-    
-    public function color(){
+
+    public function color()
+    {
         return $this->hasMany(Color::class);
+    }
+
+    // Quantity rows for each size and colour combination
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    // Total across all sizes and colours. Used for "in stock" checks and listings.
+    public function getStockAttribute(): int
+    {
+        return (int) $this->variants()->sum('quantity');
+    }
+
+    // Stock for one size and colour (colour null for products without colours).
+    // Returns 0 when the combination doesn't exist.
+    public function variantQuantity(string $size, ?int $colorId): int
+    {
+        return (int) $this->variants()
+            ->where('size', $size)
+            ->where('color_id', $colorId)
+            ->value('quantity');
     }
 }

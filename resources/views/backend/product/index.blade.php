@@ -53,7 +53,7 @@
                 <tr>
                     <td>{{$product->id}}</td>
                     <td>{!! $product->product_code !!}</td>
-                    <td>{{$product->cat_info['title']}}
+                    <td>{{$product->cat_info->title ?? ''}}
                       <sub>
                           {{$product->sub_cat_info->title ?? ''}}
                       </sub>

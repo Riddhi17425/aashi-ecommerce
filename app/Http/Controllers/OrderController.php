@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Shipping;
+use App\Models\ProductVariant;
 use App\User;
 use PDF;
 use Notification;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -116,10 +118,20 @@ class OrderController extends Controller
         }
         $order_data['payment_status']='unpaid';
         $order_data['country']='IN';
-        $order->fill($order_data);
-        
-        $order->total_gst_amount = $gstTotal;
-        $order->save();
+
+        try {
+            DB::transaction(function () use ($order, $order_data, $gstTotal) {
+                $this->reserveVariantStock(auth()->id());
+
+                $order->fill($order_data);
+                $order->total_gst_amount = $gstTotal;
+                $order->save();
+            });
+        } catch (ValidationException $e) {
+            request()->session()->flash('error', collect($e->errors())->flatten()->first());
+            return back()->withInput();
+        }
+
         session()->put('thank_you_order_id', $order->id);
         //$status=$order->save();
 
@@ -219,13 +231,8 @@ class OrderController extends Controller
         ]);
         $data=$request->all();
         // return $request->status;
-        if($request->status=='delivered'){
-            foreach($order->cart as $cart){
-                $product=$cart->product;
-                // return $product;
-                $product->stock -=$cart->quantity;
-                $product->save();
-            }
+        if($request->status=='delivered')
+        {
             $data['delivered_at'] = $order->delivered_at ?: now();
         }
         $status=$order->fill($data)->save();
@@ -429,7 +436,8 @@ class OrderController extends Controller
         
     }
 
-    public function cancelOrder($orderId){
+    public function cancelOrder($orderId)
+    {
         $order = Order::find($orderId);
         if (!$order) {
             return response()->json([
@@ -455,9 +463,7 @@ class OrderController extends Controller
         }
 
         if(isset($order) && $order->payment_method == 'cod'){
-            $order->status = 'cancel';
-            $order->payment_status = 'cancelled';
-            $order->save();
+            $this->markOrderCancelled($order, 'cancelled');
 
             return response()->json([
                 'status' => true,
@@ -470,9 +476,7 @@ class OrderController extends Controller
             $refundResponseData = $refundResponse->getData(true);
 
             if (isset($refundResponseData['status']) && $refundResponseData['status'] === true) {
-                $order->status = 'cancel';
-                $order->payment_status = 'refunded';
-                $order->save();
+                $this->markOrderCancelled($order, 'refunded');
 
                 return response()->json([
                     'status' => true,
@@ -485,9 +489,7 @@ class OrderController extends Controller
                 'message' => 'Refund failed, order cancellation unsuccessful'
             ]);
         } else if($order->payment_method == 'razorpay' && $order->payment_status != 'paid') {
-            $order->status = 'cancel';
-            $order->payment_status = 'cancelled';
-            $order->save();
+            $this->markOrderCancelled($order, 'cancelled');
 
             return response()->json([
                 'status' => true,
@@ -1191,5 +1193,126 @@ class OrderController extends Controller
             'status' => true,
             'message' => 'Exchange request cancelled successfully'
         ]);
+    }
+
+    /**
+     * Reads the size from the cart line.
+     */
+    private function cartSize(Cart $cart): ?string
+    {
+        $raw = $cart->size_price;
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $raw = $decoded;
+            }
+        }
+        if (is_array($raw)) {
+            return isset($raw['size']) ? (string) $raw['size'] : null;
+        }
+        return (is_string($raw) && $raw !== '') ? $raw : null;
+    }
+
+    /**
+     * One requirement per product + size + colour, so a variant that appears
+     * on several cart lines is counted once.
+     */
+    private function variantRequirements($carts): array
+    {
+        $required = [];
+        foreach ($carts as $cart) {
+            $size = $this->cartSize($cart);
+            $key  = $cart->product_id . '|' . $size . '|' . ($cart->color_id ?? 'none');
+
+            if (!isset($required[$key])) {
+                $required[$key] = [
+                    'product_id' => $cart->product_id,
+                    'size'       => $size,
+                    'color_id'   => $cart->color_id,
+                    'title'      => optional($cart->product)->title ?? 'Product',
+                    'quantity'   => 0,
+                ];
+            }
+            $required[$key]['quantity'] += (int) $cart->quantity;
+        }
+        return $required;
+    }
+
+    /**
+     * Locks the variant row. Must be called inside a DB transaction.
+     */
+    private function lockVariant(array $line): ?ProductVariant
+    {
+        return ProductVariant::where('product_id', $line['product_id'])
+            ->where('size', $line['size'])
+            ->where('color_id', $line['color_id'])
+            ->lockForUpdate()
+            ->first();
+    }
+
+    /**
+     * Checks every open cart line against variant stock, then deducts it.
+     * If any line is short, nothing is deducted and a ValidationException is thrown.
+     */
+    private function reserveVariantStock(int $userId): void
+    {
+        $carts = Cart::where('user_id', $userId)->whereNull('order_id')->get();
+        $required = $this->variantRequirements($carts);
+
+        $problems = [];
+        $toDeduct = [];
+
+        foreach ($required as $line) {
+            $variant   = $this->lockVariant($line);
+            $available = $variant ? (int) $variant->quantity : 0;
+
+            if ($available < $line['quantity']) {
+                $label = $line['title'] . ($line['size'] ? ' (' . $line['size'] . ')' : '');
+                $problems[] = $label . ': only ' . $available . ' left';
+                continue;
+            }
+            $toDeduct[] = [$variant, $line['quantity']];
+        }
+
+        if (!empty($problems)) {
+            throw ValidationException::withMessages([
+                'stock' => 'Some items are no longer available in the quantity you ordered. Please update your cart. ' . implode('; ', $problems),
+            ]);
+        }
+
+        foreach ($toDeduct as [$variant, $qty]) {
+            $variant->decrement('quantity', $qty);
+        }
+    }
+
+    /**
+     * Puts the stock of an order's lines back into their variants.
+     */
+    private function releaseVariantStock(Order $order): void
+    {
+        $required = $this->variantRequirements($order->cart);
+
+        foreach ($required as $line) {
+            $variant = $this->lockVariant($line);
+            if ($variant) {
+                $variant->increment('quantity', $line['quantity']);
+            }
+        }
+    }
+
+    /**
+     * Marks an order cancelled and releases its stock once.
+     * Calling it on an already cancelled order does not add stock twice.
+     */
+    private function markOrderCancelled(Order $order, string $paymentStatus): void
+    {
+        DB::transaction(function () use ($order, $paymentStatus) {
+            if ($order->status !== 'cancel') {
+                $this->releaseVariantStock($order);
+            }
+            $order->status = 'cancel';
+            $order->payment_status = $paymentStatus;
+            $order->save();
+        });
     }
 }
