@@ -91,6 +91,10 @@
                     {{-- Product Name --}}
                     <strong style="color:#2c3e50;">
                         {{ $item->product->title ?? 'Product' }}
+                        @if ($item->is_gift)
+                            <br>
+                            <span style="font-size: 12px; color: #5db845; font-weight: bold;">Free Gift</span>
+                        @endif
                     </strong>
 
                     {{-- Size --}}
@@ -134,7 +138,12 @@
                         color: #555555;
                         font-size: 14px;
                     ">
-                    ₹{{ number_format($item->amount ?? ($item->price * $item->quantity), 2) }}
+                    @if ($item->is_gift)
+                        <span style="color:#999; text-decoration:line-through;">₹{{ number_format($item->price, 2) }}</span>
+                        <span style="color:#5db845; font-weight:bold;">FREE</span>
+                    @else
+                        ₹{{ number_format($item->amount ?? ($item->price * $item->quantity), 2) }}
+                    @endif
                 </td>
             </tr>
         @endforeach
@@ -216,6 +225,17 @@
                         font-size: 14px;
                     ">
                     -₹{{ number_format($order->coupon, 2) }}
+                </td>
+            </tr>
+        @endif
+
+        @if($order->first_order_discount > 0)
+            <tr>
+                <td align="right" style="padding: 7px; color: #666666; font-size: 14px;">
+                    First order discount (10%)
+                </td>
+                <td align="right" width="120" style="padding: 7px; color: #555555; font-size: 14px;">
+                    -₹{{ number_format($order->first_order_discount, 2) }}
                 </td>
             </tr>
         @endif

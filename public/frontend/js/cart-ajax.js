@@ -99,6 +99,15 @@ function updateCartTotalsFromServer(response) {
             $('#gst_amount').hide();
         }
     }
+    if (response.first_order_discount !== undefined) {
+        let firstOrder = parseFloat(response.first_order_discount) || 0;
+        if (firstOrder > 0) {
+            $('#first-order-row span').text('-₹' + firstOrder.toFixed(2));
+            $('#first-order-row').show();
+        } else {
+            $('#first-order-row').hide();
+        }
+    }
     if (response.grand_total !== undefined) {
         $('#you-pay').text('₹' + parseFloat(response.grand_total).toFixed(2));
     }
@@ -142,7 +151,10 @@ $(document).on('click', '.delete-cart-item', function () {
                 success: function (response) {
                     if (response.status) {
                         $('#cart-row-' + cartId).remove();
-                        recalculateCartTotals();
+                        updateCartTotalsFromServer(response);
+                        if (response.coupon_removed) {
+                            $('.coupon_price').remove();
+                        }
                         updateHeaderCartCount();
                         refreshMiniCart();
 
@@ -270,15 +282,17 @@ $(document).ready(function() {
 
     });
 
-     $('#btn-goto-signup').click(function() {
+    $('#btn-goto-signup').click(function() {
         clearAllFieldErrors();
         var email = $('#checkout_email').val().trim();
+        var prefill = isValidEmail(email) ? email : '';
+
         isRegistered = false;
-        userEmail = email;
+        userEmail = prefill;
         $('#checkoutAuthTitle').text('Create Account');
         $('#step-email').addClass('d-none');
         $('#step-register').removeClass('d-none');
-        $('#checkout_register_email').val(email);
+        $('#checkout_register_email').val(prefill);
     });
 
     $('#btn-login-back, #btn-register-back').click(function() {

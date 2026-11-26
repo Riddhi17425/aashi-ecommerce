@@ -1,24 +1,27 @@
 <?php
 
-    use Illuminate\Support\Facades\Route;
-    use Illuminate\Support\Facades\Artisan;
-    use App\Http\Controllers\AdminController;
-    use App\Http\Controllers\FrontendController;
-    use App\Http\Controllers\Auth\LoginController;
-    use App\Http\Controllers\MessageController;
-    use App\Http\Controllers\CartController;
-    use App\Http\Controllers\WishlistController;
-    use App\Http\Controllers\OrderController;
-    use App\Http\Controllers\ProductReviewController;
-    use App\Http\Controllers\PostCommentController;
-    use App\Http\Controllers\CouponController;
-    use App\Http\Controllers\PaypalController;
-    use App\Http\Controllers\NotificationController;
-    use App\Http\Controllers\DelhiveryController;
-    use App\Http\Controllers\HomeController;
-    use \UniSharp\LaravelFilemanager\Lfm;
-    use App\Models\Color;
-    use App\Http\Controllers\RazorpayController;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminBulkOrderController;
+use App\Http\Controllers\FrontendController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductReviewController;
+use App\Http\Controllers\PostCommentController;
+use App\Http\Controllers\CouponController;
+use App\Http\Controllers\PaypalController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\DelhiveryController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\BulkOrderController;
+use App\Http\Controllers\WhatsappEnquiryController;
+use \UniSharp\LaravelFilemanager\Lfm;
+use App\Models\Color;
+use App\Http\Controllers\RazorpayController;
 use App\Http\Controllers\ShiprocketWebhookController;
 
     /*
@@ -84,8 +87,12 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::get('/exchange-policy', function () {
         return view('frontend.pages.exchange_policy');
     })->name('exchange-policy');
-    
-    
+
+    Route::get('/bulk-wholesale-enquiries', [BulkOrderController::class, 'index'])->name('bulk-order');
+    Route::post('/bulk-wholesale-enquiries', [BulkOrderController::class, 'store'])->name('bulk-order.store');
+    Route::get('/bulk-order-thank-you', [BulkOrderController::class, 'thankYou'])->name('bulk-order.thankyou');
+        
+    Route::post('/whatsapp-enquiry', [WhatsappEnquiryController::class, 'store'])->name('whatsapp-enquiry.store');
     
 // Frontend Routes
     // Out-of-stock "notify me" form
@@ -109,7 +116,7 @@ use App\Http\Controllers\ShiprocketWebhookController;
     Route::get('/filter-products', [FrontendController::class, 'filterProducts'])->name('filter-products');
 
 
-// Cart section (guest-friendly, no forced login)
+    // Cart section (guest-friendly, no forced login)
     Route::post('/add-to-cart', [CartController::class, 'singleAddToCart'])->name('single-add-to-cart');
     Route::get('cart-delete/{id}', [CartController::class, 'cartDelete'])->name('cart-delete');
     Route::post('cart-update', [CartController::class, 'cartUpdate'])->name('cart.update');
@@ -138,6 +145,7 @@ use App\Http\Controllers\ShiprocketWebhookController;
     });
     
     Route::get('/cart', function () {
+        \App\Services\FreeGiftService::sync();
         return view('frontend.pages.cart');
     })->name('cart');
     Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('myorders')->middleware('user');
@@ -252,6 +260,10 @@ use App\Http\Controllers\ShiprocketWebhookController;
         Route::resource('/shipping', 'ShippingController');
         // Coupon
         Route::resource('/coupon', 'CouponController');
+
+        // Bulk Order
+        Route::get('/bulk-orders', [AdminBulkOrderController::class, 'index'])->name('admin.bulk-orders.index');
+
         // Settings
         Route::get('settings', [AdminController::class, 'settings'])->name('settings');
         Route::post('setting/update', [AdminController::class, 'settingsUpdate'])->name('settings.update');

@@ -172,6 +172,196 @@
 				</div>
 			</div>
 		</div>
+
+		{{-- WhatsApp floating button --}}
+		<style>
+			.wa-float-btn {
+				position: fixed;
+				right: 20px;
+				bottom: 20px;
+				width: 56px;
+				height: 56px;
+				border-radius: 50%;
+				border: 0;
+				background: #25D366;
+				color: #fff;
+				font-size: 28px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+				cursor: pointer;
+				z-index: 9998;
+				transition: transform 0.2s ease;
+			}
+			.wa-float-btn:hover { transform: scale(1.05); }
+
+			.wa-popup {
+				position: fixed;
+				right: 20px;
+				bottom: 90px;
+				width: 320px;
+				max-width: calc(100vw - 40px);
+				background: #fff;
+				border-radius: 12px;
+				box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+				padding: 18px;
+				z-index: 9999;
+				display: none;
+			}
+			.wa-popup.open { display: block; }
+			.wa-popup-head {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 12px;
+			}
+			.wa-popup-head h4 { margin: 0; font-size: 16px; font-weight: 600; color: #1e293b; }
+			.wa-close {
+				background: none;
+				border: 0;
+				font-size: 22px;
+				line-height: 1;
+				cursor: pointer;
+				color: #475569;
+			}
+			.wa-popup label {
+				display: block;
+				font-size: 13px;
+				font-weight: 600;
+				color: #334155;
+				margin-bottom: 4px;
+			}
+			.wa-popup label span { color: #dc2626; }
+			.wa-popup input,
+			.wa-popup textarea {
+				display: block;
+				width: 100%;
+				box-sizing: border-box;
+				padding: 9px 10px;
+				margin-bottom: 12px;
+				border: 1px solid #cbd0d8;
+				border-radius: 8px;
+				background: #f8f9fb;
+				font-family: inherit;
+				font-size: 14px;
+				color: #334155;
+			}
+			.wa-popup input { height: 42px; }
+			.wa-popup .wa-error {
+				display: block;
+				margin: -8px 0 10px;
+				color: #dc2626;
+				font-size: 12px;
+			}
+			.wa-popup .wa-error:empty { display: none; }
+			.wa-popup input.wa-invalid,
+			.wa-popup textarea.wa-invalid {
+				border-color: #dc2626;
+				background: #fff8f8;
+			}
+			.wa-submit {
+				width: 100%;
+				padding: 11px;
+				border: 0;
+				border-radius: 8px;
+				background: #25D366;
+				color: #fff;
+				font-size: 14px;
+				font-weight: 600;
+				cursor: pointer;
+			}
+			.wa-submit:hover { background: #1ebe57; }
+		</style>
+
+		<button type="button" class="wa-float-btn" id="waFloatBtn" aria-label="Chat on WhatsApp">
+			<i class="fa fa-whatsapp"></i>
+		</button>
+
+		<div class="wa-popup {{ $errors->hasAny(['wa_number', 'wa_message']) ? 'open' : '' }}" id="waPopup" role="dialog" aria-label="WhatsApp enquiry">
+			<div class="wa-popup-head">
+				<h4>Chat with us on WhatsApp</h4>
+				<button type="button" class="wa-close" id="waClose" aria-label="Close">&times;</button>
+			</div>
+
+			<form action="{{ route('whatsapp-enquiry.store') }}" method="POST" novalidate>
+				@csrf
+
+				<label for="wa_message">Message </label>
+				<textarea id="wa_message" name="wa_message" rows="4"
+						placeholder="Type your message">{{ old('wa_message') }}</textarea>
+				<span class="wa-error" data-error-for="wa_message">@error('wa_message'){{ $message }}@enderror</span>
+
+				<label for="wa_number">Your mobile number <span>*</span></label>
+				<input type="text" id="wa_number" name="wa_number" value="{{ old('wa_number') }}"
+					placeholder="10-digit mobile" maxlength="10" inputmode="numeric">
+				<span class="wa-error" data-error-for="wa_number">@error('wa_number'){{ $message }}@enderror</span>
+
+				<button type="submit" class="wa-submit">Submit &amp; Open WhatsApp</button>
+			</form>
+		</div>
+
+		<script>
+			(function () {
+				var btn = document.getElementById('waFloatBtn');
+				var popup = document.getElementById('waPopup');
+				var closeBtn = document.getElementById('waClose');
+				if (!btn || !popup) return;
+
+				var form = popup.querySelector('form');
+
+				var rules = {
+					wa_number: function (value) {
+						if (value.trim() === '') return 'Please enter your mobile number.';
+						if (!/^\d{10}$/.test(value.trim())) return 'Mobile number must be exactly 10 digits.';
+						return '';
+					},
+					// wa_message: function (value) {
+					// 	if (value.trim() === '') return 'Please type your message.';
+					// 	if (value.trim().length > 1000) return 'Message must be 1000 characters or fewer.';
+					// 	return '';
+					// }
+				};
+
+				function showError(field, message) {
+					var errorBox = popup.querySelector('[data-error-for="' + field.name + '"]');
+					field.classList.toggle('wa-invalid', message !== '');
+					if (errorBox) errorBox.textContent = message;
+				}
+
+				// Check a field while the user types, once it has been touched
+				Object.keys(rules).forEach(function (name) {
+					var field = form.elements[name];
+					field.addEventListener('input', function () {
+						showError(field, rules[name](field.value));
+					});
+				});
+
+				// Check everything on submit and stop if anything is wrong
+				form.addEventListener('submit', function (e) {
+					var firstInvalid = null;
+
+					Object.keys(rules).forEach(function (name) {
+						var field = form.elements[name];
+						var message = rules[name](field.value);
+						showError(field, message);
+						if (message && !firstInvalid) firstInvalid = field;
+					});
+
+					if (firstInvalid) {
+						e.preventDefault();
+						firstInvalid.focus();
+					}
+				});
+
+				btn.addEventListener('click', function () {
+					popup.classList.toggle('open');
+				});
+				closeBtn.addEventListener('click', function () {
+					popup.classList.remove('open');
+				});
+			})();
+		</script>
 	</footer>
 	<!-- /End Footer Area -->
  

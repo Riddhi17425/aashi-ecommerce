@@ -386,7 +386,7 @@
                                                 @endforeach
                                             @endif
                                             <li class="{{Request::path()=='blog' ? 'active' : ''}}"><a href="{{route('blog')}}">Blog</a></li>									
-                                               
+                                            <li class="{{Request::path()=='bulk-wholesale-enquiries' ? 'active' : ''}}"><a href="{{route('bulk-order')}}">Bulk Order</a></li>
                                             <li class="{{Request::path()=='contact' ? 'active' : ''}}"><a href="{{route('contact')}}">Contact Us</a></li>
                                             <li><a href="{{asset('public/files/about-aashi.pdf')}}" target="_blank">What is Aashi</a></li>
                                         </ul>

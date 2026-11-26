@@ -15,13 +15,16 @@ class Helper{
     {
         return Message::whereNull('read_at')->orderBy('created_at', 'desc')->get();
     } 
-    public static function getAllCategory(){
+
+    public static function getAllCategory()
+    {
         $category=new Category();
         $menu=$category->getAllParentWithChild();
         return $menu;
     } 
     
-    public static function getHeaderCategory(){
+    public static function getHeaderCategory()
+    {
         $category = new Category();
         // dd($category);
         $menu=$category->getAllParentWithChild();
@@ -62,21 +65,24 @@ class Helper{
         }
     }
 
-    public static function productCategoryList($option='all'){
+    public static function productCategoryList($option='all')
+    {
         if($option='all'){
             return Category::orderBy('id','DESC')->get();
         }
         return Category::has('products')->orderBy('id','DESC')->get();
     }
 
-    public static function postTagList($option='all'){
+    public static function postTagList($option='all')
+    {
         if($option='all'){
             return PostTag::orderBy('id','desc')->get();
         }
         return PostTag::has('posts')->orderBy('id','desc')->get();
     }
 
-    public static function postCategoryList($option="all"){
+    public static function postCategoryList($option="all")
+    {
         if($option='all'){
             return PostCategory::orderBy('id','DESC')->get();
         }
@@ -86,8 +92,9 @@ class Helper{
     /**
      * Cart Count (Guest + Logged-in both supported -)
      */
-    public static function cartCount($user_id=''){
-        $query = Cart::where('order_id', null);
+    public static function cartCount($user_id='')
+    {
+        $query = Cart::where('order_id', null)->where('is_gift', false);
         if (Auth::check()) {
             $user_id = $user_id ?: auth()->id();
             $query->where('user_id', $user_id);
@@ -98,15 +105,17 @@ class Helper{
     }
 
     // relationship cart with product
-    public function product(){
+    public function product()
+    {
         return $this->hasOne('App\Models\Product','id','product_id');
     }
 
     /**
      * Get all cart items (Guest + Logged-in both supported -)
      */
-    public static function getAllProductFromCart($user_id=''){
-        $query = Cart::with('product')->where('order_id', null);
+    public static function getAllProductFromCart($user_id='')
+    {
+        $query = Cart::with('product')->where('order_id', null)->where('is_gift', false);
         if (Auth::check()) {
             $user_id = $user_id ?: auth()->id();
             $query->where('user_id', $user_id);
@@ -154,7 +163,8 @@ class Helper{
     /**
      * Total cart amount (Guest + Logged-in both supported - )
      */
-    public static function totalCartPrice($user_id=''){
+    public static function totalCartPrice($user_id='')
+    {
         $query = Cart::where('order_id', null);
         if (Auth::check()) {
             $user_id = $user_id ?: auth()->id();
@@ -168,7 +178,8 @@ class Helper{
     /**
      * Total GST amount (Guest + Logged-in both supported - )
      */
-    public static function totalGstPrice($user_id=''){
+    public static function totalGstPrice($user_id='')
+    {
         $query = Cart::where('order_id', null);
         if (Auth::check()) {
             $user_id = $user_id ?: auth()->id();
@@ -203,62 +214,66 @@ class Helper{
     }
     
     // Wishlist Count (Unchanged - login required rahega)
-    public static function wishlistCount($user_id=''){
-    $query = Wishlist::where('cart_id', null);
-    if (Auth::check()) {
-        $user_id = $user_id ?: auth()->id();
-        $query->where('user_id', $user_id);
-    } else {
-        $query->where('session_id', session()->getId());
-    }
-    return $query->sum('quantity');
-}
-    public static function getAllProductFromWishlist($user_id=''){
-    $query = Wishlist::with('product')->where('cart_id', null);
-    if (Auth::check()) {
-        $user_id = $user_id ?: auth()->id();
-        $query->where('user_id', $user_id);
-    } else {
-        $query->where('session_id', session()->getId());
-    }
-    $wishlist = $query->get();
-
-    if(isset($wishlist) && is_countable($wishlist) && count($wishlist) > 0){
-        foreach($wishlist as $k => $v){
-            $images = [];
-            if(isset($v->color_id) && $v->color_id != null){
-                $color = Color::find($v->color_id);
-                $images = $color->images->pluck('image')->map(function($image) {
-                    return asset('public/storage/products/'.$image);
-                });
-            }
-            if(isset($images) && is_countable($images) && count($images)){
-                $v->color_img = $images[0] ?? null;
-            }
-            
-            $sizeData = json_decode($v->product->size, true);
-            if(isset($v->product->price) && $v->product->price != null)
-                $v->price = $v->product->price;
-            else
-                $v->price = $sizeData['price'][0];
-            
-            $afterDiscount = 0;
-            if(isset($v->product->discount) && $v->product->discount > 0){
-                $sizes = json_decode($v->product->size);
-                $priceArr = $sizes->price;
-                $productPrice = 0;
-                foreach($priceArr as $key => $val){
-                    $productPrice = $val;
-                }
-                $afterDiscount = ($productPrice-($productPrice*$v->product->discount)/100);
-            }
-            $v->after_discount = $afterDiscount;
+    public static function wishlistCount($user_id='')
+    {
+        $query = Wishlist::where('cart_id', null);
+        if (Auth::check()) {
+            $user_id = $user_id ?: auth()->id();
+            $query->where('user_id', $user_id);
+        } else {
+            $query->where('session_id', session()->getId());
         }
+        return $query->sum('quantity');
     }
-    return $wishlist;
-}
+
+    public static function getAllProductFromWishlist($user_id='')
+    {
+        $query = Wishlist::with('product')->where('cart_id', null);
+        if (Auth::check()) {
+            $user_id = $user_id ?: auth()->id();
+            $query->where('user_id', $user_id);
+        } else {
+            $query->where('session_id', session()->getId());
+        }
+        $wishlist = $query->get();
+
+        if(isset($wishlist) && is_countable($wishlist) && count($wishlist) > 0){
+            foreach($wishlist as $k => $v){
+                $images = [];
+                if(isset($v->color_id) && $v->color_id != null){
+                    $color = Color::find($v->color_id);
+                    $images = $color->images->pluck('image')->map(function($image) {
+                        return asset('public/storage/products/'.$image);
+                    });
+                }
+                if(isset($images) && is_countable($images) && count($images)){
+                    $v->color_img = $images[0] ?? null;
+                }
+                
+                $sizeData = json_decode($v->product->size, true);
+                if(isset($v->product->price) && $v->product->price != null)
+                    $v->price = $v->product->price;
+                else
+                    $v->price = $sizeData['price'][0];
+                
+                $afterDiscount = 0;
+                if(isset($v->product->discount) && $v->product->discount > 0){
+                    $sizes = json_decode($v->product->size);
+                    $priceArr = $sizes->price;
+                    $productPrice = 0;
+                    foreach($priceArr as $key => $val){
+                        $productPrice = $val;
+                    }
+                    $afterDiscount = ($productPrice-($productPrice*$v->product->discount)/100);
+                }
+                $v->after_discount = $afterDiscount;
+            }
+        }
+        return $wishlist;
+    }
         
-    public static function totalWishlistPrice($user_id=''){
+    public static function totalWishlistPrice($user_id='')
+    {
         if(Auth::check()){
             if($user_id=="") $user_id=auth()->user()->id;
             return Wishlist::where('user_id',$user_id)->where('cart_id',null)->sum('amount');
@@ -269,7 +284,8 @@ class Helper{
     }
 
     // Total price with shipping and coupon
-    public static function grandPrice($id,$user_id){
+    public static function grandPrice($id,$user_id)
+    {
         $order=Order::find($id);
         dd($id);
         if($order){
@@ -281,9 +297,20 @@ class Helper{
         }
     }
 
+    public static function getGiftFromCart()
+    {
+        $query = Cart::with('product')->where('order_id', null)->where('is_gift', true);
+        if (Auth::check()) {
+            $query->where('user_id', auth()->id());
+        } else {
+            $query->where('session_id', session()->getId());
+        }
+        return $query->get();
+    }
 
     // Admin home
-    public static function earningPerMonth(){
+    public static function earningPerMonth()
+    {
         $month_data=Order::where('status','delivered')->get();
         // return $month_data;
         $price=0;
@@ -293,9 +320,34 @@ class Helper{
         return number_format((float)($price),2,'.','');
     }
 
-    public static function shipping(){
+    public static function shipping()
+    {
         return Shipping::orderBy('id','DESC')->get();
     }
-}
 
+    public static function isFirstOrderCustomer($userId = null, $email = null): bool
+    {
+        return !Order::whereNotIn('status', ['cancel', 'cancelled', 'failed'])
+            ->whereNotIn('payment_status', ['cancelled', 'failed'])
+            ->where(function ($q) use ($userId, $email) {
+                if ($userId) $q->orWhere('user_id', $userId);
+                if ($email)  $q->orWhere('email', $email);
+            })
+            ->exists();
+    }
+
+    public static function firstOrderDiscount(): float
+    {
+        if (!Auth::check() || session()->has('coupon')) {
+            return 0;
+        }
+
+        $subtotal = (float) self::totalCartPrice();
+        if ($subtotal <= 0 || !self::isFirstOrderCustomer(auth()->id(), auth()->user()->email)) {
+            return 0;
+        }
+
+        return round($subtotal * 0.10, 2);
+    }
+}
 ?>

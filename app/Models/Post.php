@@ -6,8 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
 {
-    protected $fillable=['title','tags','summary','slug','description','photo','quote','post_cat_id','post_tag_id','added_by','status','meta_title','meta_description'];
-
+    protected $fillable = [
+        'title', 'slug', 'summary', 'description', 'quote', 'photo',
+        'tags', 'post_cat_id', 'post_tag_id', 'added_by', 'status',
+        'meta_title', 'meta_description', 'meta_keywords',
+    ];
 
     public function cat_info(){
         return $this->hasOne('App\Models\PostCategory','id','post_cat_id');

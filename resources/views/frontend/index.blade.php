@@ -1,7 +1,6 @@
 @extends('frontend.layouts.master')
 @section('title', 'Aashi-Ecommerce || HOME PAGE')
 @section('main-content')
-    <h1 class="sr-only">{{ $page_heading }}</h1>
     <!-- Slider Area -->
     @if (!empty($banners) && count($banners) > 0)
         <section id="Gslider" class="carousel slide" data-ride="carousel">

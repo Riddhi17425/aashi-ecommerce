@@ -150,6 +150,13 @@
             <span>Stock Alerts</span></a>
     </li>
 
+    <!-- Bulk Orders -->
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('admin.bulk-orders.index') }}">
+            <i class="fas fa-boxes"></i>
+            <span>Bulk Orders</span></a>
+    </li>
+
     <!-- Reviews -->
     <!-- <li class="nav-item">
         <a class="nav-link" href="{{route('review.index')}}">

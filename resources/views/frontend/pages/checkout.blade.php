@@ -675,13 +675,30 @@
                         </div>
                         <div class="col-lg-4 col-12">
                             <div class="order-details">
-                                
-                                
                                 <div class="single-widget">
                                     <h2>CART  TOTALS</h2>
                                     <div class="content">
                                         <ul>
 										    <li class="order_subtotal" data-price="{{Helper::totalCartPrice()}}">Cart Subtotal<span>₹{{number_format(Helper::totalCartPrice(),2)}}</span></li>
+                                            </ul>
+
+                                            @foreach (Helper::getGiftFromCart() as $giftItem)
+                                                <div class="free-gift-card">
+                                                    <div class="free-gift-label">
+                                                        <i class="ti-gift"></i> Free gift unlocked
+                                                    </div>
+                                                    <div class="free-gift-main">
+                                                        <div class="free-gift-icon"><i class="ti-gift"></i></div>
+                                                        <div class="free-gift-info">
+                                                            <div class="free-gift-name">{{ $giftItem->product['product_code'] }}</div>
+                                                            <div class="free-gift-worth">Worth ₹{{ number_format($giftItem->price, 2) }}</div>
+                                                        </div>
+                                                        <div class="free-gift-price">FREE</div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+
+                                            <ul>
                                             <li class="shipping">
                                                 Shipping Cost
                                                 <input type="hidden" name="shipping" id="shipping_input" value="0">
@@ -693,9 +710,11 @@
                                             <li class="coupon_price" data-price="{{session('coupon')['value']}}">You Save<span>₹{{number_format(session('coupon')['value'],2)}}</span></li>
                                             @endif
                                             @php
-                                                $total_amount = Helper::totalCartPrice() - (session('coupon')['value'] ?? 0);
+                                                $firstOrderDiscount = session()->has('coupon') ? 0 : Helper::firstOrderDiscount();
+                                                $total_amount = Helper::totalCartPrice() - (session('coupon')['value'] ?? 0) - $firstOrderDiscount;
                                                 $gstTotal = Helper::totalGstPrice();
                                             @endphp
+                                            <li class="first-order-discount" id="first-order-row" style="{{ $firstOrderDiscount > 0 ? '' : 'display:none' }}"><strong>First Order Discount (10%)</strong><span>-₹ {{ number_format($firstOrderDiscount, 2) }}</span></li>
                                             @if($gstTotal > 0)
                                                 @php $total_amount += $gstTotal; @endphp
                                                 <li class="" id="gst_amount">GST Amount<span>₹{{number_format($gstTotal,2)}}</span></li>
@@ -703,8 +722,6 @@
                                             <li class="last" id="order_total_price">
                                                 Total <span data-base="{{$total_amount}}">₹{{ number_format($total_amount, 2) }}</span>
                                             </li>
-
-
                                         </ul>
                                     </div>
                                 </div>
@@ -839,6 +856,103 @@
 @endsection
 @push('styles')
 	<style>
+        li.first-order-discount,
+        li.first-order-discount span {
+            color: #3f9a2c;
+            font-weight: 700;
+        }
+        .order-details .free-gift-card {
+            position: relative;
+            margin: 14px 0;
+            padding: 16px 18px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f3fbef 0%, #e2f5d4 100%);
+            border: 1px solid #b9e3a0;
+            box-shadow: 0 6px 18px rgba(93, 184, 69, 0.18);
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .order-details .free-gift-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #5db845;
+        }
+
+        .order-details .free-gift-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #3f9a2c;
+        }
+
+        .order-details .free-gift-label i {
+            font-size: 13px;
+            color: #5db845;
+        }
+
+        .order-details .free-gift-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .order-details .free-gift-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: #5db845;
+            color: #fff;
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(93, 184, 69, 0.35);
+        }
+
+        .order-details .free-gift-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .order-details .free-gift-name {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #1e293b;
+        }
+
+        .order-details .free-gift-worth {
+            margin-top: 3px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .order-details .free-gift-worth s {
+            color: #94a3b8;
+        }
+
+        .order-details .free-gift-price {
+            flex-shrink: 0;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: #5db845;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 8px rgba(93, 184, 69, 0.3);
+        }
 		li.shipping{
 			display: inline-flex;
 			width: 100%;
