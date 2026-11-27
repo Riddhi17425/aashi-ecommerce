@@ -21,12 +21,10 @@ class CartController extends Controller
     /**
      * Add product to cart via AJAX (Guest + Logged-in both supported)
      */
-
     public function singleAddToCart(Request $request)
     {
         $maxPerOrder = config('shop.max_qty_per_order', 1000);
 
-        // Step 2: validate quantity format and range
         $validator = \Validator::make($request->all(), [
             'slug'    => 'required',
             'quant.1' => 'required|integer|min:1|max:' . $maxPerOrder,
@@ -53,14 +51,7 @@ class CartController extends Controller
             ]);
         }
 
-        $qty = isset($request->quant[1]) ? (int) $request->quant[1] : 1;
-
-        if ($qty < 1) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Invalid quantity',
-            ]);
-        }
+        $qty = (int) $request->input('quant.1');
 
         $selectedSize    = $request->selected_size ?: null;
         $selectedColorId = $request->selected_color ? (int) $request->selected_color : null;
@@ -77,22 +68,24 @@ class CartController extends Controller
             ]);
         }
 
-        // Step 3: the largest quantity allowed in one cart line
-        $maxAllowed = min($maxPerOrder, (int) $product->stock);
-
-        // Step 4: check the quantity for a new cart line
-        if ($qty > $maxAllowed) {
+        if ($selectedColorId && !Color::where('product_id', $product->id)->where('id', $selectedColorId)->exists()) {
             return response()->json([
                 'status'  => false,
-                'message' => "You can order up to {$maxAllowed} units of this product.",
+                'message' => 'Invalid Color Selected',
             ]);
         }
+
+        // Price comes from the product, not from the browser (same discount as the product page)
+        $basePrice     = (float) $sizeData['price'][$index];
+        $finalPrice    = $basePrice - ($basePrice * (float) $product->discount) / 100;
+        $selectedPrice = number_format($finalPrice, 2, '.', '');
 
         // GUEST vs LOGGED-IN
         $user_id    = Auth::check() ? Auth::id() : null;
         $session_id = Auth::check() ? null : session()->getId();
 
-        $already_cart = Cart::where('order_id', null)->where('product_id', $product->id)->where('is_gift', false);
+        // Stock for this exact size and colour
+        $available = $product->variantQuantity((string) $selectedSize, $selectedColorId);
 
         if ($available <= 0) {
             return response()->json([
@@ -101,46 +94,36 @@ class CartController extends Controller
             ]);
         }
 
-        // Quantity of this size and colour already in the cart
-        $inCart    = (int) $this->variantCartLines($user_id, $session_id, $product, $selectedSize, $selectedColorId)->sum('quantity');
-        $remaining = $available - $inCart;
+        // Quantity of this size and colour already in the cart, and the most allowed in total
+        $maxAllowed = min($maxPerOrder, $available);
+        $inCart     = (int) $this->variantCartLines($user_id, $session_id, $product, $selectedSize, $selectedColorId)->sum('quantity');
+        $remaining  = $maxAllowed - $inCart;
 
         if ($qty > $remaining) {
             return response()->json([
                 'status'  => false,
                 'message' => $remaining > 0
-                    ? "Only {$remaining} more can be added for this size and colour."
-                    : 'You already have all the available stock of this size and colour in your cart.',
+                    ? "You can add only {$remaining} more unit(s) of this size and colour."
+                    : 'You already have the maximum quantity of this size and colour in your cart.',
+                'data'    => [
+                    'available_stock' => $available,
+                    'already_in_cart' => $inCart,
+                ],
             ]);
         }
 
+        // Existing paid line with the same size, colour and price (free gift lines are never merged)
         $existing = $this->variantCartLines($user_id, $session_id, $product, $selectedSize, $selectedColorId)
+                        ->where('is_gift', false)
                         ->whereJsonContains('size_price->price', $selectedPrice)
                         ->first();
 
-        if ($already_cart) {
-            // Step 5: check the combined quantity for the existing cart line
-            $newQty = $already_cart->quantity + $qty;
+        if ($existing) {
+            $newQty = $existing->quantity + $qty;
 
-            if ($newQty > $maxAllowed) {
-                $canAdd = max(0, $maxAllowed - $already_cart->quantity);
-
-                return response()->json([
-                    'status'  => false,
-                    'message' => $canAdd > 0
-                        ? "You can add only {$canAdd} more unit(s) of this product."
-                        : 'You already have the maximum quantity of this product in your cart.',
-                    'data'    => [
-                        'available_stock' => $product->stock,
-                        'already_in_cart' => $already_cart->quantity,
-                    ],
-                ]);
-            }
-
-            // Step 6: save (unchanged)
-            $already_cart->quantity = $newQty;
-            $already_cart->amount   = $selectedPrice * $newQty;
-            $already_cart->save();
+            $existing->quantity = $newQty;
+            $existing->amount   = $selectedPrice * $newQty;
+            $existing->save();
 
         } else {
             $data = [
@@ -292,15 +275,15 @@ class CartController extends Controller
         }
 
         return response()->json([
-            'status' => true,
-            'message' => 'Cart updated successfully',
-            'subtotal' => Helper::totalCartPrice(),
-            'gst_total' => Helper::totalGstPrice(),
+            'status'               => true,
+            'message'              => 'Cart updated successfully',
+            'subtotal'             => Helper::totalCartPrice(),
+            'gst_total'            => Helper::totalGstPrice(),
             'first_order_discount' => Helper::firstOrderDiscount(),
-            'grand_total' => Helper::totalCartPrice() + Helper::totalGstPrice()
+            'grand_total'          => Helper::totalCartPrice() + Helper::totalGstPrice()
                 - (session()->has('coupon') ? session('coupon')['value'] : 0)
                 - Helper::firstOrderDiscount(),
-            'gift_changed' => $giftChanged,
+            'gift_changed'         => $giftChanged,
         ]);
     }
 
@@ -319,7 +302,7 @@ class CartController extends Controller
             ]);
         }
 
-        // Ownership check (guest / user dono ke liye)
+        // Ownership check (guest / user)
         $user_id    = Auth::check() ? Auth::id() : null;
         $session_id = Auth::check() ? null : session()->getId();
 

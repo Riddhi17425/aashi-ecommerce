@@ -80,8 +80,12 @@
                                             @if ($cart->is_gift)
                                                 1
                                             @else
+                                                @php
+                                                    $lineSize  = json_decode($cart->size_price, true)['size'] ?? null;
+                                                    $lineStock = $cart->product->variantQuantity((string) $lineSize, $cart->color_id);
+                                                @endphp
                                                 <div class="input-group increment_decrement" data-cart-id="{{ $cart->id }}"
-                                                    data-stock="{{ $cart->product->stock }}">
+                                                    data-stock="{{ $lineStock }}">
                                                     <div class="button minus">
                                                         <button type="button" class="btn btn-primary btn-number dec_btn">
                                                             <i class="ti-minus"></i>

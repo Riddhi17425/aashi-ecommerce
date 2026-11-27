@@ -16,7 +16,7 @@ class FreeGiftService
      */
     public static function sync(): bool
     {
-        $threshold = (float) config('shop.free_gift.threshold', 2000);
+        $threshold = (float) config('shop.free_gift.threshold', 1400);
         $slug      = config('shop.free_gift.product_slug');
 
         // Paid items (product discounts are already in "amount")

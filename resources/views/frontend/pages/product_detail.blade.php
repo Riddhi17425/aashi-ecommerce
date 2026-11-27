@@ -2979,7 +2979,8 @@
 
 @push('scripts')
     <script src="{{ asset('public/frontend/js/sweetalert.min.js') }}"></script>
-    <script>
+
+    <!-- <script>
         function setPriceId(element) {
             var priceId = element.getAttribute('data-price-id');
             var sizeId = element.getAttribute('data-size-id');
@@ -3270,7 +3271,7 @@
             $('#main-img').attr('src', newImageSrc);
         });
         });
-    </script>
+    </script> -->
 
         <script>
         // ===== Variant stock map: "size|colorId" => quantity (or "size|none") =====

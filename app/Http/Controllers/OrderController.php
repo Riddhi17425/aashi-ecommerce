@@ -131,6 +131,7 @@ class OrderController extends Controller
         $order_data['payment_status']='unpaid';
         $order_data['country']='IN';
 
+
         try {
             DB::transaction(function () use ($order, $order_data, $gstTotal) {
                 $this->reserveVariantStock(auth()->id());
@@ -138,6 +139,11 @@ class OrderController extends Controller
                 $order->fill($order_data);
                 $order->total_gst_amount = $gstTotal;
                 $order->save();
+
+                // Link the cart lines to this order in the same transaction
+                Cart::where('user_id', auth()->id())
+                    ->where('order_id', null)
+                    ->update(['order_id' => $order->id]);
             });
         } catch (ValidationException $e) {
             request()->session()->flash('error', collect($e->errors())->flatten()->first());
@@ -165,7 +171,7 @@ class OrderController extends Controller
             session()->forget('cart');
             session()->forget('coupon');
         }
-        Cart::where('user_id', auth()->user()->id)->where('order_id', null)->update(['order_id' => $order->id]);
+        
         
         $order->load('cart_info');
 
